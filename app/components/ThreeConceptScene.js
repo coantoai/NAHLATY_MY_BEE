@@ -83,9 +83,10 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    });
    const mesh=new THREE.Mesh(geometry,material);
    mesh.position.copy(pos);
-   mesh.userData={nodeId:n.id,baseScale:1,action:actionMap.get(n.id)||"dim",phase:i*.7,visible:visible&&!background,basePosition:pos.clone()};
+   mesh.userData={nodeId:n.id,baseScale:1,baseVisualScale:new THREE.Vector3(1,1,1),action:actionMap.get(n.id)||"dim",phase:i*.7,visible:visible&&!background,basePosition:pos.clone(),baseColor:new THREE.Color(color)};
    if(n.visual==="heart") mesh.scale.set(.88,1.08,.92);
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
+   mesh.userData.baseVisualScale.copy(mesh.scale);
    group.add(mesh);
    meshes.push(mesh);
 
@@ -122,6 +123,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      const partMesh=new THREE.Mesh(partGeometry,partMaterial);
      partMesh.position.set((partIndex%2?1:-1)*(2.2+partIndex*.45),(partIndex-1)*1.25,Number(part.z||0)*.22);
      partMesh.scale.set(.72,.48,.72);
+     partMesh.userData={basePosition:partMesh.position.clone(),baseScale:partMesh.scale.clone(),partId:part.id,label:part.label};
      partsGroup.add(partMesh);
     });
     mesh.add(partsGroup);
@@ -261,20 +263,48 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     else if(action==="grow")s=.96+Math.sin(t*1.8+phase)*.07;
     else if(action==="shrink")s=.82+Math.sin(t*2+phase)*.04;
     else if(action==="activate")s=1.04+Math.sin(t*3+phase)*.03;
-    mesh.scale.setScalar(s);
+    const baseVisualScale=mesh.userData.baseVisualScale||new THREE.Vector3(1,1,1);
+    mesh.scale.copy(baseVisualScale).multiplyScalar(s);
     const base=mesh.userData.basePosition;
     if(base) mesh.position.copy(base);
     if(!reduced&&action==="spin") mesh.rotation.y+=.018;
     if(!reduced&&action==="flow"&&base) mesh.position.x=base.x+Math.sin(t*2+phase)*.8;
+    if(action==="compress") mesh.scale.y*=.58;
+    if(action==="contract") mesh.scale.y*=.88;
+    if(action==="expand") mesh.scale.y*=1.12;
+    const mat=mesh.material;
+    if(mat){
+     const baseColor=mesh.userData.baseColor||new THREE.Color(0xf2c45c);
+     mat.color.copy(baseColor);
+     mat.emissive.copy(baseColor);
+     if(action==="heat"||action==="ignite"){
+      mat.color.lerp(new THREE.Color(0xff7a2f),.62);
+      mat.emissive.lerp(new THREE.Color(0xff3d12),.72);
+      mat.emissiveIntensity=action==="ignite"?.72:.46;
+     }else if(action==="cool"){
+      mat.color.lerp(new THREE.Color(0x6fb9ff),.68);
+      mat.emissive.lerp(new THREE.Color(0x2d74ff),.6);
+      mat.emissiveIntensity=.34;
+     }else if(action==="dim"){
+      mat.emissiveIntensity=.015;
+     }
+     if(action==="fill") mat.opacity=Math.min(1,.82+Math.sin(t*2.5+phase)*.12);
+     if(action==="empty") mat.opacity=.28+Math.sin(t*2.1+phase)*.06;
+    }
     const parts=mesh.children.find(x=>x.userData?.semanticParts);
     if(parts){
      const explode=cameraMode==="explode"&&focusIds.includes(mesh.userData.nodeId);
+     const split=action==="split"||action==="transform";
      parts.children.forEach((part,j)=>{
-      const targetZ=explode?(j-(parts.children.length-1)/2)*5.5:j*.35;
-      part.position.z=THREE.MathUtils.lerp(part.position.z,targetZ,.08);
-      const spread=explode?1.12:1;
-      const baseScale=(.62+j*.04)*spread;
-      part.scale.setScalar(baseScale);
+      const basePart=part.userData?.basePosition||new THREE.Vector3();
+      const basePartScale=part.userData?.baseScale||new THREE.Vector3(.72,.48,.72);
+      const dir=j-(parts.children.length-1)/2;
+      const target=basePart.clone();
+      if(explode) target.z+=dir*5.5;
+      if(split){target.x+=dir*4.2;target.y+=Math.abs(dir)*1.6;}
+      part.position.lerp(target,.08);
+      part.scale.copy(basePartScale).multiplyScalar(explode||split?1.12:1);
+      if(action==="transform"&&!reduced) part.rotation.y+=.012*(j+1);
      });
     }
    }
