@@ -11,6 +11,7 @@ import { deriveLearnerState } from "./lib/learnerAdaptation";
 import { analyzeMentalModel, deriveRememberedModelRepair } from "./lib/mentalModel";
 import { mergeReframeAvoidance } from "./lib/representationMemory";
 import { BRAND } from "./lib/brand";
+import MYBEE_REFERENCE from "./mybee-reference-data";
 const ThreeConceptScene=dynamic(()=>import("./components/ThreeConceptScene"),{ssr:false,loading:()=>null});
 
 const icons={flow:"↟",timeline:"⟶",comparison:"⇄",concept:"✦"}; const motionGlyph={pulse:"◎",travel:"➜",orbit:"◌",grow:"↗",reveal:"✦",split:"⑂",connect:"⌁",accumulate:"⋮",compress:"⇥",burst:"✹",wave:"≈"};
@@ -165,10 +166,12 @@ function VisualScene({result,active,playing,onSelect,speed,onPause,onPaceHint}){
 export default function Home(){
  const[c,setC]=useState(""),[a,setA]=useState(""),[r,setR]=useState(null),[load,setLoad]=useState(false),[makeError,setMakeError]=useState(""),[audienceSwitchOpen,setAudienceSwitchOpen]=useState(false),[active,setActive]=useState(0),[playing,setPlaying]=useState(false),[speed,setSpeed]=useState(2.6);
  const examples=[
-  {glyph:"🫀",title:"كيف يعمل القلب؟",text:"اشرح لي كيف يعمل القلب وكيف ينتقل الدم بين أجزائه والجسم."},
+  {glyph:"🪐",title:"ما هي الكواكب؟",text:"اشرح لي النظام الشمسي وعلاقة الكواكب بالشمس والحركة بينها."},
+  {glyph:"🏙️",title:"كيف تعمل المدن الذكية؟",text:"اشرح لي بصرياً كيف تعمل المدن الذكية وكيف تتواصل الحساسات والبيانات والخدمات داخل المدينة."},
+  {glyph:"🧠",title:"كيف يتعلم الدماغ؟",text:"اشرح لي بصرياً كيف يتعلم الدماغ وكيف تتكوّن الروابط والذكريات."},
   {glyph:"🌱",title:"كيف تنمو النباتات؟",text:"اشرح لي كيف تنمو النباتات من البذرة حتى تصبح نبتة، وما دور الضوء والماء."},
-  {glyph:"🧠",title:"كيف يتعلم الذكاء الاصطناعي؟",text:"اشرح لي بصرياً كيف يتعلم نموذج ذكاء اصطناعي من البيانات حتى يعطي نتيجة."},
-  {glyph:"🪐",title:"ما هي الكواكب؟",text:"اشرح لي النظام الشمسي وعلاقة الكواكب بالشمس والحركة بينها."}
+  {glyph:"🌍",title:"ما هو الاحتباس الحراري؟",text:"اشرح لي بصرياً ما هو الاحتباس الحراري، أسبابه، وكيف تتغير حرارة الأرض."},
+  {glyph:"🫀",title:"كيف يعمل القلب؟",text:"اشرح لي كيف يعمل القلب وكيف ينتقل الدم بين أجزائه والجسم."}
  ];
  const go=id=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"});
  const useExample=x=>{setC(x.text);setA(a||"عام");go("explain-input")};
@@ -192,6 +195,32 @@ export default function Home(){
  </aside>
  <nav className="beeMobileNav" aria-label="تنقل نحلتي على الهاتف"><button onClick={()=>go("home")}><i>⌂</i><span>الرئيسية</span></button><button onClick={()=>go("explain-input")}><i>✦</i><span>اشرح لي</span></button><button onClick={()=>go("examples")}><i>◫</i><span>أمثلة</span></button><button onClick={()=>go("why-mybee")}><i>◇</i><span>نحلتي</span></button></nav>
  <main id="home">
+  <section className="exactHomeFrame" aria-label="واجهة نحلتي الرئيسية">
+   <div className="exactHomeCanvas">
+    <img className="exactHomeImage" src={MYBEE_REFERENCE} alt="واجهة نحلتي — من الفضول إلى الفهم"/>
+    <button className="exactHotspot hSearch" aria-label="ابدأ بسؤال" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hTopExplain" aria-label="اشرح لي" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hNavHome" aria-label="الرئيسية" onClick={()=>go("home")}/>
+    <button className="exactHotspot hNavExplain" aria-label="اشرح لي" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hNavLibrary" aria-label="مكتبتي" onClick={()=>go("examples")}/>
+    <button className="exactHotspot hNavExamples" aria-label="أمثلة جاهزة" onClick={()=>go("examples")}/>
+    <button className="exactHotspot hNavAudience" aria-label="تخصيص الجمهور" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hNavHistory" aria-label="سجل الفهم" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hNavSettings" aria-label="الإعدادات" onClick={()=>go("why-mybee")}/>
+    <button className="exactHotspot hHeroCta" aria-label="ابدأ الآن مجاناً" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hHow" aria-label="شاهد كيف يعمل" onClick={()=>go("examples")}/>
+    <button className="exactHotspot hInputImage" aria-label="ارفع صورة" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hInputFile" aria-label="ارفع ملفاً" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hInputVoice" aria-label="استخدم الصوت" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hInputText" aria-label="اكتب سؤالاً" onClick={()=>go("explain-input")}/>
+    <button className="exactHotspot hExHeart" aria-label="كيف يعمل القلب؟" onClick={()=>useExample(examples[5])}/>
+    <button className="exactHotspot hExClimate" aria-label="ما هو الاحتباس الحراري؟" onClick={()=>useExample(examples[4])}/>
+    <button className="exactHotspot hExPlant" aria-label="كيف تنمو النباتات؟" onClick={()=>useExample(examples[3])}/>
+    <button className="exactHotspot hExBrain" aria-label="كيف يتعلم الدماغ؟" onClick={()=>useExample(examples[2])}/>
+    <button className="exactHotspot hExCity" aria-label="كيف تعمل المدن الذكية؟" onClick={()=>useExample(examples[1])}/>
+    <button className="exactHotspot hExPlanets" aria-label="ما هي الكواكب؟" onClick={()=>useExample(examples[0])}/>
+   </div>
+  </section>
   <header className="brandHeader"><div className="brandLockup mobileBrand"><span className="beeMark" aria-hidden="true"><i/><i/></span><div><b>{BRAND.ar}</b><small>{BRAND.en}</small></div></div><button className="topQuestion" onClick={()=>go("explain-input")}><span>⌕</span><b>{c.trim()?c.slice(0,70):"ما الذي تريد أن تفهمه اليوم؟"}</b><small>اكتب سؤالك، أو أرفق ملفاً أو صورة أو استعمل صوتك</small></button><div className="headerTools"><button>AR⌄</button><button>☀</button><button>◐</button><button className="profileOrb">●</button></div></header>
   <section className="hero beeHero premiumHero"><div className="heroCopy"><div className="badge">نحلتي · MY BEE</div><h1>من الفضول</h1><h2>إلى <em>الفهم</em></h2><p>نحوّل أي فكرة، معلومة، ملف أو صورة إلى تجربة شرح بصرية تفاعلية حيّة.</p><div className="heroMini">أسهل <b>✦</b> أعمق <b>✦</b> أكثر تفاعلاً <b>✦</b> لجميع الأعمار</div><div className="heroActions"><button className="primary heroPrimary" onClick={()=>go("explain-input")}>ابدأ الآن مجاناً <span>←</span></button><button className="ghostAction" onClick={()=>go("examples")}>▶ شاهد كيف يعمل</button></div></div><div className="heroBeeWorld visualWorld" aria-hidden="true"><div className="heroHalo"/><div className="heroBee"><span className="wing w1"/><span className="wing w2"/><i className="body"/><i className="head"/><b className="eye e1"/><b className="eye e2"/><em className="antenna a1"/><em className="antenna a2"/></div><svg className="heroBeeTrail" viewBox="0 0 360 240"><path d="M15 190 C75 120 108 215 166 138 C218 70 270 118 340 38"/></svg><div className="worldCard"><span>⌾ اكتشف</span><span>▷ شاهد</span><span>⚗ افهم</span><span>♧ جرّب</span><span>◉ تذكّر</span></div><div className="miniLandscape"><i>△</i><b>☁</b><em>⌁</em></div></div></section>
   <section className="workspace" id="explain-input"><InputComposer content={c} setContent={setC} audience={a} setAudience={setA} onGenerate={make} loading={load} error={makeError}/>
