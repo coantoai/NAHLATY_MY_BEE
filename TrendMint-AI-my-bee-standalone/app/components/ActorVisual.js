@@ -1,0 +1,30 @@
+export default function ActorVisual({visual="generic",glyph="●",action="activate"}){
+ const v=visual||"generic"; const cls=`actorVisual actor-${v} action-${action||"activate"}`;
+ if(v==="heart")return <span className={cls}><i className="heartCore"/><i className="heartPulse"/><i className="heartVessel v1"/><i className="heartVessel v2"/></span>;
+ if(v==="brain")return <span className={cls}><i className="brainLobe l1"/><i className="brainLobe l2"/><i className="brainLobe l3"/><i className="brainSpark"/></span>;
+ if(v==="blood")return <span className={cls}><i className="bloodDrop"/><i className="bloodCell c1"/><i className="bloodCell c2"/></span>;
+ if(v==="cell")return <span className={cls}><i className="cellShell"/><i className="cellNucleus"/><i className="cellDot d1"/><i className="cellDot d2"/></span>;
+ if(v==="lung")return <span className={cls}><i className="lungLeft"/><i className="lungRight"/><i className="lungPipe"/></span>;
+ if(v==="data")return <span className={cls}><i className="dataBit b1"/><i className="dataBit b2"/><i className="dataBit b3"/><i className="dataBit b4"/></span>;
+ if(v==="document")return <span className={cls}><i className="docSheet"/><i className="docLine l1"/><i className="docLine l2"/><i className="docLine l3"/></span>;
+ if(v==="server")return <span className={cls}><i className="serverRack r1"/><i className="serverRack r2"/><i className="serverLight"/></span>;
+ if(v==="database")return <span className={cls}><i className="dbLayer d1"/><i className="dbLayer d2"/><i className="dbLayer d3"/></span>;
+ if(v==="cloud")return <span className={cls}><i className="cloudPuff p1"/><i className="cloudPuff p2"/><i className="cloudPuff p3"/></span>;
+ if(v==="signal")return <span className={cls}><i className="signalDot"/><i className="signalWave w1"/><i className="signalWave w2"/></span>;
+ if(v==="person")return <span className={cls}><i className="personHead"/><i className="personBody"/></span>;
+ if(v==="building"||v==="store")return <span className={cls}><i className="buildingBody"/><i className="buildingWindow w1"/><i className="buildingWindow w2"/><i className="buildingDoor"/></span>;
+ if(v==="factory")return <span className={cls}><i className="factoryBody"/><i className="factoryRoof"/><i className="factoryChimney c1"/><i className="factoryChimney c2"/><i className="factoryGear"/></span>;
+ if(v==="truck")return <span className={cls}><i className="truckCab"/><i className="truckBox"/><i className="truckWheel w1"/><i className="truckWheel w2"/></span>;
+ if(v==="box"||v==="product")return <span className={cls}><i className="boxBody"/><i className="boxTop"/><i className="boxMark"/></span>;
+ if(v==="money")return <span className={cls}><i className="moneyCoin c1"/><i className="moneyCoin c2"/><i className="moneySign">$</i></span>;
+ if(v==="gear")return <span className={cls}><i className="gearRing">⚙</i></span>;
+ if(v==="fire")return <span className={cls}><i className="flame f1"/><i className="flame f2"/><i className="flame f3"/></span>;
+ if(v==="water")return <span className={cls}><i className="waterDrop"/><i className="waterRipple"/></span>;
+ if(v==="plant")return <span className={cls}><i className="plantStem"/><i className="plantLeaf l1"/><i className="plantLeaf l2"/><i className="plantSoil"/></span>;
+ if(v==="portal")return <span className={cls}><i className="portalRing r1"/><i className="portalRing r2"/><i className="portalCore"/></span>;
+ if(v==="stack")return <span className={cls}><i className="stackLayer s1"/><i className="stackLayer s2"/><i className="stackLayer s3"/></span>;
+ if(v==="stream"||v==="road")return <span className={cls}><i className="streamPath"/><i className="streamParticle p1"/><i className="streamParticle p2"/></span>;
+ if(v==="planet")return <span className={cls}><i className="planetBody"/><i className="planetRing"/></span>;
+ if(v==="volcano")return <span className={cls}><i className="volcanoBody"/><i className="volcanoLava"/><i className="volcanoSmoke s1"/><i className="volcanoSmoke s2"/></span>;
+ return <span className={cls}><i className="genericGlyph">{glyph}</i></span>;
+}
