@@ -393,3 +393,41 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .exampleGrid button{position:relative;overflow:hidden;background:radial-gradient(circle at 25% 20%,rgba(77,119,170,.12),transparent 40%),linear-gradient(160deg,#121b27,#0a1018)}.exampleGrid button:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;left:-22px;top:-28px;background:radial-gradient(circle,rgba(246,200,95,.12),transparent 68%)}
 @media(max-width:1000px){.headerTools{display:none}.premiumHero{padding:32px 24px}.premiumHero .heroCopy{text-align:center}.visualWorld{height:290px}.worldCard{width:120px}.miniLandscape{transform:scale(.8)}}
 @media(max-width:720px){.premiumHero{border-radius:20px;padding:24px 16px}.premiumHero .heroBeeWorld{order:0}.premiumHero h1{font-size:43px}.premiumHero h2{font-size:47px}.premiumHero p{font-size:14px}.visualWorld{height:240px}.worldCard{right:0;width:105px;padding:9px}.worldCard span{font-size:9px;padding:7px}.miniLandscape{right:18%;transform:scale(.65)}}
+
+
+/* LOCKED EXACT HOME — screenshot is the visual source of truth */
+.beeAppShell{display:block!important;min-height:100vh;background:#060b12!important}
+.beeRail,.brandHeader,.beeHero{display:none!important}
+.beeAppShell>main{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;direction:rtl}
+.exactHomeFrame{width:100%;background:#060b12;display:flex;justify-content:center;align-items:flex-start;overflow:hidden}
+.exactHomeCanvas{position:relative;width:100%;max-width:1536px;aspect-ratio:3/2;background:#060b12}
+.exactHomeImage{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+.exactHotspot{position:absolute;z-index:5;border:0!important;background:transparent!important;box-shadow:none!important;border-radius:14px;cursor:pointer;padding:0!important;opacity:0}
+.exactHotspot:focus-visible{opacity:1!important;outline:2px solid #f6c85f!important;outline-offset:2px;background:rgba(246,200,95,.08)!important}
+.hSearch{left:19.5%;top:3.0%;width:55.8%;height:7.6%}
+.hTopExplain{left:64.7%;top:3.8%;width:10.3%;height:6.3%}
+.hNavHome{left:1.1%;top:14.8%;width:14.3%;height:6.5%}
+.hNavExplain{left:1.4%;top:22.1%;width:13.6%;height:5.0%}
+.hNavLibrary{left:1.4%;top:28.0%;width:13.6%;height:5.0%}
+.hNavExamples{left:1.4%;top:34.1%;width:13.6%;height:5.0%}
+.hNavAudience{left:1.4%;top:40.1%;width:13.6%;height:5.0%}
+.hNavHistory{left:1.4%;top:46.1%;width:13.6%;height:5.0%}
+.hNavSettings{left:1.4%;top:52.0%;width:13.6%;height:5.0%}
+.hHeroCta{left:51.4%;top:41.4%;width:14.8%;height:5.7%}
+.hHow{left:19.4%;top:47.6%;width:10.8%;height:5.1%}
+.hInputImage{left:17.8%;top:56.8%;width:19.2%;height:8.6%}
+.hInputFile{left:37.9%;top:56.8%;width:18.3%;height:8.6%}
+.hInputVoice{left:57.0%;top:56.8%;width:19.0%;height:8.6%}
+.hInputText{left:77.0%;top:56.8%;width:21.0%;height:8.6%}
+.hExHeart{left:17.8%;top:70.8%;width:12.3%;height:16.3%}
+.hExClimate{left:31.0%;top:70.8%;width:12.3%;height:16.3%}
+.hExPlant{left:44.2%;top:70.8%;width:12.3%;height:16.3%}
+.hExBrain{left:57.2%;top:70.8%;width:12.3%;height:16.3%}
+.hExCity{left:70.3%;top:70.8%;width:12.5%;height:16.3%}
+.hExPlanets{left:83.4%;top:70.8%;width:14.3%;height:16.3%}
+.workspace{max-width:1280px;margin:0 auto;padding:34px 28px 54px;scroll-margin-top:0}
+.exampleGallery,.trustStrip{max-width:1280px;margin-left:auto;margin-right:auto}
+@media(max-width:900px){
+ .exactHomeCanvas{width:100%;max-width:none}
+ .workspace{padding:24px 14px 90px}
+}
