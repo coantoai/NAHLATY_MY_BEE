@@ -4,11 +4,17 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 function geometryFor(visual){
- if(["heart","brain","cell","planet","blood"].includes(visual)) return new THREE.SphereGeometry(5,28,20);
+ if(visual==="heart") return new THREE.SphereGeometry(5,32,24);
+ if(visual==="brain") return new THREE.IcosahedronGeometry(5,2);
+ if(["cell","planet","blood"].includes(visual)) return new THREE.SphereGeometry(5,28,20);
+ if(visual==="lung") return new THREE.SphereGeometry(4.7,24,18);
+ if(visual==="road") return new THREE.BoxGeometry(12,1.1,4.2);
+ if(visual==="stream") return new THREE.TorusGeometry(5,1,14,42);
+ if(visual==="cloud") return new THREE.IcosahedronGeometry(5.2,2);
  if(["database","stack"].includes(visual)) return new THREE.CylinderGeometry(5,5,7,28);
  if(["volcano","fire"].includes(visual)) return new THREE.ConeGeometry(5.5,9,24);
  if(["portal","signal"].includes(visual)) return new THREE.TorusGeometry(5,1.2,18,40);
- if(["lung","plant","water"].includes(visual)) return new THREE.IcosahedronGeometry(5,1);
+ if(["plant","water"].includes(visual)) return new THREE.IcosahedronGeometry(5,1);
  if(["gear"].includes(visual)) return new THREE.TorusKnotGeometry(3.4,1.15,70,12);
  return new THREE.BoxGeometry(9,7,7);
 }
@@ -63,6 +69,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const labels=[];
   const edgeCurves=new Map();
   const travelers=[];
+  const actionParticles=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
 
   nodes.forEach((n,i)=>{
@@ -89,6 +96,14 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    mesh.userData.baseVisualScale.copy(mesh.scale);
    group.add(mesh);
    meshes.push(mesh);
+   if(["flow","ignite","heat"].includes(mesh.userData.action)&&!reduced){
+    const particleCount=mesh.userData.action==="flow"?5:8;
+    for(let p=0;p<particleCount;p++){
+     const particle=new THREE.Mesh(new THREE.SphereGeometry(mesh.userData.action==="flow"?.42:.34,8,6),new THREE.MeshBasicMaterial({color:mesh.userData.action==="flow"?0x9ed0ff:0xffb347,transparent:true,opacity:.78}));
+     particle.userData={owner:mesh,phase:p/particleCount,kind:mesh.userData.action};
+     group.add(particle); actionParticles.push(particle);
+    }
+   }
 
    const labelCanvas=document.createElement("canvas");
    const labelCtx=labelCanvas.getContext("2d");
@@ -243,6 +258,19 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      camera.position.lerp(desiredCamera,.035);
     }
    }
+   for(const particle of actionParticles){
+    const owner=particle.userData.owner;
+    if(!owner)continue;
+    const phase=particle.userData.phase;
+    if(particle.userData.kind==="flow"){
+     particle.position.copy(owner.position).add(new THREE.Vector3((phase*2-1)*9,Math.sin(t*3+phase*9)*1.3,2.8));
+    }else{
+     const rise=(t*.22+phase)%1;
+     particle.position.copy(owner.position).add(new THREE.Vector3(Math.sin(t*3+phase*11)*2.4,2+rise*10,Math.cos(t*2+phase*8)*2));
+     particle.scale.setScalar(1-rise*.65);
+     particle.material.opacity=.82*(1-rise);
+    }
+   }
    for(const traveler of travelers){
     const u=(t*.22+traveler.userData.phase)%1;
     traveler.position.copy(traveler.userData.curve.getPoint(u));
@@ -269,7 +297,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     if(base) mesh.position.copy(base);
     if(!reduced&&action==="spin") mesh.rotation.y+=.018;
     if(!reduced&&action==="flow"&&base) mesh.position.x=base.x+Math.sin(t*2+phase)*.8;
-    if(action==="compress") mesh.scale.y*=.58;
+    if(action==="compress"){mesh.scale.y*=.58;mesh.scale.x*=1.08;}
     if(action==="contract") mesh.scale.y*=.88;
     if(action==="expand") mesh.scale.y*=1.12;
     const mat=mesh.material;
