@@ -60,6 +60,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   scene.add(group);
   const positions=new Map();
   const meshes=[];
+  const labels=[];
   const edgeCurves=new Map();
   const travelers=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
@@ -87,6 +88,30 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
    group.add(mesh);
    meshes.push(mesh);
+
+   const labelCanvas=document.createElement("canvas");
+   const labelCtx=labelCanvas.getContext("2d");
+   labelCanvas.width=512; labelCanvas.height=128;
+   if(labelCtx){
+    labelCtx.clearRect(0,0,512,128);
+    labelCtx.fillStyle="rgba(16,22,26,.78)";
+    labelCtx.roundRect?.(10,18,492,92,28);
+    labelCtx.fill();
+    labelCtx.fillStyle="#fff7df";
+    labelCtx.font="600 34px system-ui, sans-serif";
+    labelCtx.textAlign="center";
+    labelCtx.textBaseline="middle";
+    const label=String(n.label||"").slice(0,26);
+    labelCtx.fillText(label,256,64,455);
+    const texture=new THREE.CanvasTexture(labelCanvas);
+    texture.colorSpace=THREE.SRGBColorSpace;
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,opacity:visible?(background?.32:.94):.08}));
+    sprite.position.copy(pos).add(new THREE.Vector3(0,-9,3));
+    sprite.scale.set(18,4.5,1);
+    sprite.userData={nodeId:n.id,labelSprite:true};
+    group.add(sprite);
+    labels.push(sprite);
+   }
 
    if(n.spatial&&Array.isArray(n.depthParts)&&n.depthParts.length){
     const partsGroup=new THREE.Group();
@@ -197,7 +222,11 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    if(disposed)return;
    frame=requestAnimationFrame(animate);
    const t=clock.getElapsedTime();
-   if(playingRef.current&&focused.length&&!reduced){
+   if(playingRef.current&&cameraMode==="inside"&&explicitTarget&&!reduced){
+    const insideCamera=explicitTarget.clone().add(new THREE.Vector3(0,1,18));
+    controls.target.lerp(explicitTarget,.1);
+    camera.position.lerp(insideCamera,.075);
+   }else if(playingRef.current&&focused.length&&!reduced){
     if(followCurve){
      const u=(t*.16)%1;
      const p=followCurve.getPoint(u);
@@ -218,6 +247,10 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     const pulse=.9+Math.sin(t*8+traveler.userData.phase*12)*.18;
     traveler.scale.setScalar(pulse);
    }
+   for(const label of labels){
+    const source=meshes.find(m=>m.userData.nodeId===label.userData.nodeId);
+    if(source) label.position.copy(source.position).add(new THREE.Vector3(0,-9,3));
+   }
    for(const mesh of meshes){
     const {action,phase}=mesh.userData;
     let s=1;
@@ -237,9 +270,11 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     if(parts){
      const explode=cameraMode==="explode"&&focusIds.includes(mesh.userData.nodeId);
      parts.children.forEach((part,j)=>{
-      const spread=explode?1.8:1;
-      part.position.z=(part.position.z||0)*.985 + (explode?(j-1)*.08:0);
-      part.scale.setScalar((.62+j*.04)*spread);
+      const targetZ=explode?(j-(parts.children.length-1)/2)*5.5:j*.35;
+      part.position.z=THREE.MathUtils.lerp(part.position.z,targetZ,.08);
+      const spread=explode?1.12:1;
+      const baseScale=(.62+j*.04)*spread;
+      part.scale.setScalar(baseScale);
      });
     }
    }
