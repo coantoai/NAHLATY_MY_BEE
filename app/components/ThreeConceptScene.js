@@ -82,12 +82,25 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    });
    const mesh=new THREE.Mesh(geometry,material);
    mesh.position.copy(pos);
-   mesh.userData={nodeId:n.id,baseScale:1,action:actionMap.get(n.id)||"dim",phase:i*.7,visible:visible&&!background};
+   mesh.userData={nodeId:n.id,baseScale:1,action:actionMap.get(n.id)||"dim",phase:i*.7,visible:visible&&!background,basePosition:pos.clone()};
    if(n.visual==="heart") mesh.scale.set(.88,1.08,.92);
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
    group.add(mesh);
    meshes.push(mesh);
 
+   if(n.spatial&&Array.isArray(n.depthParts)&&n.depthParts.length){
+    const partsGroup=new THREE.Group();
+    partsGroup.userData={semanticParts:true,nodeId:n.id};
+    n.depthParts.forEach((part,partIndex)=>{
+     const partGeometry=new THREE.SphereGeometry(Math.max(1.15,3.25-partIndex*.38),18,12);
+     const partMaterial=new THREE.MeshStandardMaterial({color,roughness:.5,metalness:.08,transparent:true,opacity:.28,emissive:color,emissiveIntensity:.035});
+     const partMesh=new THREE.Mesh(partGeometry,partMaterial);
+     partMesh.position.set((partIndex%2?1:-1)*(2.2+partIndex*.45),(partIndex-1)*1.25,Number(part.z||0)*.22);
+     partMesh.scale.set(.72,.48,.72);
+     partsGroup.add(partMesh);
+    });
+    mesh.add(partsGroup);
+   }
    if(n.spatial){
     const halo=new THREE.Mesh(
      new THREE.TorusGeometry(7.2,.16,10,42),
@@ -162,6 +175,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const cameraTarget=new THREE.Vector3();
   const desiredCamera=new THREE.Vector3(0,8,115);
   const cameraMode=cameraPlan?.mode||"focus";
+  const followCurve=cameraMode==="follow"&&activeEdgeIds.length?edgeCurves.get(activeEdgeIds[0]):null;
   const explicitTarget=cameraPlan?.targetNodeId?positions.get(cameraPlan.targetNodeId):null;
   let focused=(explicitTarget?[explicitTarget]:focusIds.map(id=>positions.get(id)).filter(Boolean));
   if(cameraMode==="follow"&&activeEdgeIds.length){
@@ -184,8 +198,19 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    frame=requestAnimationFrame(animate);
    const t=clock.getElapsedTime();
    if(playingRef.current&&focused.length&&!reduced){
-    controls.target.lerp(cameraTarget,.055);
-    camera.position.lerp(desiredCamera,.035);
+    if(followCurve){
+     const u=(t*.16)%1;
+     const p=followCurve.getPoint(u);
+     const ahead=followCurve.getPoint(Math.min(.999,u+.035));
+     const tangent=ahead.clone().sub(p).normalize();
+     const followTarget=p.clone().add(tangent.multiplyScalar(4));
+     const followCamera=p.clone().add(new THREE.Vector3(0,7,Math.max(34,Number(cameraPlan?.distance)||58)));
+     controls.target.lerp(followTarget,.09);
+     camera.position.lerp(followCamera,.065);
+    }else{
+     controls.target.lerp(cameraTarget,.055);
+     camera.position.lerp(desiredCamera,.035);
+    }
    }
    for(const traveler of travelers){
     const u=(t*.22+traveler.userData.phase)%1;
@@ -204,8 +229,19 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     else if(action==="shrink")s=.82+Math.sin(t*2+phase)*.04;
     else if(action==="activate")s=1.04+Math.sin(t*3+phase)*.03;
     mesh.scale.setScalar(s);
+    const base=mesh.userData.basePosition;
+    if(base) mesh.position.copy(base);
     if(!reduced&&action==="spin") mesh.rotation.y+=.018;
-    if(!reduced&&action==="flow") mesh.position.x+=(Math.sin(t*2+phase)*.006);
+    if(!reduced&&action==="flow"&&base) mesh.position.x=base.x+Math.sin(t*2+phase)*.8;
+    const parts=mesh.children.find(x=>x.userData?.semanticParts);
+    if(parts){
+     const explode=cameraMode==="explode"&&focusIds.includes(mesh.userData.nodeId);
+     parts.children.forEach((part,j)=>{
+      const spread=explode?1.8:1;
+      part.position.z=(part.position.z||0)*.985 + (explode?(j-1)*.08:0);
+      part.scale.setScalar((.62+j*.04)*spread);
+     });
+    }
    }
    controls.update();
    renderer.render(scene,camera);
