@@ -1,9 +1,11 @@
 import { createGemini, generateJson } from "../../lib/genai";
+import { getExperienceProfile } from "../../lib/experienceProfile";
 
 const clamp=n=>Math.max(8,Math.min(92,Number(n)||50));
 function normalizeScene(data,audience="عام"){
  const audienceText=String(audience||"عام").toLowerCase();
- const presentation=audienceText.includes("طفل")?{density:"simple",paceSec:3.4,terminology:"simple",interactionStyle:"guided"}:audienceText.includes("خبير")?{density:"deep",paceSec:1.8,terminology:"precise",interactionStyle:"technical"}:audienceText.includes("طالب")?{density:"balanced",paceSec:2.6,terminology:"standard",interactionStyle:"guided"}:{density:"balanced",paceSec:2.6,terminology:"standard",interactionStyle:"exploratory"};
+ const profile=getExperienceProfile(audience);
+ const presentation={...profile,profileId:profile.id};
  const rawNodes=Array.isArray(data?.sceneGraph?.nodes)?data.sceneGraph.nodes.slice(0,presentation.density==="simple"?5:7):[];
  const allowedVisuals=["generic","heart","brain","blood","cell","lung","data","document","server","database","cloud","signal","person","building","factory","store","truck","box","money","product","gear","fire","water","plant","portal","stack","stream","planet","volcano","road"];
  const allowedThemes=["biology","technology","nature","business","space","mechanical","human","abstract"];
@@ -109,7 +111,8 @@ export async function POST(req){
   if(!content) return Response.json({error:"المحتوى مطلوب"},{status:400});
   const cleanContent=String(content).slice(0,70000);
   const audienceText=String(audience||"عام").toLowerCase();
-  const presentation=audienceText.includes("طفل")?{density:"simple",paceSec:3.4,terminology:"simple",interactionStyle:"guided",challengeStyle:"concrete"}:audienceText.includes("خبير")?{density:"deep",paceSec:1.8,terminology:"precise",interactionStyle:"technical",challengeStyle:"causal"}:audienceText.includes("طالب")?{density:"balanced",paceSec:2.6,terminology:"standard",interactionStyle:"guided",challengeStyle:"prediction"}:audienceText.includes("معلّم")||audienceText.includes("معلم")||audienceText.includes("مدر")?{density:"balanced",paceSec:2.5,terminology:"standard",interactionStyle:"guided",challengeStyle:"teachback"}:{density:"balanced",paceSec:2.6,terminology:"standard",interactionStyle:"exploratory",challengeStyle:"direct"};
+  const audienceProfile=getExperienceProfile(audience);
+  const presentation={...audienceProfile,profileId:audienceProfile.id};
   const preserveAnchors=(Array.isArray(preserve?.truthAnchors)?preserve.truthAnchors:[]).slice(0,6).map(x=>String(x||"").slice(0,220)).filter(Boolean);
   const preserveCausality=(Array.isArray(preserve?.causalRelations)?preserve.causalRelations:[]).slice(0,8).map(x=>({from:String(x?.from||"").slice(0,80),to:String(x?.to||"").slice(0,80),relation:String(x?.relation||"").slice(0,30),label:String(x?.label||"").slice(0,100)})).filter(x=>x.from&&x.to);
   const key=process.env.GEMINI_API_KEY;
