@@ -384,7 +384,7 @@ test("visual scene compiler infers semantic motion without inventing new nodes",
  assert.equal(compiled.runtimeVersion,"visual-scene/v1");
  assert.deepEqual(compiled.steps[0].runtime.activeEdgeIds,["e1"]);
  assert.equal(compiled.steps[0].runtime.camera.mode,"follow");
- assert.equal(compiled.steps[0].runtime.nodeActions.find(x=>x.id==="heart")?.action,"flow");
+ assert.equal(compiled.steps[0].runtime.nodeActions.find(x=>x.id==="heart")?.action,"contract");
 });
 
 test("visual scene compiler downgrades meaningless depth camera to focus",()=>{
@@ -438,4 +438,25 @@ test("Gemini permanent errors are not retried", async()=>{
  assert.equal(calls,1);
  assert.equal(isTransientGenAIError({status:503}),true);
  assert.equal(isTransientGenAIError({status:400}),false);
+});
+
+
+test("plant water path keeps water flowing while the plant grows",()=>{
+ const result={
+  sceneGraph:{world:{dimension:"hybrid"},nodes:[
+   {id:"water",visual:"water"},
+   {id:"plant",visual:"plant",spatial:true,inside:[{id:"root",label:"الجذر"}]}
+  ],edges:[{id:"e1",from:"water",to:"plant",relation:"flow",causal:true}]},
+  steps:[
+   {motion:"travel",focusNodeIds:["water","plant"],activeEdgeIds:["e1"],visibleNodeIds:["water","plant"],camera:{mode:"follow",distance:64}},
+   {motion:"grow",focusNodeIds:["plant"],visibleNodeIds:["plant"],camera:{mode:"inside",targetNodeId:"plant",distance:52}}
+  ]
+ };
+ const compiled=compileVisualSceneResult(result);
+ const firstActions=new Map(compiled.steps[0].runtime.nodeActions.map(x=>[x.id,x.action]));
+ assert.equal(firstActions.get("water"),"flow");
+ assert.equal(firstActions.get("plant"),"grow");
+ assert.equal(compiled.steps[0].runtime.camera.mode,"follow");
+ assert.equal(compiled.steps[1].runtime.camera.mode,"inside");
+ assert.equal(compiled.steps[1].runtime.dimension,"3d");
 });
