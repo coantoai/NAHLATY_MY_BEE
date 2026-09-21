@@ -71,6 +71,8 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const travelers=[];
   const actionParticles=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
+  const outgoingActiveEdges=new Map();
+  for(const e of edges){if(activeEdgeIds.includes(e.id)&&edgeCurves.has(e.id)) outgoingActiveEdges.set(e.from,edgeCurves.get(e.id));}
 
   nodes.forEach((n,i)=>{
    const pos=new THREE.Vector3((Number(n.x||50)-50)*1.05,(50-Number(n.y||50))*.72,Number(n.depth||0)*1.05);
@@ -169,6 +171,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     points=[a,b];
    }
    edgeCurves.set(e.id,curveObj);
+   if(activeEdgeIds.includes(e.id)) outgoingActiveEdges.set(e.from,curveObj);
    const geometry=new THREE.BufferGeometry().setFromPoints(points);
    const active=activeEdgeIds.includes(e.id);
    const material=new THREE.LineBasicMaterial({
@@ -263,7 +266,11 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     if(!owner)continue;
     const phase=particle.userData.phase;
     if(particle.userData.kind==="flow"){
-     particle.position.copy(owner.position).add(new THREE.Vector3((phase*2-1)*9,Math.sin(t*3+phase*9)*1.3,2.8));
+     const semanticCurve=outgoingActiveEdges.get(owner.userData.nodeId);
+     if(semanticCurve){
+      const u=(t*.2+phase)%1;
+      particle.position.copy(semanticCurve.getPoint(u));
+     }else particle.position.copy(owner.position).add(new THREE.Vector3((phase*2-1)*9,Math.sin(t*3+phase*9)*1.3,2.8));
     }else{
      const rise=(t*.22+phase)%1;
      particle.position.copy(owner.position).add(new THREE.Vector3(Math.sin(t*3+phase*11)*2.4,2+rise*10,Math.cos(t*2+phase*8)*2));
@@ -298,8 +305,14 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     if(!reduced&&action==="spin") mesh.rotation.y+=.018;
     if(!reduced&&action==="flow"&&base) mesh.position.x=base.x+Math.sin(t*2+phase)*.8;
     if(action==="compress"){mesh.scale.y*=.58;mesh.scale.x*=1.08;}
-    if(action==="contract") mesh.scale.y*=.88;
-    if(action==="expand") mesh.scale.y*=1.12;
+    if(action==="contract"){
+     const beat=.5+.5*Math.sin(t*5.2+phase);
+     mesh.scale.x*=.9+.08*beat; mesh.scale.y*=.8+.12*beat; mesh.scale.z*=.9+.06*beat;
+    }
+    if(action==="expand"){
+     const breath=.5+.5*Math.sin(t*2.15+phase);
+     mesh.scale.x*=1.02+.1*breath; mesh.scale.y*=1.02+.14*breath; mesh.scale.z*=1.02+.1*breath;
+    }
     const mat=mesh.material;
     if(mat){
      const baseColor=mesh.userData.baseColor||new THREE.Color(0xf2c45c);
