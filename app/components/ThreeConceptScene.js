@@ -72,7 +72,7 @@ function decorateSemanticMesh(mesh,visual,color){
 }
 
 
-export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visibleNodeIds=[],backgroundNodeIds=[],activeEdgeIds=[],nodeActions=[],cameraPlan={},playing=false,onSelect}){
+export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visibleNodeIds=[],backgroundNodeIds=[],activeEdgeIds=[],nodeActions=[],cameraPlan={},renderProfile={},playing=false,onSelect}){
  const hostRef=useRef(null); const selectRef=useRef(onSelect); const playingRef=useRef(playing); const [failed,setFailed]=useState(false);
  useEffect(()=>{selectRef.current=onSelect},[onSelect]);
  useEffect(()=>{playingRef.current=playing},[playing]);
@@ -85,6 +85,9 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   camera.position.set(0,8,115);
   const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches||false;
   const lowPower=(navigator.hardwareConcurrency||8)<=4;
+  const motionScale=renderProfile?.motionLevel==="calm"?.62:renderProfile?.motionLevel==="precise"?.82:1;
+  const labelMode=renderProfile?.labelMode||"contextual";
+  const guided=Boolean(renderProfile?.guided);
   let renderer;
   try{renderer=new THREE.WebGLRenderer({antialias:!lowPower,alpha:true,powerPreference:lowPower?"low-power":"high-performance"});}catch(err){setFailed(true);return;}
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,lowPower?1.25:2));
@@ -174,7 +177,9 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     texture.colorSpace=THREE.SRGBColorSpace;
     const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,opacity:visible?(background?.32:.94):.08}));
     sprite.position.copy(pos).add(new THREE.Vector3(0,-9,3));
-    sprite.scale.set(18,4.5,1);
+    const labelScale=labelMode==="always"?[20,5.2,1]:labelMode==="compact"?[15,3.6,1]:[18,4.5,1];
+    sprite.scale.set(...labelScale);
+    if(labelMode==="compact"&&!focusIds.includes(n.id)) sprite.material.opacity*=.68;
     sprite.userData={nodeId:n.id,labelSprite:true};
     group.add(sprite);
     labels.push(sprite);
@@ -230,7 +235,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    });
    group.add(new THREE.Line(geometry,material));
    if(active){
-    const tube=new THREE.Mesh(new THREE.TubeGeometry(curveObj,42,.28,8,false),new THREE.MeshBasicMaterial({color:0xffd76b,transparent:true,opacity:.2,depthWrite:false}));
+    const tube=new THREE.Mesh(new THREE.TubeGeometry(curveObj,42,guided?.34:.28,8,false),new THREE.MeshBasicMaterial({color:0xffd76b,transparent:true,opacity:guided?.26:.2,depthWrite:false}));
     tube.userData={phase:i*.9}; group.add(tube); edgeGlowTubes.push(tube);
     if(reduced)return;
     const traveler=new THREE.Mesh(
@@ -299,7 +304,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     camera.position.lerp(insideCamera,.075);
    }else if(playingRef.current&&focused.length&&!reduced){
     if(followCurve){
-     const u=(t*.16)%1;
+     const u=(t*.16*motionScale)%1;
      const p=followCurve.getPoint(u);
      const ahead=followCurve.getPoint(Math.min(.999,u+.035));
      const tangent=ahead.clone().sub(p).normalize();
@@ -319,11 +324,11 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     if(particle.userData.kind==="flow"){
      const semanticCurve=outgoingActiveEdges.get(owner.userData.nodeId);
      if(semanticCurve){
-      const u=(t*.2+phase)%1;
+      const u=(t*.2*motionScale+phase)%1;
       particle.position.copy(semanticCurve.getPoint(u));
      }else particle.position.copy(owner.position).add(new THREE.Vector3((phase*2-1)*9,Math.sin(t*3+phase*9)*1.3,2.8));
     }else{
-     const rise=(t*.22+phase)%1;
+     const rise=(t*.22*motionScale+phase)%1;
      particle.position.copy(owner.position).add(new THREE.Vector3(Math.sin(t*3+phase*11)*2.4,2+rise*10,Math.cos(t*2+phase*8)*2));
      particle.scale.setScalar(1-rise*.65);
      particle.material.opacity=.82*(1-rise);
@@ -337,7 +342,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     halo.material.opacity=.18+(.5+.5*Math.sin(t*2.2+halo.userData.phase))*.16;
    }
    for(const traveler of travelers){
-    const u=(t*.22+traveler.userData.phase)%1;
+    const u=(t*.22*motionScale+traveler.userData.phase)%1;
     traveler.position.copy(traveler.userData.curve.getPoint(u));
     const pulse=.9+Math.sin(t*8+traveler.userData.phase*12)*.18;
     traveler.scale.setScalar(pulse);
@@ -360,7 +365,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     mesh.scale.copy(baseVisualScale).multiplyScalar(s);
     const base=mesh.userData.basePosition;
     if(base) mesh.position.copy(base);
-    if(!reduced&&action==="spin") mesh.rotation.y+=.018;
+    if(!reduced&&action==="spin") mesh.rotation.y+=.018*motionScale;
     if(!reduced&&action==="flow"&&base) mesh.position.x=base.x+Math.sin(t*2+phase)*.8;
     if(action==="compress"){mesh.scale.y*=.58;mesh.scale.x*=1.08;}
     if(action==="contract"){
@@ -391,7 +396,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      if(action==="empty") mat.opacity=.28+Math.sin(t*2.1+phase)*.06;
     }
     const semanticAuras=mesh.children.filter(x=>x.userData?.semanticAura);
-    if(!reduced) semanticAuras.forEach((aura,j)=>{aura.rotation.z+=.0025*(j+1)});
+    if(!reduced) semanticAuras.forEach((aura,j)=>{aura.rotation.z+=.0025*(j+1)*motionScale});
     const parts=mesh.children.find(x=>x.userData?.semanticParts);
     if(parts){
      const explode=cameraMode==="explode"&&focusIds.includes(mesh.userData.nodeId);
@@ -431,7 +436,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    renderer.dispose();
    renderer.domElement.remove();
   };
- },[nodes,edges,focusIds,visibleNodeIds,backgroundNodeIds,activeEdgeIds,nodeActions,cameraPlan]);
+ },[nodes,edges,focusIds,visibleNodeIds,backgroundNodeIds,activeEdgeIds,nodeActions,cameraPlan,renderProfile]);
 
  if(failed)return <div className="threeFallback" role="status">تعذّر تشغيل 3D على هذا الجهاز — يبقى الشرح ثنائي الأبعاد متاحًا.</div>;
  return <div className="threeConceptScene" ref={hostRef} aria-label="مشهد ثلاثي الأبعاد تفاعلي"/>;
