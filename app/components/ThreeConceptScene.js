@@ -198,6 +198,14 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
 
   const group=new THREE.Group();
   scene.add(group);
+  // Cinematic depth field: restrained dust motes give scale without distracting from meaning.
+  const dustCount=lowPower?90:180;
+  const dustGeo=new THREE.BufferGeometry();
+  const dustPos=new Float32Array(dustCount*3);
+  for(let d=0;d<dustCount;d++){dustPos[d*3]=(Math.random()-.5)*150;dustPos[d*3+1]=(Math.random()-.5)*95;dustPos[d*3+2]=(Math.random()-.5)*110;}
+  dustGeo.setAttribute("position",new THREE.BufferAttribute(dustPos,3));
+  const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xffd9b5,size:.18,transparent:true,opacity:.16,depthWrite:false}));
+  scene.add(dust);
   const positions=new Map();
   const meshes=[];
   const labels=[];
@@ -233,7 +241,11 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    const mesh=new THREE.Mesh(geometry,material);
    mesh.position.copy(pos);
    mesh.userData={nodeId:n.id,baseScale:1,baseVisualScale:new THREE.Vector3(1,1,1),action:actionMap.get(n.id)||"dim",phase:i*.7,visible:visible&&!background,basePosition:pos.clone(),baseColor:new THREE.Color(color)};
-   if(n.visual==="heart") mesh.scale.set(.9,1.12,.94);
+   if(n.visual==="heart"){
+    mesh.scale.set(.9,1.12,.94);
+    mesh.rotation.set(-.08,0,-.12);
+    mesh.userData.cinematicHeart=true;
+   }
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
    mesh.userData.baseVisualScale.copy(mesh.scale);
    decorateSemanticMesh(mesh,n.visual,color);
@@ -415,6 +427,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    frame=requestAnimationFrame(animate);
    if(document.hidden||!inViewport)return;
    const t=clock.getElapsedTime();
+   if(!reduced){dust.rotation.y=t*.006;dust.rotation.x=Math.sin(t*.08)*.025;}
    if(playingRef.current&&cameraMode==="inside"&&explicitTarget&&!reduced){
     const insideCamera=explicitTarget.clone().add(new THREE.Vector3(0,1,18));
     controls.target.lerp(explicitTarget,.1);
@@ -495,8 +508,18 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     if(!reduced&&action==="flow"&&base) mesh.position.x=base.x+Math.sin(t*2+phase)*.8;
     if(action==="compress"){mesh.scale.y*=.58;mesh.scale.x*=1.08;}
     if(action==="contract"){
-     const beat=.5+.5*Math.sin(t*5.2+phase);
-     mesh.scale.x*=.9+.08*beat; mesh.scale.y*=.8+.12*beat; mesh.scale.z*=.9+.06*beat;
+     // Two-part heartbeat profile: quick systolic squeeze followed by a longer relaxed phase.
+     const cycle=(t*.82+phase*.08)%1;
+     const systole=Math.exp(-Math.pow((cycle-.18)/.085,2));
+     const rebound=.32*Math.exp(-Math.pow((cycle-.34)/.11,2));
+     const squeeze=Math.min(1,systole+rebound);
+     mesh.scale.x*=1-.075*squeeze; mesh.scale.y*=1-.115*squeeze; mesh.scale.z*=1-.065*squeeze;
+     if(mesh.userData.cinematicHeart){
+      mesh.rotation.z=-.12-.025*squeeze;
+      mesh.rotation.y=.025*Math.sin(t*.55);
+      const coronary=mesh.children.find(x=>x.geometry?.type==="TubeGeometry");
+      if(coronary?.material) coronary.material.emissiveIntensity=.12+.28*squeeze;
+     }
     }
     if(action==="expand"){
      const breath=.5+.5*Math.sin(t*2.15+phase);
