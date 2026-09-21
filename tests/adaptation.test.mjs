@@ -7,6 +7,7 @@ import { analyzeMentalModel, deriveRememberedModelRepair } from "../app/lib/ment
 import { mergeReframeAvoidance, updateRepresentationHistory } from "../app/lib/representationMemory.js";
 import { deriveTransferEdgeIds } from "../app/lib/transferEvidence.js";
 import { compileVisualSceneResult, compileVisualStep } from "../app/lib/visualSceneCompiler.js";
+import { generateJson, isTransientGenAIError } from "../app/lib/genai.js";
 
 test("audience profiles stay meaningfully distinct",()=>{
  const child=getExperienceProfile("طفل");
@@ -412,4 +413,29 @@ test("visual scene compiler uses semantic actions for focused objects",()=>{
  const plant=compileVisualStep(result,{focusNodeIds:["plant"],visibleNodeIds:["plant"],motion:"reveal"},0,[]);
  assert.equal(gear.nodeActions[0].action,"spin");
  assert.equal(plant.nodeActions[0].action,"grow");
+});
+
+
+test("Gemini transient capacity errors are retried before failing the explanation", async()=>{
+ let calls=0;
+ const ai={models:{generateContent:async()=>{
+  calls++;
+  if(calls===1){const e=new Error("503 high demand");e.status=503;throw e;}
+  return {text:'{"ok":true}'};
+ }}};
+ const data=await generateJson(ai,"test",{maxAttempts:2,retryBaseMs:0});
+ assert.equal(data.ok,true);
+ assert.equal(calls,2);
+});
+
+test("Gemini permanent errors are not retried", async()=>{
+ let calls=0;
+ const ai={models:{generateContent:async()=>{
+  calls++;
+  const e=new Error("400 bad request");e.status=400;throw e;
+ }}};
+ await assert.rejects(()=>generateJson(ai,"test",{maxAttempts:3,retryBaseMs:0}));
+ assert.equal(calls,1);
+ assert.equal(isTransientGenAIError({status:503}),true);
+ assert.equal(isTransientGenAIError({status:400}),false);
 });
