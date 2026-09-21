@@ -155,10 +155,7 @@
   position:absolute;z-index:5;inset:0;pointer-events:none;
 }
 .causalTrail i{
-  --n:calc(var(--i) + 1);
   position:absolute;
-  left:calc(48% + var(--i)*2.2%);
-  top:calc(47% + var(--i)*.82%);
   width:5px;height:5px;border-radius:50%;
   background:#ffe08b;
   box-shadow:0 0 12px #ffc64f;
@@ -166,23 +163,21 @@
 }
 .scene[data-playing="true"] .causalTrail i{
   animation:trailMove 2.6s ease-in-out infinite;
-  animation-delay:calc(var(--i)*.16s);
+  animation-delay:var(--delay);
 }
 .pollenField{
   position:absolute;z-index:5;inset:0;pointer-events:none;
 }
 .pollenField i{
   position:absolute;
-  left:calc(43% + (var(--i) % 7)*1.1%);
-  top:calc(51% + (var(--i) % 5)*.9%);
   width:3px;height:3px;border-radius:50%;
   background:#ffd75c;
   box-shadow:0 0 9px rgba(255,193,55,.9);
   opacity:.15;
 }
 .scene[data-playing="true"] .pollenField i{
-  animation:pollenFloat calc(2.3s + (var(--i) % 6)*.28s) ease-in-out infinite;
-  animation-delay:calc(var(--i)*-.13s);
+  animation:pollenFloat var(--dur) ease-in-out infinite;
+  animation-delay:var(--delay);
 }
 .motionControl{
   position:absolute;z-index:9;
@@ -239,7 +234,7 @@
 }
 @keyframes pollenFloat{
   0%,100%{transform:translate(0,0) scale(.75);opacity:.10}
-  50%{transform:translate(calc((var(--i)%3 - 1)*8px),-16px) scale(1.22);opacity:.72}
+  50%{transform:translate(var(--dx),-16px) scale(1.22);opacity:.72}
 }
 @media(max-width:900px){
   .referenceLayer{inset:0;transform:scale(1.03) translate(calc(var(--px)*-3px),calc(var(--py)*-2px))}
