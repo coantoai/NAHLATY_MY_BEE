@@ -460,3 +460,35 @@ test("plant water path keeps water flowing while the plant grows",()=>{
  assert.equal(compiled.steps[1].runtime.camera.mode,"inside");
  assert.equal(compiled.steps[1].runtime.dimension,"3d");
 });
+
+
+test("scene compiler prioritizes causal edges when focus contains multiple relations",()=>{
+ const result={sceneGraph:{world:{dimension:"2d"},nodes:[
+  {id:"a",visual:"document",knowledge:"fact"},
+  {id:"b",visual:"gear",knowledge:"fact"},
+  {id:"c",visual:"signal",knowledge:"inference"}
+ ],edges:[
+  {id:"decorative",from:"a",to:"b",relation:"connect",knowledge:"inference"},
+  {id:"causal",from:"a",to:"c",relation:"cause",causal:true,knowledge:"fact",label:"يؤدي إلى"}
+ ]}};
+ const runtime=compileVisualStep(result,{focusNodeIds:["a","b","c"],visibleNodeIds:["a","b","c"],motion:"connect"},0,[]);
+ assert.deepEqual(runtime.activeEdgeIds,["causal"]);
+ assert.equal(runtime.causalCue?.from,"a");
+ assert.equal(runtime.causalCue?.to,"c");
+ assert.equal(runtime.causalCue?.causal,true);
+ assert.equal(runtime.qualityVersion,"scene-quality/v2");
+});
+
+test("scene compiler exposes continuity and knowledge cues for visual runtime",()=>{
+ const result={sceneGraph:{world:{dimension:"2d"},nodes:[
+  {id:"a",visual:"document",knowledge:"fact"},
+  {id:"b",visual:"gear",knowledge:"unknown"}
+ ],edges:[{id:"e1",from:"a",to:"b",relation:"cause",causal:true,knowledge:"inference"}]}};
+ const runtime=compileVisualStep(result,{focusNodeIds:["b"],visibleNodeIds:["b"],activeEdgeIds:["e1"],motion:"connect"},1,["a"]);
+ assert.deepEqual(runtime.transition.enteringNodeIds,["b"]);
+ assert.equal(runtime.transition.causeNodeId,"a");
+ assert.equal(runtime.transition.effectNodeId,"b");
+ assert.equal(runtime.knowledgeSummary.fact,0);
+ assert.equal(runtime.knowledgeSummary.unknown,1);
+ assert.equal(runtime.knowledgeSummary.inference,1);
+});
