@@ -6,7 +6,7 @@ import InputComposer from "./components/InputComposer";
 import useLastSession from "./hooks/useLastSession";
 import useUnderstandingMemory from "./hooks/useUnderstandingMemory";
 import { chooseLearningAction } from "./lib/learningDirector";
-import { clientExperience } from "./lib/experienceProfile";
+import { clientExperience, getExperienceProfile } from "./lib/experienceProfile";
 import { deriveLearnerState } from "./lib/learnerAdaptation";
 import { analyzeMentalModel, deriveRememberedModelRepair } from "./lib/mentalModel";
 import { mergeReframeAvoidance } from "./lib/representationMemory";
@@ -176,12 +176,15 @@ export default function Home(){
  const go=id=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"});
  const useExample=x=>{setC(x.text);setA(a||"عام");go("explain-input")};
  const viewerExperience=clientExperience(r?.presentation||{});
+ const shellExperience=r?.presentation?viewerExperience:getExperienceProfile(a||"عام");
+ const contentTheme=r?.sceneGraph?.world?.theme||"abstract";
+ const serviceState=r?"understanding":"discovery";
  const knowledgeItems=[...(r?.sceneGraph?.nodes||[]),...(r?.sceneGraph?.edges||[])];
  const knowledgeStats=knowledgeItems.reduce((acc,x)=>{const k=["fact","inference","unknown"].includes(x?.knowledge)?x.knowledge:"inference";acc[k]=(acc[k]||0)+1;return acc},{fact:0,inference:0,unknown:0});
  const {sessionRestored,setSessionRestored}=useLastSession({content:c,audience:a,result:r,active,setContent:setC,setAudience:setA,setResult:setR,setActive,setSpeed});
  useEffect(()=>{if(!playing||!r?.steps?.length)return;const id=setInterval(()=>setActive(v=>{if(v>=r.steps.length-1){setPlaying(false);return v}return v+1}),speed*1000);return()=>clearInterval(id)},[playing,r,speed]);
  async function make(audienceOverride){if(!c.trim())return;const target=typeof audienceOverride==="string"?audienceOverride:(a||"عام");const retargeting=typeof audienceOverride==="string"&&!!r;if(typeof audienceOverride==="string")setA(target);const nodeMap=new Map((r?.sceneGraph?.nodes||[]).map(n=>[n.id,n]));const preserve=retargeting?{truthAnchors:r?.truthAnchors||[],causalRelations:(r?.sceneGraph?.edges||[]).filter(e=>e.causal).slice(0,8).map(e=>({from:nodeMap.get(e.from)?.label||e.from,to:nodeMap.get(e.to)?.label||e.to,relation:e.relation||"cause",label:e.label||""}))}:null;setLoad(true);setMakeError("");setSessionRestored(false);setPlaying(false);try{const x=await fetch("/api/explain",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content:c,audience:target,preserve})});const data=await x.json();if(!x.ok||data?.error)throw new Error(data?.error||"تعذر بناء الشرح");setActive(0);setR(data);if(data?.presentation?.paceSec)setSpeed(data.presentation.paceSec)}catch(err){setMakeError(String(err?.message||err))}finally{setLoad(false)}}
- return <div className="beeAppShell" dir="rtl">
+ return <div className={`beeAppShell platformProfile-${shellExperience.id||"general"} platformTheme-${contentTheme} service-${serviceState}`} dir="rtl">
  <aside className="beeRail">
   <button className="railBrand" onClick={()=>go("home")}><span className="beeMark" aria-hidden="true"><i/><i/></span><span><b>{BRAND.ar}</b><small>{BRAND.en}</small></span></button>
   <nav aria-label="التنقل الرئيسي">
