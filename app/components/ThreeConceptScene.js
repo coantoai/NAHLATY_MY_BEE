@@ -19,6 +19,33 @@ function geometryFor(visual){
  return new THREE.BoxGeometry(9,7,7);
 }
 
+function makeDepthLabel(text,color=0xffe7a1){
+ const canvas=document.createElement("canvas");
+ canvas.width=420; canvas.height=96;
+ const ctx=canvas.getContext("2d");
+ if(!ctx) return null;
+ ctx.clearRect(0,0,420,96);
+ ctx.fillStyle="rgba(7,10,14,.82)";
+ ctx.roundRect?.(8,10,404,76,22);
+ ctx.fill();
+ ctx.strokeStyle="rgba(255,231,161,.35)";
+ ctx.lineWidth=2;
+ ctx.stroke();
+ ctx.fillStyle="#fff5d8";
+ ctx.font="600 28px system-ui, sans-serif";
+ ctx.textAlign="center";
+ ctx.textBaseline="middle";
+ ctx.fillText(String(text||"").slice(0,24),210,49,360);
+ const texture=new THREE.CanvasTexture(canvas);
+ texture.colorSpace=THREE.SRGBColorSpace;
+ const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,opacity:0});
+ const sprite=new THREE.Sprite(material);
+ sprite.scale.set(13,3.1,1);
+ sprite.position.set(0,3.15,1.2);
+ sprite.userData.depthLabel=true;
+ return sprite;
+}
+
 function nodeColor(visual,index){
  const v=String(visual||"").toLowerCase();
  if(["data","document","database","server","signal"].includes(v)) return 0x78a9ff;
@@ -118,6 +145,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const edgeGlowTubes=[];
   const edgeArrows=[];
   const focusHalos=[];
+  const depthPartLabels=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
   const outgoingActiveEdges=new Map();
   for(const e of edges){if(activeEdgeIds.includes(e.id)&&edgeCurves.has(e.id)) outgoingActiveEdges.set(e.from,edgeCurves.get(e.id));}
@@ -196,6 +224,8 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      partMesh.position.set((partIndex%2?1:-1)*(2.2+partIndex*.45),(partIndex-1)*1.25,Number(part.z||0)*.22);
      partMesh.scale.set(.72,.48,.72);
      partMesh.userData={basePosition:partMesh.position.clone(),baseScale:partMesh.scale.clone(),partId:part.id,label:part.label};
+     const partLabel=makeDepthLabel(part.label||part.id,color);
+     if(partLabel){partMesh.add(partLabel);depthPartLabels.push({sprite:partLabel,owner:mesh,part:partMesh})}
      partsGroup.add(partMesh);
     });
     mesh.add(partsGroup);
@@ -393,6 +423,13 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      mesh.scale.x*=1.02+.1*breath; mesh.scale.y*=1.02+.14*breath; mesh.scale.z*=1.02+.1*breath;
     }
     const mat=mesh.material;
+    const depthTarget=cameraPlan?.targetNodeId||focusIds[0]||"";
+    const depthFocus=mesh.userData.nodeId===depthTarget||focusIds.includes(mesh.userData.nodeId);
+    const depthActive=depthFocus&&["inside","explode"].includes(cameraMode);
+    if(mat&&depthActive){
+     const targetOpacity=cameraMode==="explode"?.1:.16;
+     mat.opacity+=(targetOpacity-mat.opacity)*.12;
+    }
     if(mat){
      const baseColor=mesh.userData.baseColor||new THREE.Color(0xf2c45c);
      mat.color.copy(baseColor);
@@ -427,10 +464,24 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
       const basePartScale=part.userData?.baseScale||new THREE.Vector3(.72,.48,.72);
       const dir=j-(parts.children.length-1)/2;
       const target=basePart.clone();
+      const inside=cameraMode==="inside"&&depthFocus;
       if(explode) target.z+=dir*5.5;
+      if(inside){target.x+=dir*2.1;target.z+=dir*2.4;}
       if(split){target.x+=dir*4.2;target.y+=Math.abs(dir)*1.6;}
       part.position.lerp(target,.08);
-      part.scale.copy(basePartScale).multiplyScalar(explode||split?1.12:1);
+      const emphasized=explode||inside||split;
+      part.scale.copy(basePartScale).multiplyScalar(emphasized?1.16:1);
+      if(part.material){
+       const desired=depthFocus&&["inside","explode"].includes(cameraMode)?.76:.28;
+       part.material.opacity+=(desired-part.material.opacity)*.12;
+       part.material.emissiveIntensity=depthFocus&&["inside","explode"].includes(cameraMode)?.16:.035;
+      }
+      const depthLabel=part.children.find(x=>x.userData?.depthLabel);
+      if(depthLabel){
+       const desiredLabel=depthFocus&&["inside","explode"].includes(cameraMode)?(j===0?.92:.82):0;
+       depthLabel.material.opacity+=(desiredLabel-depthLabel.material.opacity)*.18;
+       depthLabel.position.y=3.15+(explode?Math.abs(dir)*.22:0);
+      }
       if(action==="transform"&&!reduced) part.rotation.y+=.012*(j+1);
      });
     }
