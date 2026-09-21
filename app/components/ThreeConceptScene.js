@@ -184,7 +184,6 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const edgeGlowTubes=[];
   const edgeArrows=[];
   const focusHalos=[];
-  const depthPartLabels=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
   const outgoingActiveEdges=new Map();
   for(const e of edges){if(activeEdgeIds.includes(e.id)&&edgeCurves.has(e.id)) outgoingActiveEdges.set(e.from,edgeCurves.get(e.id));}
@@ -264,7 +263,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      partMesh.scale.set(.72,.48,.72);
      partMesh.userData={basePosition:partMesh.position.clone(),baseScale:partMesh.scale.clone(),partId:part.id,label:part.label};
      const partLabel=makeDepthLabel(part.label||part.id,color);
-     if(partLabel){partMesh.add(partLabel);depthPartLabels.push({sprite:partLabel,owner:mesh,part:partMesh})}
+     if(partLabel) partMesh.add(partLabel)
      partsGroup.add(partMesh);
     });
     mesh.add(partsGroup);
