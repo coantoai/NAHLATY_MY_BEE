@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 function geometryFor(visual){
- if(visual==="heart") return new THREE.SphereGeometry(5,32,24);
+ if(visual==="heart") return new THREE.SphereGeometry(5,48,36);
  if(visual==="brain") return new THREE.IcosahedronGeometry(5,2);
  if(["cell","planet","blood"].includes(visual)) return new THREE.SphereGeometry(5,28,20);
  if(visual==="lung") return new THREE.SphereGeometry(4.7,24,18);
@@ -70,16 +70,23 @@ function isCausalEdge3D(edge){
 
 function decorateSemanticMesh(mesh,visual,color){
  const v=String(visual||"").toLowerCase();
- const soft=(opacity=.72,emissive=.16)=>new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.08,emissive:color,emissiveIntensity:emissive,transparent:true,opacity});
+ const soft=(opacity=.72,emissive=.16)=>new THREE.MeshPhysicalMaterial({color,roughness:.46,metalness:.02,emissive:color,emissiveIntensity:emissive,transparent:true,opacity,clearcoat:.32,clearcoatRoughness:.48,sheen:.34,sheenColor:new THREE.Color(color)});
  const glow=(opacity=.34)=>new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false});
  if(v==="heart"){
-  mesh.material.opacity=.24;
-  const lobeGeometry=new THREE.SphereGeometry(2.75,22,16);
+  mesh.material.opacity=.16;
+  mesh.material.roughness=.5;
+  mesh.material.metalness=.01;
+  const lobeGeometry=new THREE.SphereGeometry(2.75,36,26);
   const left=new THREE.Mesh(lobeGeometry,soft(.84,.22)); left.position.set(-1.65,1.15,.2); left.scale.set(1,.9,.85);
   const right=new THREE.Mesh(lobeGeometry.clone(),soft(.84,.22)); right.position.set(1.65,1.15,.2); right.scale.set(1,.9,.85);
   const lower=new THREE.Mesh(new THREE.ConeGeometry(3.5,6.2,28),soft(.8,.18)); lower.position.set(0,-2.25,.15); lower.rotation.z=Math.PI;
-  const aura=new THREE.Mesh(new THREE.TorusGeometry(6.6,.13,8,52),glow(.2)); aura.rotation.x=Math.PI/2; aura.userData.semanticAura=true;
-  mesh.add(left,right,lower,aura);
+  const aura=new THREE.Mesh(new THREE.TorusGeometry(6.6,.1,10,72),glow(.12)); aura.rotation.x=Math.PI/2; aura.userData.semanticAura=true;
+  const apexGlow=new THREE.PointLight(0xff8b72,5.5,28,2); apexGlow.position.set(0,-2.8,4.2);
+  const coronaryMat=new THREE.MeshPhysicalMaterial({color:0xd95449,roughness:.32,clearcoat:.55,emissive:0x5b0907,emissiveIntensity:.18});
+  const coronaryCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-.2,2.6,2.55),new THREE.Vector3(1.9,1.25,2.85),new THREE.Vector3(2.35,-1.1,2.45),new THREE.Vector3(.8,-3.5,1.65)]);
+  const coronary=new THREE.Mesh(new THREE.TubeGeometry(coronaryCurve,48,.12,10,false),coronaryMat);
+  coronary.userData.semanticAura=true;
+  mesh.add(left,right,lower,aura,coronary,apexGlow);
  }else if(v==="lung"){
   mesh.material.opacity=.14;
   const lobeGeometry=new THREE.SphereGeometry(3.4,24,18);
@@ -169,14 +176,19 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   try{renderer=new THREE.WebGLRenderer({antialias:!lowPower,alpha:true,powerPreference:lowPower?"low-power":"high-performance"});}catch(err){setFailed(true);return;}
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,lowPower?1.25:2));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.08;
   host.appendChild(renderer.domElement);
 
   const ambient=new THREE.AmbientLight(0xfff6df,1.18);
   const key=new THREE.DirectionalLight(0xffe6ad,2.3);
   key.position.set(30,35,60);
-  const fill=new THREE.PointLight(0x78a9ff,28,180);
+  const fill=new THREE.PointLight(0x78a9ff,22,180);
   fill.position.set(-30,-12,45);
-  scene.add(ambient,key,fill);
+  const rim=new THREE.DirectionalLight(0xff765f,2.4); rim.position.set(-24,18,-30);
+  const warm=new THREE.PointLight(0xffb07c,16,120,2); warm.position.set(18,-18,34);
+  scene.fog=new THREE.FogExp2(0x090b10,.0065);
+  scene.add(ambient,key,fill,rim,warm);
 
   const controls=new OrbitControls(camera,renderer.domElement);
   controls.enableDamping=true;
@@ -221,7 +233,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    const mesh=new THREE.Mesh(geometry,material);
    mesh.position.copy(pos);
    mesh.userData={nodeId:n.id,baseScale:1,baseVisualScale:new THREE.Vector3(1,1,1),action:actionMap.get(n.id)||"dim",phase:i*.7,visible:visible&&!background,basePosition:pos.clone(),baseColor:new THREE.Color(color)};
-   if(n.visual==="heart") mesh.scale.set(.88,1.08,.92);
+   if(n.visual==="heart") mesh.scale.set(.9,1.12,.94);
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
    mesh.userData.baseVisualScale.copy(mesh.scale);
    decorateSemanticMesh(mesh,n.visual,color);
