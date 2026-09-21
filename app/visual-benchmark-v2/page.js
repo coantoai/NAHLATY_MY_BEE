@@ -65,11 +65,11 @@ export default function VisualBenchmarkV2(){
      <div className={styles.focusHalo} style={{left:item.x+"%",top:item.y+"%"}}/>
 
      <div className={styles.causalTrail} aria-hidden="true">
-       {Array.from({length:7},(_,i)=><i key={i} style={{"--i":i}}/> )}
+       {Array.from({length:7},(_,i)=><i key={i} style={{left:`${48+i*2.2}%`,top:`${47+i*.82}%`,"--delay":`${i*.16}s`}}/> )}
      </div>
 
      <div className={styles.pollenField} aria-hidden="true">
-       {Array.from({length:22},(_,i)=><i key={i} style={{"--i":i}}/> )}
+       {Array.from({length:22},(_,i)=><i key={i} style={{left:`${43+(i%7)*1.1}%`,top:`${51+(i%5)*.9}%`,"--delay":`${-i*.13}s`,"--dur":`${2.3+(i%6)*.28}s`,"--dx":`${(i%3-1)*8}px`}}/> )}
      </div>
 
      <div className={styles.motionControl}>
