@@ -30,6 +30,48 @@ function nodeColor(visual,index){
  return honey[index%honey.length];
 }
 
+function decorateSemanticMesh(mesh,visual,color){
+ const v=String(visual||"").toLowerCase();
+ const soft=(opacity=.72,emissive=.16)=>new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.08,emissive:color,emissiveIntensity:emissive,transparent:true,opacity});
+ const glow=(opacity=.34)=>new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false});
+ if(v==="heart"){
+  mesh.material.opacity=.24;
+  const lobeGeometry=new THREE.SphereGeometry(2.75,22,16);
+  const left=new THREE.Mesh(lobeGeometry,soft(.84,.22)); left.position.set(-1.65,1.15,.2); left.scale.set(1,.9,.85);
+  const right=new THREE.Mesh(lobeGeometry.clone(),soft(.84,.22)); right.position.set(1.65,1.15,.2); right.scale.set(1,.9,.85);
+  const lower=new THREE.Mesh(new THREE.ConeGeometry(3.5,6.2,28),soft(.8,.18)); lower.position.set(0,-2.25,.15); lower.rotation.z=Math.PI;
+  const aura=new THREE.Mesh(new THREE.TorusGeometry(6.6,.13,8,52),glow(.2)); aura.rotation.x=Math.PI/2; aura.userData.semanticAura=true;
+  mesh.add(left,right,lower,aura);
+ }else if(v==="lung"){
+  mesh.material.opacity=.14;
+  const lobeGeometry=new THREE.SphereGeometry(3.4,24,18);
+  const left=new THREE.Mesh(lobeGeometry,soft(.7,.12)); left.position.set(-2.25,-.2,0); left.scale.set(.72,1.16,.62);
+  const right=new THREE.Mesh(lobeGeometry.clone(),soft(.7,.12)); right.position.set(2.25,-.2,0); right.scale.set(.72,1.16,.62);
+  const trachea=new THREE.Mesh(new THREE.CylinderGeometry(.55,.72,6.2,16),soft(.82,.08)); trachea.position.set(0,3.5,.2);
+  const bronchusL=new THREE.Mesh(new THREE.CylinderGeometry(.28,.42,3.4,12),soft(.74,.08)); bronchusL.position.set(-1.15,1.15,.2); bronchusL.rotation.z=-.72;
+  const bronchusR=bronchusL.clone(); bronchusR.material=soft(.74,.08); bronchusR.position.x=1.15; bronchusR.rotation.z=.72;
+  mesh.add(left,right,trachea,bronchusL,bronchusR);
+ }else if(v==="brain"){
+  for(let j=0;j<3;j++){
+   const ring=new THREE.Mesh(new THREE.TorusGeometry(3.7-j*.45,.16,8,42),glow(.2-j*.035));
+   ring.rotation.set(Math.PI/2+j*.28,j*.55,j*.4); ring.userData.semanticAura=true; mesh.add(ring);
+  }
+ }else if(v==="plant"){
+  mesh.material.opacity=.18;
+  const stem=new THREE.Mesh(new THREE.CylinderGeometry(.38,.52,7.2,14),soft(.82,.1)); stem.position.y=.2;
+  const leafGeometry=new THREE.SphereGeometry(1.8,18,12);
+  const leafL=new THREE.Mesh(leafGeometry,soft(.76,.12)); leafL.position.set(-1.7,1.2,.1); leafL.scale.set(1.4,.42,.7); leafL.rotation.z=.55;
+  const leafR=new THREE.Mesh(leafGeometry.clone(),soft(.76,.12)); leafR.position.set(1.7,2.3,.1); leafR.scale.set(1.4,.42,.7); leafR.rotation.z=-.55;
+  mesh.add(stem,leafL,leafR);
+ }else if(v==="database"||v==="stack"){
+  for(let j=-1;j<=1;j++){
+   const ring=new THREE.Mesh(new THREE.TorusGeometry(4.6,.2,8,40),glow(.24));
+   ring.rotation.x=Math.PI/2; ring.position.y=j*2.45; ring.userData.semanticAura=true; mesh.add(ring);
+  }
+ }
+}
+
+
 export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visibleNodeIds=[],backgroundNodeIds=[],activeEdgeIds=[],nodeActions=[],cameraPlan={},playing=false,onSelect}){
  const hostRef=useRef(null); const selectRef=useRef(onSelect); const playingRef=useRef(playing); const [failed,setFailed]=useState(false);
  useEffect(()=>{selectRef.current=onSelect},[onSelect]);
@@ -70,6 +112,8 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const edgeCurves=new Map();
   const travelers=[];
   const actionParticles=[];
+  const edgeGlowTubes=[];
+  const focusHalos=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
   const outgoingActiveEdges=new Map();
   for(const e of edges){if(activeEdgeIds.includes(e.id)&&edgeCurves.has(e.id)) outgoingActiveEdges.set(e.from,edgeCurves.get(e.id));}
@@ -96,6 +140,11 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    if(n.visual==="heart") mesh.scale.set(.88,1.08,.92);
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
    mesh.userData.baseVisualScale.copy(mesh.scale);
+   decorateSemanticMesh(mesh,n.visual,color);
+   if(focusIds.includes(n.id)){
+    const focusHalo=new THREE.Mesh(new THREE.TorusGeometry(7.8,.14,8,56),new THREE.MeshBasicMaterial({color:0xffe7a1,transparent:true,opacity:.28,depthWrite:false}));
+    focusHalo.rotation.x=Math.PI/2; focusHalo.userData={focusHalo:true,phase:i*.6}; mesh.add(focusHalo); focusHalos.push(focusHalo);
+   }
    group.add(mesh);
    meshes.push(mesh);
    if(["flow","ignite","heat"].includes(mesh.userData.action)&&!reduced){
@@ -181,6 +230,8 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    });
    group.add(new THREE.Line(geometry,material));
    if(active){
+    const tube=new THREE.Mesh(new THREE.TubeGeometry(curveObj,42,.28,8,false),new THREE.MeshBasicMaterial({color:0xffd76b,transparent:true,opacity:.2,depthWrite:false}));
+    tube.userData={phase:i*.9}; group.add(tube); edgeGlowTubes.push(tube);
     if(reduced)return;
     const traveler=new THREE.Mesh(
      new THREE.SphereGeometry(1.15,14,10),
@@ -278,6 +329,13 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      particle.material.opacity=.82*(1-rise);
     }
    }
+   for(const tube of edgeGlowTubes){
+    tube.material.opacity=.14+(.5+.5*Math.sin(t*3.2+tube.userData.phase))*.16;
+   }
+   for(const halo of focusHalos){
+    if(!reduced){halo.rotation.z+=.004;halo.rotation.y+=.002;}
+    halo.material.opacity=.18+(.5+.5*Math.sin(t*2.2+halo.userData.phase))*.16;
+   }
    for(const traveler of travelers){
     const u=(t*.22+traveler.userData.phase)%1;
     traveler.position.copy(traveler.userData.curve.getPoint(u));
@@ -332,6 +390,8 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      if(action==="fill") mat.opacity=Math.min(1,.82+Math.sin(t*2.5+phase)*.12);
      if(action==="empty") mat.opacity=.28+Math.sin(t*2.1+phase)*.06;
     }
+    const semanticAuras=mesh.children.filter(x=>x.userData?.semanticAura);
+    if(!reduced) semanticAuras.forEach((aura,j)=>{aura.rotation.z+=.0025*(j+1)});
     const parts=mesh.children.find(x=>x.userData?.semanticParts);
     if(parts){
      const explode=cameraMode==="explode"&&focusIds.includes(mesh.userData.nodeId);
