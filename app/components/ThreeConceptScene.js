@@ -116,6 +116,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const travelers=[];
   const actionParticles=[];
   const edgeGlowTubes=[];
+  const edgeArrows=[];
   const focusHalos=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
   const outgoingActiveEdges=new Map();
@@ -237,6 +238,12 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    if(active){
     const tube=new THREE.Mesh(new THREE.TubeGeometry(curveObj,42,guided?.34:.28,8,false),new THREE.MeshBasicMaterial({color:0xffd76b,transparent:true,opacity:guided?.26:.2,depthWrite:false}));
     tube.userData={phase:i*.9}; group.add(tube); edgeGlowTubes.push(tube);
+    const arrow=new THREE.Mesh(new THREE.ConeGeometry(.95,2.8,12),new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:.88,depthWrite:false}));
+    const au=.82,ap=curveObj.getPoint(au),ahead=curveObj.getPoint(Math.min(.995,au+.025)),tangent=ahead.clone().sub(ap).normalize();
+    arrow.position.copy(ap);
+    arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),tangent);
+    arrow.userData={curve:curveObj,phase:i*.13};
+    group.add(arrow); edgeArrows.push(arrow);
     if(reduced)return;
     const traveler=new THREE.Mesh(
      new THREE.SphereGeometry(1.15,14,10),
@@ -337,6 +344,15 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    for(const tube of edgeGlowTubes){
     tube.material.opacity=.14+(.5+.5*Math.sin(t*3.2+tube.userData.phase))*.16;
    }
+   for(const arrow of edgeArrows){
+    const u=.72+((t*.035*motionScale+arrow.userData.phase)%1)*.2;
+    const p=arrow.userData.curve.getPoint(Math.min(.94,u));
+    const ahead=arrow.userData.curve.getPoint(Math.min(.98,u+.025));
+    const tangent=ahead.clone().sub(p).normalize();
+    arrow.position.copy(p);
+    arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),tangent);
+    arrow.material.opacity=.62+(.5+.5*Math.sin(t*4+arrow.userData.phase*10))*.3;
+   }
    for(const halo of focusHalos){
     if(!reduced){halo.rotation.z+=.004;halo.rotation.y+=.002;}
     halo.material.opacity=.18+(.5+.5*Math.sin(t*2.2+halo.userData.phase))*.16;
@@ -394,6 +410,11 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      }
      if(action==="fill") mat.opacity=Math.min(1,.82+Math.sin(t*2.5+phase)*.12);
      if(action==="empty") mat.opacity=.28+Math.sin(t*2.1+phase)*.06;
+     const isFocused=focusIds.includes(mesh.userData.nodeId);
+     if(playingRef.current&&focusIds.length&&!isFocused&&action==="dim") mat.opacity=Math.min(mat.opacity,.2);
+     if(isFocused){
+      mat.emissiveIntensity=Math.max(mat.emissiveIntensity,.24+(.5+.5*Math.sin(t*2.4+phase))*.18);
+     }
     }
     const semanticAuras=mesh.children.filter(x=>x.userData?.semanticAura);
     if(!reduced) semanticAuras.forEach((aura,j)=>{aura.rotation.z+=.0025*(j+1)*motionScale});
