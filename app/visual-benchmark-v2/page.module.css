@@ -21,7 +21,7 @@
   position:absolute;
   inset:-2%;
   z-index:-5;
-  background-image:url("/visual-benchmark-reference.svg");
+  background-image:url("/visual-benchmark-reference.jpg");
   background-size:cover;
   background-position:center;
   filter:saturate(1.07) contrast(1.03) brightness(.96);
