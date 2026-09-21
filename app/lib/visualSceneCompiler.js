@@ -2,6 +2,7 @@ const ACTIONS=new Set(["activate","fill","empty","heat","cool","grow","shrink","
 const CAMERA_MODES=new Set(["overview","focus","follow","inside","explode"]);
 const EDGE_MOTIONS=new Set(["travel","connect","wave","accumulate"]);
 const DEPTH_MODES=new Set(["inside","explode"]);
+const CAUSAL_RELATIONS=new Set(["cause","causes","flow","activate","trigger","transform","increase","decrease","inhibit","block","lead","leads-to"]);
 
 const VISUAL_ACTION={
  heart:"contract",
@@ -47,6 +48,22 @@ function hasDepthMeaning(node){
  return Boolean(node?.spatial||node?.inside?.length||node?.depthParts?.length);
 }
 
+function normalizeKnowledge(value){
+ return ["fact","inference","unknown"].includes(value)?value:"inference";
+}
+
+function isCausalEdge(edge){
+ return Boolean(edge?.causal||CAUSAL_RELATIONS.has(String(edge?.relation||"").toLowerCase()));
+}
+
+function edgePriority(edge){
+ return (isCausalEdge(edge)?100:0)+(normalizeKnowledge(edge?.knowledge)==="fact"?20:normalizeKnowledge(edge?.knowledge)==="inference"?8:0)+(edge?.label?2:0);
+}
+
+function chooseStrongestEdge(edges){
+ return [...edges].sort((a,b)=>edgePriority(b)-edgePriority(a))[0]||null;
+}
+
 function deriveEdgeIds(edges,edgeIds,focusIds,motion){
  const edgeSet=new Set(edges.map(e=>e.id));
  const explicit=validIds(edgeIds,edgeSet);
@@ -54,11 +71,13 @@ function deriveEdgeIds(edges,edgeIds,focusIds,motion){
 
  const focusSet=new Set(focusIds);
  const between=edges.filter(e=>focusSet.has(e.from)&&focusSet.has(e.to));
- if(between.length) return [between[0].id];
+ const strongestBetween=chooseStrongestEdge(between);
+ if(strongestBetween) return [strongestBetween.id];
 
  if(EDGE_MOTIONS.has(motion)&&focusIds.length){
-  const touching=edges.find(e=>focusSet.has(e.from)||focusSet.has(e.to));
-  if(touching) return [touching.id];
+  const touching=edges.filter(e=>focusSet.has(e.from)||focusSet.has(e.to));
+  const strongestTouching=chooseStrongestEdge(touching);
+  if(strongestTouching) return [strongestTouching.id];
  }
  return [];
 }
@@ -90,6 +109,9 @@ export function compileVisualStep(result,step={},index=0,previousVisible=[]){
  const explicitVisible=validIds(step?.visibleNodeIds,nodeSet);
  let visibleNodeIds=uniq([...previousVisible,...explicitVisible,...focusIds,...activeEndpoints]).filter(id=>nodeSet.has(id));
  if(!visibleNodeIds.length) visibleNodeIds=nodes.map(n=>n.id);
+ const previousSet=new Set(validIds(previousVisible,nodeSet));
+ const enteringNodeIds=visibleNodeIds.filter(id=>!previousSet.has(id));
+ const contextNodeIds=visibleNodeIds.filter(id=>previousSet.has(id)&&!focusIds.includes(id));
 
  const explicitActions=new Map();
  for(const a of Array.isArray(step?.nodeActions)?step.nodeActions:[]){
@@ -131,9 +153,32 @@ export function compileVisualStep(result,step={},index=0,previousVisible=[]){
  const worldDimension=["2d","3d","hybrid"].includes(result?.sceneGraph?.world?.dimension)?result.sceneGraph.world.dimension:"2d";
  const needsDepth=DEPTH_MODES.has(cameraMode)||focusIds.some(id=>hasDepthMeaning(byId.get(id)));
  const dimension=worldDimension==="3d"?"3d":worldDimension==="hybrid"&&needsDepth?"3d":"2d";
+ const activeEdges=validIds(activeEdgeIds,edgeSet).map(id=>edges.find(e=>e.id===id)).filter(Boolean);
+ const primaryEdge=chooseStrongestEdge(activeEdges);
+ const causalCue=primaryEdge?{
+  edgeId:primaryEdge.id,
+  from:primaryEdge.from,
+  to:primaryEdge.to,
+  relation:String(primaryEdge.relation||"cause"),
+  label:String(primaryEdge.label||""),
+  causal:isCausalEdge(primaryEdge),
+  knowledge:normalizeKnowledge(primaryEdge.knowledge)
+ }:null;
+ const knowledgeItems=[
+  ...focusIds.map(id=>byId.get(id)).filter(Boolean),
+  ...activeEdges
+ ];
+ const knowledgeSummary=knowledgeItems.reduce((acc,item)=>{
+  const key=normalizeKnowledge(item?.knowledge);
+  acc[key]=(acc[key]||0)+1;
+  return acc;
+ },{fact:0,inference:0,unknown:0});
+ const overload=focusIds.length>4||activeEdges.length>3;
+ if(overload) corrections.push("visual-overload");
 
  return {
   version:"visual-scene/v1",
+  qualityVersion:"scene-quality/v2",
   index,
   focusNodeIds:focusIds,
   activeEdgeIds:validIds(activeEdgeIds,edgeSet),
@@ -141,9 +186,23 @@ export function compileVisualStep(result,step={},index=0,previousVisible=[]){
   nodeActions,
   camera:{mode:cameraMode,targetNodeId,distance},
   dimension,
+  transition:{
+   enteringNodeIds,
+   contextNodeIds,
+   causeNodeId:causalCue?.from||"",
+   effectNodeId:causalCue?.to||""
+  },
+  causalCue,
+  knowledgeSummary,
+  quality:{
+   overloaded:overload,
+   focusCount:focusIds.length,
+   edgeCount:activeEdges.length
+  },
   intent:{
    motion,
-   relationDriven:activeEdgeIds.length>0,
+   relationDriven:activeEdges.length>0,
+   causal:Boolean(causalCue?.causal),
    spatial:needsDepth
   },
   corrections
