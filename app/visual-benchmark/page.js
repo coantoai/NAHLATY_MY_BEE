@@ -170,10 +170,12 @@ function makeBee(){
 export default function VisualBenchmarkPage(){
   const hostRef=useRef(null);
   const stepRef=useRef(0);
+  const playingRef=useRef(true);
   const [step,setStep]=useState(0);
   const [playing,setPlaying]=useState(true);
 
   useEffect(()=>{stepRef.current=step},[step]);
+  useEffect(()=>{playingRef.current=playing},[playing]);
 
   useEffect(()=>{
     const host=hostRef.current;
@@ -191,6 +193,8 @@ export default function VisualBenchmarkPage(){
     const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.8));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.08;
     renderer.shadowMap.enabled=true;
     renderer.shadowMap.type=THREE.PCFSoftShadowMap;
     host.appendChild(renderer.domElement);
@@ -236,9 +240,14 @@ export default function VisualBenchmarkPage(){
     flowerC.rotation.y=.4;
     scene.add(flowerC);
 
+    [flowerA,flowerB,flowerC].forEach(flower=>flower.traverse(obj=>{
+      if(obj.isMesh){obj.castShadow=true;obj.receiveShadow=true;}
+    }));
+
     const bee=makeBee();
     bee.position.set(0,2.7,4.4);
     bee.rotation.y=Math.PI;
+    bee.traverse(obj=>{if(obj.isMesh)obj.castShadow=true});
     scene.add(bee);
 
     const grass=[];
@@ -331,7 +340,7 @@ export default function VisualBenchmarkPage(){
       raf=requestAnimationFrame(animate);
       const t=clock.getElapsedTime();
       const s=stepRef.current;
-      const isPlaying=playing;
+      const isPlaying=playingRef.current;
 
       let u=0;
       if(s===0)u=.18+.18*(.5+.5*Math.sin(t*.55));
@@ -433,7 +442,7 @@ export default function VisualBenchmarkPage(){
       renderer.dispose();
       renderer.domElement.remove();
     };
-  },[playing]);
+  },[]);
 
   const current=STEPS[step];
   return (
