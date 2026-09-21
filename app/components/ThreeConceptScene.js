@@ -213,6 +213,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const travelers=[];
   const actionParticles=[];
   const heartFlowParticles=[];
+  const heartValves=[];
   const edgeGlowTubes=[];
   const edgeArrows=[];
   const focusHalos=[];
@@ -250,6 +251,13 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
    mesh.userData.baseVisualScale.copy(mesh.scale);
    decorateSemanticMesh(mesh,n.visual,color);
+   if(n.visual==="heart"){
+    // Four controllable valve cues. They remain visually subordinate until the heart is active.
+    const valveGeo=new THREE.TorusGeometry(.62,.1,8,24);
+    const valveMat=new THREE.MeshPhysicalMaterial({color:0xffd7b0,roughness:.34,clearcoat:.5,emissive:0x6a261f,emissiveIntensity:.12,transparent:true,opacity:.7});
+    const valveSpecs=[[-1.05,.65,2.85],[1.05,.72,2.85],[-.82,-.78,2.92],[.9,-.72,2.92]];
+    valveSpecs.forEach((v,vi)=>{const valve=new THREE.Mesh(valveGeo,valveMat.clone());valve.position.set(...v);valve.rotation.x=Math.PI/2;valve.userData={heartOwner:mesh,phase:vi*.18};mesh.add(valve);heartValves.push(valve);});
+   }
    if(n.visual==="heart"&&!reduced){
     // Local cardiac circulation cue: restrained dual-stream particles remain bound to the heart,
     // so the cinematic layer reinforces flow without inventing a separate mechanism.
@@ -476,6 +484,15 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      particle.scale.setScalar(1-rise*.65);
      particle.material.opacity=.82*(1-rise);
     }
+   }
+   for(const valve of heartValves){
+    const owner=valve.userData.heartOwner;
+    const active=owner?.userData?.action==="contract"&&playingRef.current;
+    const cyc=(t*.82+valve.userData.phase)%1;
+    const opening=active?(.5+.5*Math.sin(cyc*Math.PI*2)):0;
+    valve.scale.set(1,.34+.66*opening,1);
+    valve.material.emissiveIntensity=.1+.22*opening;
+    valve.material.opacity=.5+.35*opening;
    }
    for(const particle of heartFlowParticles){
     const owner=particle.userData.heartOwner;
