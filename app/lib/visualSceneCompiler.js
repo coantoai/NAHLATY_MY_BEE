@@ -35,9 +35,9 @@ function validIds(values,set){
 }
 
 function semanticAction(node,motion,isFlowSource=false){
- if(isFlowSource) return "flow";
  const byVisual=VISUAL_ACTION[String(node?.visual||"").toLowerCase()];
  if(byVisual) return byVisual;
+ if(isFlowSource) return "flow";
  const byMotion=MOTION_ACTION[motion];
  if(byMotion) return byMotion;
  return "activate";
