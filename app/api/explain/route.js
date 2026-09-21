@@ -1,4 +1,4 @@
-import { createGemini, generateJson } from "../../lib/genai";
+import { createGemini, generateJson, isTransientGenAIError } from "../../lib/genai";
 import { getExperienceProfile } from "../../lib/experienceProfile";
 import { compileVisualSceneResult } from "../../lib/visualSceneCompiler";
 
@@ -133,6 +133,7 @@ export async function POST(req){
  }catch(e){
   const detail=String(e?.message||e);
   console.error("[NAHLATY_EXPLAIN_ERROR]", detail, e?.stack||"");
+  if(isTransientGenAIError(e)) return Response.json({error:"مزود الذكاء الاصطناعي مشغول مؤقتاً. أعد المحاولة بعد قليل.",code:"AI_BUSY"},{status:503});
   return Response.json({error:"تعذر إنشاء الشرح",detail},{status:500});
  }
 }
