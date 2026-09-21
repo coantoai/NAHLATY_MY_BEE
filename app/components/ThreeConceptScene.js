@@ -57,6 +57,12 @@ function nodeColor(visual,index){
  return honey[index%honey.length];
 }
 
+function knowledgeTone(kind){
+ if(kind==="fact") return 0x73d7a7;
+ if(kind==="unknown") return 0x98a2ad;
+ return 0xf1c76b;
+}
+
 function decorateSemanticMesh(mesh,visual,color){
  const v=String(visual||"").toLowerCase();
  const soft=(opacity=.72,emissive=.16)=>new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.08,emissive:color,emissiveIntensity:emissive,transparent:true,opacity});
@@ -185,6 +191,9 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const edgeArrows=[];
   const focusHalos=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
+  const primaryActiveEdge=edges.find(e=>activeEdgeIds.includes(e.id)&&e.causal)||edges.find(e=>activeEdgeIds.includes(e.id))||null;
+  const causeNodeId=primaryActiveEdge?.from||"";
+  const effectNodeId=primaryActiveEdge?.to||"";
   const outgoingActiveEdges=new Map();
   for(const e of edges){if(activeEdgeIds.includes(e.id)&&edgeCurves.has(e.id)) outgoingActiveEdges.set(e.from,edgeCurves.get(e.id));}
 
@@ -212,8 +221,15 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    mesh.userData.baseVisualScale.copy(mesh.scale);
    decorateSemanticMesh(mesh,n.visual,color);
    if(focusIds.includes(n.id)){
-    const focusHalo=new THREE.Mesh(new THREE.TorusGeometry(7.8,.14,8,56),new THREE.MeshBasicMaterial({color:0xffe7a1,transparent:true,opacity:.28,depthWrite:false}));
+    const focusHalo=new THREE.Mesh(new THREE.TorusGeometry(7.8,.14,8,56),new THREE.MeshBasicMaterial({color:knowledgeTone(n.knowledge),transparent:true,opacity:.34,depthWrite:false}));
     focusHalo.rotation.x=Math.PI/2; focusHalo.userData={focusHalo:true,phase:i*.6}; mesh.add(focusHalo); focusHalos.push(focusHalo);
+   }
+   if(n.id===causeNodeId||n.id===effectNodeId){
+    const roleColor=n.id===causeNodeId?0xffd36d:0x78dfbf;
+    const roleHalo=new THREE.Mesh(new THREE.TorusGeometry(n.id===causeNodeId?6.7:6.25,.09,8,48),new THREE.MeshBasicMaterial({color:roleColor,transparent:true,opacity:.3,depthWrite:false}));
+    roleHalo.rotation.x=Math.PI/2;
+    roleHalo.rotation.z=n.id===effectNodeId?Math.PI/4:0;
+    mesh.add(roleHalo);
    }
    group.add(mesh);
    meshes.push(mesh);
@@ -234,6 +250,8 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     labelCtx.fillStyle="rgba(16,22,26,.78)";
     labelCtx.roundRect?.(10,18,492,92,28);
     labelCtx.fill();
+    labelCtx.fillStyle="#"+knowledgeTone(n.knowledge).toString(16).padStart(6,"0");
+    labelCtx.beginPath();labelCtx.arc(474,64,8,0,Math.PI*2);labelCtx.fill();
     labelCtx.fillStyle="#fff7df";
     labelCtx.font="600 34px system-ui, sans-serif";
     labelCtx.textAlign="center";
@@ -346,6 +364,9 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const ro=new ResizeObserver(resize);
   ro.observe(host);
   resize();
+  let inViewport=true;
+  const io=typeof IntersectionObserver!=="undefined"?new IntersectionObserver(entries=>{inViewport=entries?.[0]?.isIntersecting!==false},{rootMargin:"140px"}):null;
+  io?.observe(host);
 
   const clock=new THREE.Clock();
   const cameraTarget=new THREE.Vector3();
@@ -369,9 +390,13 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    const distance=cameraMode==="inside"?Math.max(38,requested*.62):cameraMode==="explode"?Math.max(45,requested*.78):cameraMode==="overview"?Math.max(100,requested):requested;
    desiredCamera.copy(cameraTarget).add(new THREE.Vector3(0,cameraMode==="overview"?18:10,distance));
   }
+  camera.position.copy(desiredCamera);
+  controls.target.copy(cameraTarget);
+  controls.update();
   const animate=()=>{
    if(disposed)return;
    frame=requestAnimationFrame(animate);
+   if(document.hidden||!inViewport)return;
    const t=clock.getElapsedTime();
    if(playingRef.current&&cameraMode==="inside"&&explicitTarget&&!reduced){
     const insideCamera=explicitTarget.clone().add(new THREE.Vector3(0,1,18));
@@ -533,6 +558,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    disposed=true;
    cancelAnimationFrame(frame);
    ro.disconnect();
+   io?.disconnect();
    renderer.domElement.removeEventListener("pointerdown",onPointer);
    renderer.domElement.removeEventListener("webglcontextlost",onContextLost);
    controls.dispose();
@@ -549,5 +575,5 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
  },[nodes,edges,focusIds,visibleNodeIds,backgroundNodeIds,activeEdgeIds,nodeActions,cameraPlan,renderProfile]);
 
  if(failed)return <div className="threeFallback" role="status">تعذّر تشغيل 3D على هذا الجهاز — يبقى الشرح ثنائي الأبعاد متاحًا.</div>;
- return <div className="threeConceptScene" ref={hostRef} aria-label="مشهد ثلاثي الأبعاد تفاعلي"/>;
+ return <div className="threeConceptScene" ref={hostRef} aria-label="مشهد ثلاثي الأبعاد تفاعلي"><div className="threeKnowledgeLegend" aria-hidden="true"><span className="fact">● حقيقة</span><span className="inference">◐ استنتاج</span><span className="unknown">○ غير محسوم</span></div></div>;
 }
