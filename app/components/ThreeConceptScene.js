@@ -95,6 +95,45 @@ function decorateSemanticMesh(mesh,visual,color){
    const ring=new THREE.Mesh(new THREE.TorusGeometry(4.6,.2,8,40),glow(.24));
    ring.rotation.x=Math.PI/2; ring.position.y=j*2.45; ring.userData.semanticAura=true; mesh.add(ring);
   }
+ }else if(v==="cell"){
+  mesh.material.opacity=.2;
+  const membrane=new THREE.Mesh(new THREE.SphereGeometry(5.25,24,18),glow(.12));
+  const nucleus=new THREE.Mesh(new THREE.SphereGeometry(1.65,18,14),soft(.86,.18)); nucleus.position.set(.65,.35,.8);
+  const organelleGeometry=new THREE.SphereGeometry(.55,12,8);
+  for(let j=0;j<5;j++){
+   const organelle=new THREE.Mesh(organelleGeometry,soft(.58,.08));
+   const angle=j/5*Math.PI*2; organelle.position.set(Math.cos(angle)*3.1,Math.sin(angle*1.3)*2.1,Math.sin(angle)*1.3);
+   mesh.add(organelle);
+  }
+  mesh.add(membrane,nucleus);
+ }else if(v==="gear"){
+  mesh.material.opacity=.34;
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(1.7,1.7,2.2,18),soft(.82,.12)); hub.rotation.x=Math.PI/2;
+  for(let j=0;j<10;j++){
+   const tooth=new THREE.Mesh(new THREE.BoxGeometry(1.15,1.8,1.4),soft(.72,.09));
+   const angle=j/10*Math.PI*2; tooth.position.set(Math.cos(angle)*4.7,Math.sin(angle)*4.7,0); tooth.rotation.z=angle;
+   mesh.add(tooth);
+  }
+  mesh.add(hub);
+ }else if(v==="server"){
+  mesh.material.opacity=.2;
+  for(let j=-1;j<=1;j++){
+   const tray=new THREE.Mesh(new THREE.BoxGeometry(7.2,1.35,5.2),soft(.7,.08)); tray.position.y=j*2.15;
+   for(let k=0;k<3;k++){
+    const led=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),glow(.7)); led.position.set(-2.6+k*.55,j*2.15,2.7); mesh.add(led);
+   }
+   mesh.add(tray);
+  }
+ }else if(v==="planet"){
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(6.2,.16,10,64),glow(.26)); ring.rotation.set(Math.PI/2.55,.25,.35); ring.userData.semanticAura=true;
+  const moon=new THREE.Mesh(new THREE.SphereGeometry(.8,12,8),soft(.78,.1)); moon.position.set(6.1,1.5,0); moon.userData.semanticAura=true;
+  mesh.add(ring,moon);
+ }else if(v==="fire"||v==="volcano"){
+  const core=new THREE.Mesh(new THREE.ConeGeometry(2.6,6.6,22),new THREE.MeshStandardMaterial({color:0xff7b32,roughness:.32,emissive:0xff4318,emissiveIntensity:.55,transparent:true,opacity:.78}));
+  core.position.y=.8; core.scale.set(.7,1,.7);
+  const ember=new THREE.Mesh(new THREE.SphereGeometry(1.4,14,10),new THREE.MeshBasicMaterial({color:0xffd66b,transparent:true,opacity:.48,depthWrite:false}));
+  ember.position.y=-1.6; ember.userData.semanticAura=true;
+  mesh.add(core,ember);
  }
 }
 
