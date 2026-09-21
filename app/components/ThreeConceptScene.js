@@ -63,6 +63,11 @@ function knowledgeTone(kind){
  return 0xf1c76b;
 }
 
+const CAUSAL_RELATIONS_3D=new Set(["cause","causes","flow","activate","trigger","transform","increase","decrease","inhibit","block","lead","leads-to"]);
+function isCausalEdge3D(edge){
+ return Boolean(edge?.causal||CAUSAL_RELATIONS_3D.has(String(edge?.relation||"").toLowerCase()));
+}
+
 function decorateSemanticMesh(mesh,visual,color){
  const v=String(visual||"").toLowerCase();
  const soft=(opacity=.72,emissive=.16)=>new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.08,emissive:color,emissiveIntensity:emissive,transparent:true,opacity});
@@ -191,7 +196,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const edgeArrows=[];
   const focusHalos=[];
   const actionMap=new Map((nodeActions||[]).map(a=>[a.id,a.action]));
-  const primaryActiveEdge=edges.find(e=>activeEdgeIds.includes(e.id)&&e.causal)||edges.find(e=>activeEdgeIds.includes(e.id))||null;
+  const primaryActiveEdge=edges.find(e=>activeEdgeIds.includes(e.id)&&isCausalEdge3D(e))||null;
   const causeNodeId=primaryActiveEdge?.from||"";
   const effectNodeId=primaryActiveEdge?.to||"";
   const outgoingActiveEdges=new Map();
