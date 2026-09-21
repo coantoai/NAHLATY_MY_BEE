@@ -40,7 +40,7 @@ export function getExperienceProfile(audience="عام"){
 
 export function clientExperience(presentation={}){
  return {
-  id:presentation.profileId||"general",
+  id:presentation.profileId||presentation.id||"general",
   guided:presentation.interactionStyle==="guided",
   technical:presentation.interactionStyle==="technical",
   toolDepth:presentation.toolDepth||"progressive",
