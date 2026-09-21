@@ -6,6 +6,7 @@ import { chooseLearningAction } from "../app/lib/learningDirector.js";
 import { analyzeMentalModel, deriveRememberedModelRepair } from "../app/lib/mentalModel.js";
 import { mergeReframeAvoidance, updateRepresentationHistory } from "../app/lib/representationMemory.js";
 import { deriveTransferEdgeIds } from "../app/lib/transferEvidence.js";
+import { compileVisualSceneResult, compileVisualStep } from "../app/lib/visualSceneCompiler.js";
 
 test("audience profiles stay meaningfully distinct",()=>{
  const child=getExperienceProfile("طفل");
@@ -367,4 +368,48 @@ test("transfer evidence falls back to a causal relation touching the answer role
   {id:"e2",from:"c",to:"d",relation:"connect",causal:false}
  ];
  assert.deepEqual(deriveTransferEdgeIds(edges,[],"b"),["e1"]);
+});
+
+
+test("visual scene compiler infers semantic motion without inventing new nodes",()=>{
+ const result={
+  sceneGraph:{world:{dimension:"hybrid"},nodes:[
+   {id:"heart",visual:"heart",spatial:true,inside:[{id:"chamber"}]},
+   {id:"blood",visual:"blood"}
+  ],edges:[{id:"e1",from:"heart",to:"blood",relation:"flow"}]},
+  steps:[{motion:"travel",focusNodeIds:["heart","blood"],activeEdgeIds:["e1"],visibleNodeIds:["heart","blood"],camera:{mode:"follow",distance:60}}]
+ };
+ const compiled=compileVisualSceneResult(result);
+ assert.equal(compiled.runtimeVersion,"visual-scene/v1");
+ assert.deepEqual(compiled.steps[0].runtime.activeEdgeIds,["e1"]);
+ assert.equal(compiled.steps[0].runtime.camera.mode,"follow");
+ assert.equal(compiled.steps[0].runtime.nodeActions.find(x=>x.id==="heart")?.action,"flow");
+});
+
+test("visual scene compiler downgrades meaningless depth camera to focus",()=>{
+ const result={sceneGraph:{world:{dimension:"hybrid"},nodes:[{id:"a",visual:"document"}],edges:[]}};
+ const runtime=compileVisualStep(result,{focusNodeIds:["a"],visibleNodeIds:["a"],camera:{mode:"inside",targetNodeId:"a"}},0,[]);
+ assert.equal(runtime.camera.mode,"focus");
+ assert.equal(runtime.dimension,"2d");
+ assert.ok(runtime.corrections.includes("depth-without-spatial-meaning"));
+});
+
+test("visual scene compiler keeps prior reveals visible across steps",()=>{
+ const result={
+  sceneGraph:{world:{dimension:"2d"},nodes:[{id:"a",visual:"document"},{id:"b",visual:"gear"}],edges:[{id:"e1",from:"a",to:"b",relation:"transform"}]},
+  steps:[
+   {focusNodeIds:["a"],visibleNodeIds:["a"]},
+   {focusNodeIds:["b"],visibleNodeIds:["b"],activeEdgeIds:["e1"],motion:"connect"}
+  ]
+ };
+ const compiled=compileVisualSceneResult(result);
+ assert.deepEqual(compiled.steps[1].runtime.visibleNodeIds,["a","b"]);
+});
+
+test("visual scene compiler uses semantic actions for focused objects",()=>{
+ const result={sceneGraph:{world:{dimension:"2d"},nodes:[{id:"gear",visual:"gear"},{id:"plant",visual:"plant"}],edges:[]}};
+ const gear=compileVisualStep(result,{focusNodeIds:["gear"],visibleNodeIds:["gear"],motion:"reveal"},0,[]);
+ const plant=compileVisualStep(result,{focusNodeIds:["plant"],visibleNodeIds:["plant"],motion:"reveal"},0,[]);
+ assert.equal(gear.nodeActions[0].action,"spin");
+ assert.equal(plant.nodeActions[0].action,"grow");
 });
