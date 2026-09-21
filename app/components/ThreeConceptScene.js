@@ -212,6 +212,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   const edgeCurves=new Map();
   const travelers=[];
   const actionParticles=[];
+  const heartFlowParticles=[];
   const edgeGlowTubes=[];
   const edgeArrows=[];
   const focusHalos=[];
@@ -249,6 +250,18 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
    mesh.userData.baseVisualScale.copy(mesh.scale);
    decorateSemanticMesh(mesh,n.visual,color);
+   if(n.visual==="heart"&&!reduced){
+    // Local cardiac circulation cue: restrained dual-stream particles remain bound to the heart,
+    // so the cinematic layer reinforces flow without inventing a separate mechanism.
+    const flowMatA=new THREE.MeshBasicMaterial({color:0x66b8ff,transparent:true,opacity:.72,depthWrite:false});
+    const flowMatB=new THREE.MeshBasicMaterial({color:0xff6b62,transparent:true,opacity:.76,depthWrite:false});
+    const flowGeo=new THREE.SphereGeometry(.22,8,6);
+    for(let hp=0;hp<18;hp++){
+     const p=new THREE.Mesh(flowGeo,hp<9?flowMatA:flowMatB);
+     p.userData={heartOwner:mesh,phase:(hp%9)/9,oxygenated:hp>=9};
+     group.add(p); heartFlowParticles.push(p);
+    }
+   }
    if(focusIds.includes(n.id)){
     const focusHalo=new THREE.Mesh(new THREE.TorusGeometry(7.8,.14,8,56),new THREE.MeshBasicMaterial({color:knowledgeTone(n.knowledge),transparent:true,opacity:.34,depthWrite:false}));
     focusHalo.rotation.x=Math.PI/2; focusHalo.userData={focusHalo:true,phase:i*.6}; mesh.add(focusHalo); focusHalos.push(focusHalo);
@@ -463,6 +476,22 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      particle.scale.setScalar(1-rise*.65);
      particle.material.opacity=.82*(1-rise);
     }
+   }
+   for(const particle of heartFlowParticles){
+    const owner=particle.userData.heartOwner;
+    if(!owner)continue;
+    const u=(t*.34+particle.userData.phase)%1;
+    const oxy=particle.userData.oxygenated;
+    const angle=(oxy?1:-1)*(u*Math.PI*1.55-.75);
+    const radius=2.2+u*1.5;
+    particle.position.copy(owner.position).add(new THREE.Vector3(
+     (oxy?1:-1)*(1.25+Math.sin(angle)*radius*.48),
+     3.5-u*7.2,
+     3.2+Math.cos(angle)*radius*.32
+    ));
+    const pulse=.72+.28*Math.sin(Math.PI*u);
+    particle.scale.setScalar(pulse);
+    particle.material.opacity=.38+.4*Math.sin(Math.PI*u);
    }
    for(const tube of edgeGlowTubes){
     tube.material.opacity=.14+(.5+.5*Math.sin(t*3.2+tube.userData.phase))*.16;
