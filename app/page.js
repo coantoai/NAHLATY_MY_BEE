@@ -194,7 +194,7 @@ export default function Home(){
  const storyNodeIds=[...new Set([...stepFocusIds,...activeStoryEdges.flatMap(e=>[e.from,e.to])])].slice(0,4);
  const storyNodes=storyNodeIds.map(id=>nodeById.get(id)).filter(Boolean);
  const runtimeCausal=currentStep?.runtime?.causalCue||null;
- const currentCausalEdge=(runtimeCausal&&graphEdges.find(e=>e.id===runtimeCausal.edgeId))||activeStoryEdges.find(e=>e.causal)||activeStoryEdges[0]||null;
+ const currentCausalEdge=(runtimeCausal?.causal&&graphEdges.find(e=>e.id===runtimeCausal.edgeId))||activeStoryEdges.find(e=>e.causal)||null;
  const causalFrom=currentCausalEdge?nodeById.get(currentCausalEdge.from):null;
  const causalTo=currentCausalEdge?nodeById.get(currentCausalEdge.to):null;
  const knowledgeItems=[...(r?.sceneGraph?.nodes||[]),...(r?.sceneGraph?.edges||[])];
