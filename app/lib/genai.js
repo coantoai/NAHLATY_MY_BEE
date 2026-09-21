@@ -35,8 +35,9 @@ export async function generateJson(ai,prompt,{maxAttempts=3,retryBaseMs=450}={})
   }catch(error){
    lastError=error;
    if(!isTransientGenAIError(error)||attempt>=maxAttempts) throw error;
-   const jitter=Math.floor(Math.random()*120);
-   await sleep(Math.max(0,retryBaseMs)*(2**(attempt-1))+jitter);
+   const base=Math.max(0,retryBaseMs);
+   const jitter=base?Math.floor(Math.random()*120):0;
+   await sleep(base*(2**(attempt-1))+jitter);
   }
  }
  throw lastError||new Error("Gemini generation failed");
