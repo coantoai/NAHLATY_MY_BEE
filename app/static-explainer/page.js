@@ -4,18 +4,35 @@ import styles from "./page.module.css";
 
 const EXAMPLES=["كيف تنقل النحلة حبوب اللقاح؟","كيف يعمل القلب؟","كيف يحدث البرق؟","كيف تعمل الخلية الشمسية؟"];
 
+function safeText(value){
+  if(value===null||value===undefined)return "";
+  if(typeof value==="string"||typeof value==="number"||typeof value==="boolean")return String(value).trim();
+  if(Array.isArray(value))return value.map(safeText).filter(Boolean).join(" · ");
+  if(typeof value==="object"){
+    for(const key of ["label","text","title","name","value","caption","description","action","meaning","cue"]){
+      const text=safeText(value[key]);
+      if(text)return text;
+    }
+    const from=safeText(value.from),to=safeText(value.to);
+    if(from&&to)return from+" → "+to;
+    return from||to||"";
+  }
+  return "";
+}
+
 function VisualOverlay({brief}){
-  const labels=(brief?.labels||[]).slice(0,4);
-  const arrows=(brief?.arrows||[]).slice(0,3);
-  if(!labels.length&&!arrows.length)return null;
+  const labels=(Array.isArray(brief?.labels)?brief.labels:[]).map(safeText).filter(Boolean).slice(0,4);
+  const fallback=(Array.isArray(brief?.arrows)?brief.arrows:[]).map(safeText).find(Boolean);
+  const primaryMotion=safeText(brief?.primaryMotion)||fallback||"";
+  if(!labels.length&&!primaryMotion)return null;
   const spots=[{top:"18%",right:"9%"},{top:"35%",left:"7%"},{bottom:"19%",right:"12%"},{bottom:"14%",left:"10%"}];
   return <div className={styles.overlay} aria-hidden="true">
-    {labels.map((label,i)=><span key={`l-${i}`} className={styles.hotspot} style={spots[i%spots.length]}>
+    {labels.map((label,i)=><span key={"l-"+i} className={styles.hotspot} style={spots[i%spots.length]}>
       <i/><b>{label}</b>
     </span>)}
-    {arrows.map((arrow,i)=><span key={`a-${i}`} className={styles.motionCue} style={{top:`${32+i*18}%`,left:`${20+i*19}%`}}>
-      <i>↗</i><small>{arrow}</small>
-    </span>)}
+    {primaryMotion&&<span className={styles.motionCue} style={{top:"46%",left:"38%"}}>
+      <i>↗</i><small>{primaryMotion}</small>
+    </span>}
   </div>
 }
 
@@ -72,7 +89,7 @@ export default function StaticExplainer(){
 
       {loading&&<div className={styles.loading}>
         <div className={styles.scan}/>
-        <p>نفهم الفكرة → نختار المشهد → نرتب وسائل الإيضاح → نولّد الصورة</p>
+        <p>نفهم الجوهر → نحدد ما لا يكتمل الفهم بدونه → نختار المشهد → نولّد الصورة</p>
       </div>}
 
       {result&&<figure className={styles.figure}>
