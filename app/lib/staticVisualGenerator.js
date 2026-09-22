@@ -24,6 +24,31 @@ const cleanList=(value,limit,max)=>{
   return items.map(item=>clean(item,max)).filter(Boolean).slice(0,limit);
 };
 const hasAny=(text,terms)=>terms.some(term=>text.includes(term));
+const VISUAL_DEVICE_TYPES=[
+  "icon","frame","container","stage-number","contrast-marker",
+  "3d-model","hotspot","explanation-card","progress-bar","scale-indicator","arrow"
+];
+
+function normalizeVisualDevices(value){
+  const items=Array.isArray(value)?value:(value?[value]:[]);
+  return items.map((item,index)=>{
+    if(typeof item==="string")return {type:"icon",purpose:clean(item,120),label:"",placement:""};
+    if(!item||typeof item!=="object")return null;
+    const rawType=clean(item.type||item.kind||item.device,40).toLowerCase();
+    const type=VISUAL_DEVICE_TYPES.includes(rawType)?rawType:"icon";
+    return {
+      type,
+      purpose:clean(item.purpose||item.reason||item.description||item.meaning,140),
+      label:clean(item.label||item.text||item.title,40),
+      placement:clean(item.placement||item.position,40)
+    };
+  }).filter(x=>x&&x.purpose).slice(0,6);
+}
+
+function deviceLine(device){
+  const bits=[device.type,device.label,device.purpose,device.placement].filter(Boolean);
+  return bits.join(" — ");
+}
 
 function buildUnderstandingPrinciples(question,audience){
   const q=clean(question,700).toLowerCase();
@@ -90,6 +115,7 @@ function buildImagePrompt(question,brief,audience,understanding){
   const objects=cleanList(brief?.objects,7,80);
   const primaryMotion=clean(brief?.primaryMotion||arrows[0],120);
   const microMotion=cleanList(brief?.microMotion,2,90);
+  const visualDevices=normalizeVisualDevices(brief?.visualDevices);
 
   return `You are generating the final hero image for NAHLATY, a premium AI visual-explanation product.
 
@@ -121,6 +147,7 @@ Primary semantic motion: ${primaryMotion}
 Micro motion: ${microMotion.join(" | ")}
 Meaningful directional cue: ${arrows.join(" | ")}
 Short Arabic labels: ${labels.join(" | ")}
+Selected explanation devices: ${visualDevices.map(deviceLine).join(" | ") || "none"}
 Composition: ${clean(brief?.composition,650)}
 Depth plan: ${clean(brief?.depthPlan,500)}
 Lighting: ${clean(brief?.lighting,450)}
@@ -133,7 +160,7 @@ NON-NEGOTIABLE OUTPUT STANDARD:
 3. Premium documentary / cinematic key-art quality with believable materials, shadows, depth, lighting and atmosphere.
 4. Use a strong foreground / midground / background composition when useful.
 5. One dominant hero subject. Secondary objects support the explanation, never compete with it.
-6. Integrate explanation into the world itself: elegant arrows, paths, numbered cues, cutaways, magnified insets, glow traces, before→after, flow trails, or localized callouts only when they teach something.
+6. Integrate explanation into the world itself using the BEST device for the idea, not arrows by default. Available devices include: icons, frames/containers, stage numbers, contrast markers, 3D models, hotspots, explanatory cards, progress bars, scale indicators, arrows/paths, cutaways, magnified insets, before→after and flow trails. Use only devices that materially improve comprehension.
 7. Arabic text must be minimal, short, legible, and placed cleanly. No paragraphs.
 8. Show sequence, causality, transfer, transformation, comparison or mechanism spatially when relevant.
 9. For biology/science: premium scientific visualization with cinematic realism, not toy-like 3D.
@@ -144,6 +171,8 @@ NON-NEGOTIABLE OUTPUT STANDARD:
 14. Scientific / mechanical / logical correctness outranks spectacle.
 15. Match the attached benchmark's AMBITION and FINISH, not its literal subject.
 16. Use ONE primary semantic motion only. Any other motion must be subtle micro motion and never compete for attention.
+17. Arrows are optional. Do not choose an arrow if another visual device communicates the relationship more clearly.
+18. Never use every device at once. Choose the smallest useful combination; visual devices are explanatory instruments, not decoration.
 
 Return only the finished image.`;
 }
@@ -166,14 +195,16 @@ Think like a film production designer + scientific illustrator + information des
 Choose the visual world according to the topic. Determine what the eye notices first, what spatial relationship carries the meaning, what should be foreground/midground/background, and which tiny set of arrows/labels truly improves understanding.
 
 Return JSON only with:
-title, coreIdea, heroSubject, visualStory, objects, primaryMotion, microMotion, arrows, labels, composition, depthPlan, lighting, palette, accuracyNotes.
+title, coreIdea, heroSubject, visualStory, objects, primaryMotion, microMotion, visualDevices, arrows, labels, composition, depthPlan, lighting, palette, accuracyNotes.
 
 Rules:
 - heroSubject: one dominant visual focus.
 - objects: 3-7 concrete visible elements only.
 - primaryMotion: exactly ONE sentence for the single most important semantic movement/transition.
 - microMotion: 0-2 subtle supporting motions only.
-- arrows: 0-1 meaningful directional cue tied to the primary motion, not decoration.
+- visualDevices: choose 0-6 items ONLY when useful. Each item must be an object with {type,purpose,label,placement}. Allowed type values: icon, frame, container, stage-number, contrast-marker, 3d-model, hotspot, explanation-card, progress-bar, scale-indicator, arrow.
+- Choose devices by meaning: stage-number for sequence; contrast-marker for comparison; 3d-model for spatial/mechanical structure; hotspot for inspectable local detail; explanation-card for a short local clarification; progress-bar for genuine progression; scale-indicator for magnitude/size; frame/container for grouping; icon for rapid recognition; arrow only for directional/causal flow.
+- arrows: 0-1 only when direction itself matters. An arrow is NOT the default visual aid.
 - labels: 2-5 short Arabic labels, ideally 1-3 words each.
 - composition: describe camera angle and placement.
 - depthPlan: foreground/midground/background and any cutaway or magnified detail.
@@ -226,7 +257,8 @@ Audience: ${audience}`;
       labels:cleanList(brief?.labels,5,32),
       arrows:cleanList(brief?.arrows,1,100),
       primaryMotion:clean(brief?.primaryMotion||cleanList(brief?.arrows,1,100)[0],120),
-      microMotion:cleanList(brief?.microMotion,2,90)
+      microMotion:cleanList(brief?.microMotion,2,90),
+      visualDevices:normalizeVisualDevices(brief?.visualDevices)
     },
     understanding:{name:understanding.name,relation:understanding.relation,coreEssence:understanding.coreEssence,essentialElements:understanding.essentialElements,mustShow:understanding.mustShow},
     benchmark:"NAHLATY_OFFICIAL_CINEMATIC_REFERENCE",
