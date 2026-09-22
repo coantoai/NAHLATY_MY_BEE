@@ -1,5 +1,6 @@
 import { createGemini, generateJson, isTransientGenAIError } from "./genai";
 import MYBEE_REFERENCE from "../mybee-reference-data";
+import { buildInteractionPlan } from "./interaction";
 
 export const IMAGE_MODEL="gemini-3.1-flash-image";
 
@@ -396,6 +397,8 @@ ${understandingBlock(understanding)}`;
     }
   }
 
+  const interactionPlan=buildInteractionPlan({understanding,brief,priorityMap});
+
   const ref=referencePart();
   const request={
     model:IMAGE_MODEL,
@@ -442,6 +445,7 @@ ${understandingBlock(understanding)}`;
     understanding:{name:understanding.name,relation:understanding.relation,coreEssence:understanding.coreEssence,essentialElements:understanding.essentialElements,mustShow:understanding.mustShow,recommendedDevices:understanding.recommendedDevices},
     visualGrammar,
     visualPriorityMap:priorityMap,
+    interactionPlan,
     understandingCheck:{
       pass:audit?.pass!==false,
       revised:Boolean(audit?.revised),
