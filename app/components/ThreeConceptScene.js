@@ -255,8 +255,11 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     // Four controllable valve cues. They remain visually subordinate until the heart is active.
     const valveGeo=new THREE.TorusGeometry(.62,.1,8,24);
     const valveMat=new THREE.MeshPhysicalMaterial({color:0xffd7b0,roughness:.34,clearcoat:.5,emissive:0x6a261f,emissiveIntensity:.12,transparent:true,opacity:.7});
-    const valveSpecs=[[-1.05,.65,2.85],[1.05,.72,2.85],[-.82,-.78,2.92],[.9,-.72,2.92]];
-    valveSpecs.forEach((v,vi)=>{const valve=new THREE.Mesh(valveGeo,valveMat.clone());valve.position.set(...v);valve.rotation.x=Math.PI/2;valve.userData={heartOwner:mesh,phase:vi*.18};mesh.add(valve);heartValves.push(valve);});
+    const valveSpecs=[
+     {p:[-1.05,.65,2.85],kind:"av"},{p:[1.05,.72,2.85],kind:"av"},
+     {p:[-.82,-.78,2.92],kind:"semilunar"},{p:[.9,-.72,2.92],kind:"semilunar"}
+    ];
+    valveSpecs.forEach((v,vi)=>{const valve=new THREE.Mesh(valveGeo,valveMat.clone());valve.position.set(...v.p);valve.rotation.x=Math.PI/2;valve.userData={heartOwner:mesh,phase:vi*.08,kind:v.kind};mesh.add(valve);heartValves.push(valve);});
    }
    if(n.visual==="heart"&&!reduced){
     // Local cardiac circulation cue: restrained dual-stream particles remain bound to the heart,
@@ -265,7 +268,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     const flowMatB=new THREE.MeshBasicMaterial({color:0xff6b62,transparent:true,opacity:.76,depthWrite:false});
     const flowGeo=new THREE.SphereGeometry(.22,8,6);
     for(let hp=0;hp<18;hp++){
-     const p=new THREE.Mesh(flowGeo,hp<9?flowMatA:flowMatB);
+     const p=new THREE.Mesh(flowGeo,(hp<9?flowMatA:flowMatB).clone());
      p.userData={heartOwner:mesh,phase:(hp%9)/9,oxygenated:hp>=9};
      group.add(p); heartFlowParticles.push(p);
     }
@@ -489,7 +492,9 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     const owner=valve.userData.heartOwner;
     const active=owner?.userData?.action==="contract"&&playingRef.current;
     const cyc=(t*.82+valve.userData.phase)%1;
-    const opening=active?(.5+.5*Math.sin(cyc*Math.PI*2)):0;
+    const avOpen=cyc>.48||cyc<.08;
+    const semilunarOpen=cyc>.14&&cyc<.36;
+    const opening=active?((valve.userData.kind==="av"?avOpen:semilunarOpen)?1:.08):.18;
     valve.scale.set(1,.34+.66*opening,1);
     valve.material.emissiveIntensity=.1+.22*opening;
     valve.material.opacity=.5+.35*opening;
