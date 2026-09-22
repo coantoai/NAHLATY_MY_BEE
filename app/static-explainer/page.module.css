@@ -67,3 +67,41 @@
 @keyframes lampGlow{0%,35%{opacity:.18;transform:scale(.92);transform-origin:855px 285px}55%,85%{opacity:1;transform:scale(1.18);transform-origin:855px 285px}100%{opacity:.18;transform:scale(.92);transform-origin:855px 285px}}
 @media(max-width:650px){.liveDemo{padding:10px}.liveDemoTop small{display:none}.demoNode text,.demoNodeSelected text{font-size:28px}.demoFocusLabel{font-size:9px}.liveDemoHint{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.demoPhotonFlow,.demoCurrent,.demoLampGlow{animation:none}.demoLampGlow{opacity:.75}}
+
+/* Cinematic interaction attempt */
+.cinematicDemo{background:#090e0b;padding:0;color:#fff}
+.cinematicFrame{position:relative;aspect-ratio:16/9;overflow:hidden;background:#050806;isolation:isolate}
+.cinematicImage{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.015);transition:transform .8s cubic-bezier(.2,.75,.2,1),filter .6s ease}
+.cinematicShade{position:absolute;inset:0;background:linear-gradient(180deg,#00000010 0%,#00000000 38%,#00000062 100%),linear-gradient(90deg,#07110a75 0%,transparent 38%,transparent 72%,#050a0760 100%);pointer-events:none}
+.cinematicCopy{position:absolute;top:7%;right:5%;display:grid;gap:5px;max-width:360px;text-shadow:0 3px 20px #000c;z-index:3}
+.cinematicCopy span{font-size:10px;letter-spacing:.04em;color:#e4d08f}.cinematicCopy b{font-size:clamp(18px,2.5vw,34px);line-height:1.2}.cinematicCopy small{font-size:10px;line-height:1.6;color:#d8dfd9;max-width:290px}
+.cinematicControls{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);display:flex;gap:7px;padding:6px;border:1px solid #ffffff1d;border-radius:999px;background:#07100bb2;backdrop-filter:blur(14px);z-index:5;box-shadow:0 12px 36px #0007}
+.cinematicControls button{appearance:none;border:1px solid transparent;border-radius:999px;padding:8px 11px;background:transparent;color:#dfe6e0;font:inherit;font-size:9px;cursor:pointer;white-space:nowrap;transition:background .2s ease,border-color .2s ease,color .2s ease}
+.cinematicControls button:hover{background:#ffffff0d}.cinematicControls .cinematicControlActive{background:#f2efe6;color:#142019;border-color:#fff}
+.cinematicHint{position:absolute;left:50%;bottom:2.2%;transform:translateX(-50%);z-index:4;color:#d3dbd5;font-size:9px;text-shadow:0 2px 12px #000;white-space:nowrap}
+.pollenLayer{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:1;transition:opacity .35s ease}
+.pollenLayer i{position:absolute;width:7px;height:7px;border-radius:50%;background:#efca66;box-shadow:0 0 10px #efca6699;left:calc(35% + (var(--i) * 1.6%));top:calc(47% + ((var(--i) % 4) * 1.3%));opacity:0;animation:pollenTransfer 3.4s cubic-bezier(.4,.05,.2,1) infinite;animation-delay:calc(var(--i) * .12s)}
+@keyframes pollenTransfer{
+  0%{opacity:0;transform:translate3d(-26px,18px,0) scale(.65)}
+  16%{opacity:.9}
+  52%{opacity:1;transform:translate3d(25px,-8px,0) scale(1)}
+  82%{opacity:.8;transform:translate3d(78px,-23px,0) scale(.85)}
+  100%{opacity:0;transform:translate3d(112px,-34px,0) scale(.55)}
+}
+.cinematicFocus{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .45s ease;background:radial-gradient(circle at 54% 47%,transparent 0 12%,#02050322 22%,#020503b8 56%,#020503e8 100%);backdrop-filter:blur(0)}
+.cinematicFrame[data-mode="focus"] .cinematicImage{transform:scale(1.08);filter:saturate(.86) contrast(1.05)}
+.cinematicFrame[data-mode="focus"] .cinematicFocus{opacity:1}
+.cinematicFrame[data-mode="focus"] .pollenLayer{opacity:0}
+@media(max-width:650px){
+  .cinematicFrame{aspect-ratio:4/3}
+  .cinematicCopy{top:5%;right:5%;left:5%;max-width:none}
+  .cinematicCopy small{display:none}
+  .cinematicControls{bottom:8%;max-width:94%;overflow-x:auto}
+  .cinematicControls button{font-size:8px;padding:7px 9px}
+  .cinematicHint{bottom:2.5%;font-size:8px;max-width:92%;white-space:normal;text-align:center}
+  .pollenLayer i{width:6px;height:6px}
+}
+@media(prefers-reduced-motion:reduce){
+  .pollenLayer i{animation:none;opacity:.75}
+  .cinematicImage{transition:none}
+}
