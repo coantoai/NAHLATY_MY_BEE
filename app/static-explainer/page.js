@@ -2,6 +2,7 @@
 import {useState} from "react";
 import styles from "./page.module.css";
 import InteractionRuntime from "./InteractionRuntime";
+import InteractionDemo from "./InteractionDemo";
 
 const EXAMPLES=["كيف تنقل النحلة حبوب اللقاح؟","كيف يعمل القلب؟","كيف يحدث البرق؟","كيف تعمل الخلية الشمسية؟"];
 
@@ -42,7 +43,7 @@ export default function StaticExplainer(){
   return <main className={styles.page} dir="rtl">
     <header className={styles.header}>
       <div className={styles.brand}><span className={styles.bee}>✦</span><div><b>نحلتي</b><small>الفكرة تصبح صورة تُفهم</small></div></div>
-      <span className={styles.badge}>Static Visual MVP</span>
+      <span className={styles.badge}>Interactive Visual MVP</span>
     </header>
 
     <section className={styles.hero}>
@@ -66,11 +67,7 @@ export default function StaticExplainer(){
     {error&&<div className={styles.error}>{error}</div>}
 
     <section className={styles.output}>
-      {!result&&!loading&&<div className={styles.placeholder}>
-        <div className={styles.orbit}><span>✦</span></div>
-        <b>الصورة ستظهر هنا</b>
-        <p>المشهد هو الشرح. لا رسوم بيانية ولا صفحات مزدحمة.</p>
-      </div>}
+      {!result&&!loading&&<InteractionDemo/>}
 
       {loading&&<div className={styles.loading}>
         <div className={styles.scan}/>
