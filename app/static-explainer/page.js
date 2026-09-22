@@ -42,8 +42,8 @@ function VisualOverlay({brief}){
       <i/><b>{label}</b>
     </span>)}
 
-    {primaryMotion&&<span className={styles.motionCue} style={{top:"46%",left:"38%"}}>
-      <i>{showArrow?"↗":"●"}</i><small>{primaryMotion}</small>
+    {showArrow&&primaryMotion&&<span className={styles.motionCue} style={{top:"46%",left:"38%"}}>
+      <i>↗</i><small>{primaryMotion}</small>
     </span>}
 
     {stage&&<span className={styles.stageCue}><b>01</b><small>{safeText(stage.label)||safeText(stage.purpose)}</small></span>}
