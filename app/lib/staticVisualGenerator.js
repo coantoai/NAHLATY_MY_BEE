@@ -50,6 +50,107 @@ function deviceLine(device){
   return bits.join(" — ");
 }
 
+function buildVisualGrammar(understanding){
+  const relation=clean(understanding?.relation,60);
+  const grammarByRelation={
+    mechanism:{structure:"input → mechanism → output",layout:"guided spatial sequence",preferred:["stage-number","3d-model","hotspot"],avoid:["decorative arrows","parallel unrelated facts"]},
+    causality:{structure:"cause → bridge → effect",layout:"clear causal chain",preferred:["stage-number","contrast-marker","explanation-card"],avoid:["unrelated side facts","ambiguous direction"]},
+    comparison:{structure:"A ↔ B under one criterion",layout:"balanced side-by-side or split scene",preferred:["contrast-marker","frame","container"],avoid:["false sequence","unequal visual weight"]},
+    transformation:{structure:"inputs → transformation zone → outputs",layout:"one visible conversion center",preferred:["3d-model","hotspot","stage-number"],avoid:["isolated labels","hidden transformation"]},
+    growth:{structure:"source → accumulation → visible growth",layout:"progressive spatial or temporal progression",preferred:["stage-number","progress-bar","3d-model"],avoid:["instant before/after","too many stages"]},
+    concept:{structure:"subject → defining relation → meaning",layout:"single dominant subject with supporting context",preferred:["icon","hotspot","explanation-card"],avoid:["dashboard composition","equal emphasis everywhere"]}
+  };
+  return grammarByRelation[relation]||grammarByRelation.concept;
+}
+
+function normalizePriorityMap(value,understanding){
+  const source=Array.isArray(value)?value:[];
+  const items=source.map((item,index)=>{
+    if(typeof item==="string")return {rank:index+1,target:clean(item,90),reason:""};
+    if(!item||typeof item!=="object")return null;
+    return {
+      rank:Number(item.rank)||index+1,
+      target:clean(item.target||item.element||item.subject||item.label,90),
+      reason:clean(item.reason||item.why||item.purpose,140)
+    };
+  }).filter(x=>x&&x.target).sort((a,b)=>a.rank-b.rank).slice(0,3);
+  if(items.length)return items.map((x,i)=>({...x,rank:i+1}));
+  return cleanList(understanding?.essentialElements,3,90).map((target,i)=>({
+    rank:i+1,
+    target,
+    reason:i===0?"يجب أن يلتقطه النظر أولاً":"يدعم فهم العلاقة الأساسية"
+  }));
+}
+
+function buildAnnotationPolicy(understanding,grammar){
+  const relation=clean(understanding?.relation,60);
+  const policy={
+    maxLabels:4,
+    maxCards:1,
+    maxHotspots:relation==="mechanism"||relation==="transformation"?3:2,
+    maxStageNumbers:relation==="growth"||relation==="mechanism"?4:3,
+    allowedFamilies:Array.from(new Set([
+      ...cleanList(understanding?.recommendedDevices,6,40),
+      ...(Array.isArray(grammar?.preferred)?grammar.preferred:[])
+    ])).slice(0,6),
+    rule:"Use the least annotation needed. Prefer spatial clarity over text. Never label what is already unmistakable."
+  };
+  return policy;
+}
+
+function buildDensityBudget(understanding){
+  const count=cleanList(understanding?.essentialElements,8,90).length;
+  return {
+    maxPrimarySubjects:1,
+    maxSecondaryObjects:Math.min(6,Math.max(3,count)),
+    maxSimultaneousAnnotations:Math.min(5,Math.max(3,Math.ceil(count*.7))),
+    maxCompetingMotions:0,
+    rule:"If the scene exceeds the budget, merge, hide, or remove secondary detail before generation."
+  };
+}
+
+function buildMisconceptionGuard(understanding){
+  const q=clean(understanding?.question,700).toLowerCase();
+  const guards=[];
+  if(hasAny(q,["نبات","النبات","photosynthesis","plant"])){
+    guards.push("لا تُظهر النبات وكأنه يمتص الغذاء جاهزاً من التربة؛ الماء والمغذيات ليست هي السكر الذي يصنعه النبات.");
+    guards.push("لا تُظهر الأكسجين كمدخل أساسي للبناء الضوئي؛ ثاني أكسيد الكربون هو الغاز الداخل في العملية.");
+  }
+  if(hasAny(q,["قلب","القلب","heart"])){
+    guards.push("لا تجعل تدفق الدم ثنائي الاتجاه عبر الصمام في اللحظة نفسها.");
+  }
+  if(hasAny(q,["نحلة","تلقيح","حبوب اللقاح","pollination","bee"])){
+    guards.push("لا تخلط بين الرحيق وحبوب اللقاح؛ الرحيق يجذب النحلة وحبوب اللقاح هي المادة المنقولة.");
+  }
+  return guards.slice(0,4);
+}
+
+function understandingAuditFallback(brief,understanding,priorityMap){
+  const visible=[
+    clean(brief?.coreIdea,320),
+    clean(brief?.heroSubject,180),
+    clean(brief?.visualStory,850),
+    ...cleanList(brief?.objects,7,80),
+    ...cleanList(brief?.labels,5,32)
+  ].join(" ").toLowerCase();
+
+  const missing=cleanList(understanding?.essentialElements,8,90).filter(item=>{
+    const words=clean(item,90).toLowerCase().split(/\s+|\/|·/).filter(w=>w.length>2);
+    return words.length&&!words.some(w=>visible.includes(w));
+  }).slice(0,3);
+
+  return {
+    pass:missing.length===0,
+    missing,
+    priorityCovered:normalizePriorityMap(priorityMap,understanding).every(x=>{
+      const words=clean(x.target,90).toLowerCase().split(/\s+|\/|·/).filter(w=>w.length>2);
+      return words.length===0||words.some(w=>visible.includes(w));
+    }),
+    note:missing.length?"الخطة قد تُسقط عناصر أساسية من الفهم.":"التغطية الأساسية موجودة."
+  };
+}
+
+
 function buildUnderstandingPrinciples(question,audience){
   const q=clean(question,700).toLowerCase();
   let relation="concept";
@@ -156,6 +257,8 @@ Micro motion: ${microMotion.join(" | ")}
 Meaningful directional cue: ${arrows.join(" | ")}
 Short Arabic labels: ${labels.join(" | ")}
 Selected explanation devices: ${visualDevices.map(deviceLine).join(" | ") || "none"}
+Visual priority #1/#2/#3: ${normalizePriorityMap(brief?.visualPriorityMap,understanding).map(x=>x.rank+". "+x.target).join(" | ")}
+Visual grammar: ${buildVisualGrammar(understanding).structure} / ${buildVisualGrammar(understanding).layout}
 Composition: ${clean(brief?.composition,650)}
 Depth plan: ${clean(brief?.depthPlan,500)}
 Lighting: ${clean(brief?.lighting,450)}
@@ -190,8 +293,12 @@ export async function generateStaticVisual(questionInput,audienceInput="عام")
   const audience=clean(audienceInput||"عام",80);
   if(!question) throw Object.assign(new Error("اكتب ما الذي تريد فهمه."),{status:400});
 
-  // NAHLATY establishes the semantic contract before any Gemini request.
+  // NAHLATY establishes semantic constraints before any Gemini request.
   const understanding=buildUnderstandingPrinciples(question,audience);
+  const visualGrammar=buildVisualGrammar(understanding);
+  const annotationPolicy=buildAnnotationPolicy(understanding,visualGrammar);
+  const densityBudget=buildDensityBudget(understanding);
+  const misconceptionGuard=buildMisconceptionGuard(understanding);
 
   const ai=createGemini();
   if(!ai) throw Object.assign(new Error("GEMINI_API_KEY غير موجود."),{status:500});
@@ -203,10 +310,11 @@ Think like a film production designer + scientific illustrator + information des
 Choose the visual world according to the topic. Determine what the eye notices first, what spatial relationship carries the meaning, what should be foreground/midground/background, and which tiny set of arrows/labels truly improves understanding.
 
 Return JSON only with:
-title, coreIdea, heroSubject, visualStory, objects, primaryMotion, microMotion, visualDevices, arrows, labels, composition, depthPlan, lighting, palette, accuracyNotes.
+title, coreIdea, heroSubject, visualStory, objects, visualPriorityMap, primaryMotion, microMotion, visualDevices, arrows, labels, composition, depthPlan, lighting, palette, accuracyNotes.
 
 Rules:
 - heroSubject: one dominant visual focus.
+- visualPriorityMap: exactly 3 ranked items [{rank,target,reason}] describing what the eye must notice first, second, third.
 - objects: 3-7 concrete visible elements only.
 - primaryMotion: exactly ONE sentence for the single most important semantic movement/transition.
 - microMotion: 0-2 subtle supporting motions only.
@@ -224,7 +332,70 @@ Rules:
 Question: ${question}
 Audience: ${audience}`;
 
-  const brief=await generateJson(ai,directorPrompt,{maxAttempts:2,retryBaseMs:350});
+  let brief=await generateJson(ai,directorPrompt,{maxAttempts:2,retryBaseMs:350});
+  let priorityMap=normalizePriorityMap(brief?.visualPriorityMap,understanding);
+
+  const fallbackAudit=understandingAuditFallback(brief,understanding,priorityMap);
+  const criticPrompt=`You are NAHLATY's Understanding Check / Scene Critic.
+Audit the proposed visual plan BEFORE image generation.
+
+GOVERNING UNDERSTANDING:
+${understandingBlock(understanding)}
+
+VISUAL GRAMMAR:
+${JSON.stringify(visualGrammar)}
+
+PRIORITY MAP:
+${JSON.stringify(priorityMap)}
+
+DENSITY BUDGET:
+${JSON.stringify(densityBudget)}
+
+MISCONCEPTION GUARD:
+${JSON.stringify(misconceptionGuard)}
+
+PROPOSED PLAN:
+${JSON.stringify(brief)}
+
+Return JSON only with:
+pass (boolean),
+missingEssentials (array),
+priorityProblems (array),
+densityProblems (array),
+misconceptionRisks (array),
+revisionInstructions (array, max 5).
+
+Pass only if the plan can communicate the core idea visually, preserves indispensable elements, respects priority, stays within density, and avoids misconception risks.`;
+
+  let audit;
+  try{
+    audit=await generateJson(ai,criticPrompt,{maxAttempts:2,retryBaseMs:300});
+  }catch{
+    audit=fallbackAudit;
+  }
+
+  if(audit?.pass===false){
+    const revisionPrompt=`Revise this NAHLATY visual plan using the critic instructions.
+Keep one hero subject, one primary semantic motion, minimal micro-motion, the visual grammar, density budget and misconception guard.
+Return the SAME JSON schema as the original plan, including visualPriorityMap.
+
+ORIGINAL PLAN:
+${JSON.stringify(brief)}
+
+CRITIC:
+${JSON.stringify(audit)}
+
+UNDERSTANDING:
+${understandingBlock(understanding)}`;
+    try{
+      brief=await generateJson(ai,revisionPrompt,{maxAttempts:2,retryBaseMs:300});
+      priorityMap=normalizePriorityMap(brief?.visualPriorityMap,understanding);
+      audit={...audit,revised:true};
+    }catch{
+      audit={...audit,revised:false};
+    }
+  }
+
   const ref=referencePart();
   const request={
     model:IMAGE_MODEL,
@@ -269,6 +440,17 @@ Audience: ${audience}`;
       visualDevices:normalizeVisualDevices(brief?.visualDevices)
     },
     understanding:{name:understanding.name,relation:understanding.relation,coreEssence:understanding.coreEssence,essentialElements:understanding.essentialElements,mustShow:understanding.mustShow,recommendedDevices:understanding.recommendedDevices},
+    visualGrammar,
+    visualPriorityMap:priorityMap,
+    understandingCheck:{
+      pass:audit?.pass!==false,
+      revised:Boolean(audit?.revised),
+      missingEssentials:cleanList(audit?.missingEssentials||audit?.missing,5,100),
+      priorityProblems:cleanList(audit?.priorityProblems,5,120),
+      densityProblems:cleanList(audit?.densityProblems,5,120),
+      misconceptionRisks:cleanList(audit?.misconceptionRisks,5,140)
+    },
+    safeguards:{annotationPolicy,densityBudget,misconceptionGuard},
     benchmark:"NAHLATY_OFFICIAL_CINEMATIC_REFERENCE",
     model:IMAGE_MODEL
   };
