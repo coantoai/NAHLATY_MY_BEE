@@ -107,12 +107,12 @@ export default function StaticExplainer(){
 
       {loading&&<div className={styles.loading}>
         <div className={styles.scan}/>
-        <p>نفهم الجوهر → نحدد ما لا يكتمل الفهم بدونه → نختار المشهد → نولّد الصورة</p>
+        <p>نفهم الجوهر → نطبّق القواعد البصرية → نرتّب أولوية النظر → نفحص الفهم → نولّد الصورة</p>
       </div>}
 
       {result&&<figure className={styles.figure}>
         <div className={styles.scene}><img src={result.image} alt={result.title||question}/><VisualOverlay brief={result.brief}/></div>
-        <figcaption><b>{result.title}</b><span>صورة مولّدة بالذكاء الاصطناعي · راجع التفاصيل الحساسة قبل الاعتماد التعليمي الرسمي</span></figcaption>
+        <figcaption><b>{result.title}</b><span>{result.understandingCheck?.pass?"✓ فحص الفهم اجتاز":"⚠ يحتاج مراجعة"} · صورة مولّدة بالذكاء الاصطناعي · راجع التفاصيل الحساسة قبل الاعتماد التعليمي الرسمي</span></figcaption>
       </figure>}
     </section>
   </main>
