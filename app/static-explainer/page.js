@@ -22,17 +22,35 @@ function safeText(value){
 
 function VisualOverlay({brief}){
   const labels=(Array.isArray(brief?.labels)?brief.labels:[]).map(safeText).filter(Boolean).slice(0,4);
+  const devices=Array.isArray(brief?.visualDevices)?brief.visualDevices:[];
+  const types=new Set(devices.map(x=>safeText(x?.type).toLowerCase()).filter(Boolean));
   const fallback=(Array.isArray(brief?.arrows)?brief.arrows:[]).map(safeText).find(Boolean);
   const primaryMotion=safeText(brief?.primaryMotion)||fallback||"";
-  if(!labels.length&&!primaryMotion)return null;
+  const showHotspots=types.has("hotspot");
+  const showArrow=types.has("arrow");
+  const stage=devices.find(x=>safeText(x?.type).toLowerCase()==="stage-number");
+  const contrast=devices.find(x=>safeText(x?.type).toLowerCase()==="contrast-marker");
+  const card=devices.find(x=>safeText(x?.type).toLowerCase()==="explanation-card");
+  const scale=devices.find(x=>safeText(x?.type).toLowerCase()==="scale-indicator");
+  const progress=devices.find(x=>safeText(x?.type).toLowerCase()==="progress-bar");
   const spots=[{top:"18%",right:"9%"},{top:"35%",left:"7%"},{bottom:"19%",right:"12%"},{bottom:"14%",left:"10%"}];
+
+  if(!devices.length&&!primaryMotion&&!labels.length)return null;
+
   return <div className={styles.overlay} aria-hidden="true">
-    {labels.map((label,i)=><span key={"l-"+i} className={styles.hotspot} style={spots[i%spots.length]}>
+    {showHotspots&&labels.map((label,i)=><span key={"l-"+i} className={styles.hotspot} style={spots[i%spots.length]}>
       <i/><b>{label}</b>
     </span>)}
+
     {primaryMotion&&<span className={styles.motionCue} style={{top:"46%",left:"38%"}}>
-      <i>↗</i><small>{primaryMotion}</small>
+      <i>{showArrow?"↗":"●"}</i><small>{primaryMotion}</small>
     </span>}
+
+    {stage&&<span className={styles.stageCue}><b>01</b><small>{safeText(stage.label)||safeText(stage.purpose)}</small></span>}
+    {contrast&&<span className={styles.contrastCue}><i/><small>{safeText(contrast.label)||safeText(contrast.purpose)}</small><i/></span>}
+    {card&&<span className={styles.explainerCard}><b>{safeText(card.label)||"معلومة"}</b><small>{safeText(card.purpose)}</small></span>}
+    {scale&&<span className={styles.scaleCue}><i/><small>{safeText(scale.label)||safeText(scale.purpose)}</small></span>}
+    {progress&&<span className={styles.progressCue}><i/><i/><i/><small>{safeText(progress.label)||safeText(progress.purpose)}</small></span>}
   </div>
 }
 
@@ -63,7 +81,7 @@ export default function StaticExplainer(){
     <section className={styles.hero}>
       <p className={styles.eyebrow}>شرح بصري من سؤال واحد</p>
       <h1>اكتب ما تريد أن تفهمه.<br/><span>نحلتي ترسمه لك.</span></h1>
-      <p className={styles.sub}>صورة واحدة، سينمائية وواضحة، تستخدم المشهد والأسهم والكلمات القليلة لشرح الفكرة من أول نظرة.</p>
+      <p className={styles.sub}>صورة واحدة، سينمائية وواضحة، تختار وسائل الإيضاح المناسبة للفكرة: مجسمات، نقاط ساخنة، مراحل، مقاييس، بطاقات أو أسهم عند الحاجة.</p>
 
       <div className={styles.composer}>
         <textarea value={question} onChange={e=>setQuestion(e.target.value)} rows={3} placeholder="مثلاً: كيف يحدث التلقيح؟"/>
