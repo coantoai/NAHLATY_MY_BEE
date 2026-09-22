@@ -127,6 +127,8 @@ Audience: ${audience}`;
 export function staticVisualErrorResponse(error){
   const detail=String(error?.message||error);
   const status=Number(error?.status)||500;
+  const noImageQuota=status===429&&(detail.includes("limit: 0")||detail.includes("free_tier"));
+  if(noImageQuota) return {status:503,body:{error:"توليد الصور عبر Gemini API غير مفعّل على الخطة الحالية للمفتاح. المنصة جاهزة برمجياً لكن نحتاج تفعيل Billing لتجربة التوليد الحقيقية.",code:"IMAGE_BILLING_REQUIRED"}};
   if(isTransientGenAIError(error)) return {status:503,body:{error:"مولد الصور مشغول مؤقتاً. أعد المحاولة بعد قليل.",code:"AI_BUSY"}};
   return {status,body:{error:status===400?detail:"تعذر توليد الصورة.",detail}};
 }
