@@ -44,3 +44,26 @@
   .sceneImage,.sceneImageFocused{transition:none}
   .flowEnergy{animation:none}
 }
+
+/* Visible Interaction Demo */
+.liveDemo{padding:18px;background:#0b100d;color:#eef3ef}
+.liveDemoTop{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:4px 4px 14px}
+.liveDemoTop div{display:grid;gap:3px}.liveDemoTop b{font-size:15px}.liveDemoTop small{font-size:10px;color:#98a59d}
+.liveDemoTop button{appearance:none;border:1px solid #ffffff20;background:#ffffff0c;color:#f5f7f3;border-radius:999px;padding:8px 12px;font:inherit;font-size:10px;cursor:pointer}
+.demoScene{position:relative;border:1px solid #26342c;border-radius:22px;overflow:hidden;background:radial-gradient(circle at 16% 20%,#37432c55,transparent 24%),linear-gradient(180deg,#152018,#0a0f0c 72%)}
+.demoScene svg{display:block;width:100%;height:auto}
+.demoNode,.demoNodeSelected{cursor:pointer;outline:none}.demoNode text,.demoNodeSelected text{fill:#e9efe9;font-size:22px;font-family:inherit}
+.demoNodeSelected{filter:drop-shadow(0 0 12px #dfeadf66)}
+.demoHit{fill:transparent;stroke:transparent}
+.demoSun{fill:#f4d06d;stroke:#fff2b4;stroke-width:5}
+.demoPanel{stroke:#7892a2;stroke-width:4}.demoGrid{stroke:#9ab0bc77;stroke-width:2}
+.demoPhotonBase,.demoPhotonFlow,.demoWire,.demoCurrent{fill:none;stroke-linecap:round}
+.demoPhotonBase{stroke:#f8df8a33;stroke-width:8}.demoPhotonFlow{stroke:#f8df8a;stroke-width:7;stroke-dasharray:14 20;animation:demoFlow 1.2s linear infinite}
+.demoWire{stroke:#2d3940;stroke-width:16}.demoCurrent{stroke:#90d7ff;stroke-width:6;stroke-dasharray:12 16;animation:demoFlow 1s linear infinite}
+.demoLampGlow{fill:#ffe99555;animation:lampGlow 2.2s ease-in-out infinite}.demoLamp{fill:#fff0a8;stroke:#fff8d9;stroke-width:4}.demoLampBase{fill:#59636a}
+.demoFocusLabel{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);max-width:80%;padding:8px 12px;border-radius:12px;background:#07100cda;border:1px solid #ffffff24;color:#fff;font-size:11px;text-align:center;backdrop-filter:blur(9px)}
+.liveDemoHint{text-align:center;color:#91a098;font-size:10px;padding:12px 0 2px}
+@keyframes demoFlow{to{stroke-dashoffset:-34}}
+@keyframes lampGlow{0%,35%{opacity:.18;transform:scale(.92);transform-origin:855px 285px}55%,85%{opacity:1;transform:scale(1.18);transform-origin:855px 285px}100%{opacity:.18;transform:scale(.92);transform-origin:855px 285px}}
+@media(max-width:650px){.liveDemo{padding:10px}.liveDemoTop small{display:none}.demoNode text,.demoNodeSelected text{font-size:28px}.demoFocusLabel{font-size:9px}.liveDemoHint{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.demoPhotonFlow,.demoCurrent,.demoLampGlow{animation:none}.demoLampGlow{opacity:.75}}
