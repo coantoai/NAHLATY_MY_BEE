@@ -98,14 +98,32 @@ Audience: ${audience}`;
 
   const brief=await generateJson(ai,directorPrompt,{maxAttempts:2,retryBaseMs:350});
   const ref=referencePart();
-  const response=await ai.models.generateContent({
+  const request={
     model:IMAGE_MODEL,
     contents:[{role:"user",parts:[ref,{text:buildImagePrompt(question,brief,audience)}].filter(Boolean)}],
     config:{
       responseModalities:["IMAGE"],
       responseFormat:{image:{aspectRatio:"16:9",imageSize:"2K"}}
     }
-  });
+  };
+
+  // Gemini documents 503/429/5xx as transient conditions. Retry the same
+  // cinematic request with bounded exponential backoff instead of immediately
+  // falling back to the legacy explainer.
+  let response;
+  let lastError;
+  const retryDelays=[0,1200,3000,6500];
+  for(let attempt=0;attempt<retryDelays.length;attempt+=1){
+    if(retryDelays[attempt]) await new Promise(resolve=>setTimeout(resolve,retryDelays[attempt]));
+    try{
+      response=await ai.models.generateContent(request);
+      break;
+    }catch(error){
+      lastError=error;
+      if(!isTransientGenAIError(error)||attempt===retryDelays.length-1) throw error;
+    }
+  }
+  if(!response) throw lastError||new Error("Image generation failed.");
 
   const imagePart=(response?.candidates?.[0]?.content?.parts||[]).find(p=>p?.inlineData?.data);
   if(!imagePart) throw Object.assign(new Error("لم يرجع مولد الصور صورة هذه المرة."),{status:502});
