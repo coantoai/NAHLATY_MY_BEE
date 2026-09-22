@@ -84,10 +84,12 @@ function referencePart(){
   return match?{inlineData:{mimeType:match[1],data:match[2]}}:null;
 }
 
-function buildImagePrompt(question,brief,audience){
-  const labels=(brief?.labels||[]).slice(0,5).map(x=>clean(x,28)).filter(Boolean);
-  const arrows=(brief?.arrows||[]).slice(0,5).map(x=>clean(x,90)).filter(Boolean);
-  const objects=(brief?.objects||[]).slice(0,7).map(x=>clean(x,80)).filter(Boolean);
+function buildImagePrompt(question,brief,audience,understanding){
+  const labels=cleanList(brief?.labels,5,28);
+  const arrows=cleanList(brief?.arrows,1,90);
+  const objects=cleanList(brief?.objects,7,80);
+  const primaryMotion=clean(brief?.primaryMotion||arrows[0],120);
+  const microMotion=cleanList(brief?.microMotion,2,90);
 
   return `You are generating the final hero image for NAHLATY, a premium AI visual-explanation product.
 
@@ -104,13 +106,20 @@ ${question}
 AUDIENCE:
 ${audience}
 
+GOVERNING UNDERSTANDING PRINCIPLES — DECIDED BY NAHLATY BEFORE GEMINI:
+${understandingBlock(understanding)}
+
+These principles are a semantic contract. Preserve the indispensable elements and must-show relation; visual beauty must not erase meaning.
+
 VISUAL DIRECTOR PLAN:
 Title: ${clean(brief?.title,90)}
 One-sentence idea: ${clean(brief?.coreIdea,320)}
 Hero subject: ${clean(brief?.heroSubject,180)}
 Visual story: ${clean(brief?.visualStory,850)}
 Main visible objects: ${objects.join(" | ")}
-Meaningful arrows / directional cues: ${arrows.join(" | ")}
+Primary semantic motion: ${primaryMotion}
+Micro motion: ${microMotion.join(" | ")}
+Meaningful directional cue: ${arrows.join(" | ")}
 Short Arabic labels: ${labels.join(" | ")}
 Composition: ${clean(brief?.composition,650)}
 Depth plan: ${clean(brief?.depthPlan,500)}
@@ -134,6 +143,7 @@ NON-NEGOTIABLE OUTPUT STANDARD:
 13. If a detail is uncertain, simplify it instead of inventing it.
 14. Scientific / mechanical / logical correctness outranks spectacle.
 15. Match the attached benchmark's AMBITION and FINISH, not its literal subject.
+16. Use ONE primary semantic motion only. Any other motion must be subtle micro motion and never compete for attention.
 
 Return only the finished image.`;
 }
@@ -142,6 +152,9 @@ export async function generateStaticVisual(questionInput,audienceInput="عام")
   const question=clean(questionInput,700);
   const audience=clean(audienceInput||"عام",80);
   if(!question) throw Object.assign(new Error("اكتب ما الذي تريد فهمه."),{status:400});
+
+  // NAHLATY establishes the semantic contract before any Gemini request.
+  const understanding=buildUnderstandingPrinciples(question,audience);
 
   const ai=createGemini();
   if(!ai) throw Object.assign(new Error("GEMINI_API_KEY غير موجود."),{status:500});
@@ -153,12 +166,14 @@ Think like a film production designer + scientific illustrator + information des
 Choose the visual world according to the topic. Determine what the eye notices first, what spatial relationship carries the meaning, what should be foreground/midground/background, and which tiny set of arrows/labels truly improves understanding.
 
 Return JSON only with:
-title, coreIdea, heroSubject, visualStory, objects, arrows, labels, composition, depthPlan, lighting, palette, accuracyNotes.
+title, coreIdea, heroSubject, visualStory, objects, primaryMotion, microMotion, arrows, labels, composition, depthPlan, lighting, palette, accuracyNotes.
 
 Rules:
 - heroSubject: one dominant visual focus.
 - objects: 3-7 concrete visible elements only.
-- arrows: 0-5 meaningful causal/directional cues, not decoration.
+- primaryMotion: exactly ONE sentence for the single most important semantic movement/transition.
+- microMotion: 0-2 subtle supporting motions only.
+- arrows: 0-1 meaningful directional cue tied to the primary motion, not decoration.
 - labels: 2-5 short Arabic labels, ideally 1-3 words each.
 - composition: describe camera angle and placement.
 - depthPlan: foreground/midground/background and any cutaway or magnified detail.
@@ -174,7 +189,7 @@ Audience: ${audience}`;
   const ref=referencePart();
   const request={
     model:IMAGE_MODEL,
-    contents:[{role:"user",parts:[ref,{text:buildImagePrompt(question,brief,audience)}].filter(Boolean)}],
+    contents:[{role:"user",parts:[ref,{text:buildImagePrompt(question,brief,audience,understanding)}].filter(Boolean)}],
     config:{
       responseModalities:["IMAGE"],
       responseFormat:{image:{aspectRatio:"16:9",imageSize:"2K"}}
@@ -208,9 +223,12 @@ Audience: ${audience}`;
     brief:{
       coreIdea:clean(brief?.coreIdea,320),
       heroSubject:clean(brief?.heroSubject,180),
-      labels:Array.isArray(brief?.labels)?brief.labels.slice(0,5).map(x=>clean(x,32)):[],
-      arrows:Array.isArray(brief?.arrows)?brief.arrows.slice(0,5).map(x=>clean(x,100)):[]
+      labels:cleanList(brief?.labels,5,32),
+      arrows:cleanList(brief?.arrows,1,100),
+      primaryMotion:clean(brief?.primaryMotion||cleanList(brief?.arrows,1,100)[0],120),
+      microMotion:cleanList(brief?.microMotion,2,90)
     },
+    understanding:{name:understanding.name,relation:understanding.relation,coreEssence:understanding.coreEssence,essentialElements:understanding.essentialElements,mustShow:understanding.mustShow},
     benchmark:"NAHLATY_OFFICIAL_CINEMATIC_REFERENCE",
     model:IMAGE_MODEL
   };
