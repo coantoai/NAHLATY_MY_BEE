@@ -3,7 +3,81 @@ import MYBEE_REFERENCE from "../mybee-reference-data";
 
 export const IMAGE_MODEL="gemini-3.1-flash-image";
 
-const clean=(value,max=700)=>String(value||"").replace(/\s+/g," ").trim().slice(0,max);
+const scalarText=value=>{
+  if(value===null||value===undefined)return "";
+  if(typeof value==="string"||typeof value==="number"||typeof value==="boolean")return String(value);
+  if(Array.isArray(value))return value.map(scalarText).filter(Boolean).join(" · ");
+  if(typeof value==="object"){
+    for(const key of ["label","text","title","name","value","caption","description","action","meaning","cue"]){
+      const text=scalarText(value[key]);
+      if(text)return text;
+    }
+    const from=scalarText(value.from),to=scalarText(value.to);
+    if(from&&to)return from+" → "+to;
+    return from||to||"";
+  }
+  return "";
+};
+const clean=(value,max=700)=>scalarText(value).replace(/\s+/g," ").trim().slice(0,max);
+const cleanList=(value,limit,max)=>{
+  const items=Array.isArray(value)?value:(value?[value]:[]);
+  return items.map(item=>clean(item,max)).filter(Boolean).slice(0,limit);
+};
+const hasAny=(text,terms)=>terms.some(term=>text.includes(term));
+
+function buildUnderstandingPrinciples(question,audience){
+  const q=clean(question,700).toLowerCase();
+  let relation="concept";
+  let coreEssence=clean(question,420);
+  let essentialElements=["الموضوع الرئيسي","العلاقة الأساسية","النتيجة أو المعنى"];
+  let mustShow=["بداية أو سبب واضح","العلاقة أو التحول الأساسي","نتيجة مرئية"];
+
+  if(hasAny(q,["كيف","how ","ماذا يحدث","what happens"])){
+    relation="mechanism";
+    essentialElements=["الموضوع الرئيسي","المدخل أو السبب","الآلية/التحول","النتيجة"];
+  }else if(hasAny(q,["لماذا","ليش","why "])){
+    relation="causality";
+    essentialElements=["السبب","الآلية التي تربط السبب بالنتيجة","النتيجة"];
+  }else if(hasAny(q,["الفرق","مقارنة","compare"," vs ","versus"])){
+    relation="comparison";
+    essentialElements=["العنصر الأول","العنصر الثاني","معيار الفرق الأساسي"];
+  }
+
+  const plant=hasAny(q,["نبات","النبات","النباتات","ورقة","الأوراق","photosynthesis","plant"]);
+  if(plant&&hasAny(q,["غذاء","طعام","يصنع","تصنع","تمثيل ضوئي","البناء الضوئي","photosynthesis"])){
+    relation="transformation";
+    coreEssence="النبات يحوّل ضوء الشمس والماء وثاني أكسيد الكربون داخل الورقة إلى سكريات تخزن طاقة كيميائية، مع إطلاق الأكسجين.";
+    essentialElements=["ضوء الشمس","الماء من الجذور","ثاني أكسيد الكربون","الورقة/البلاستيدات الخضراء","السكر الناتج","الأكسجين الناتج"];
+    mustShow=["دخول الضوء والماء وثاني أكسيد الكربون","مكان التحول داخل الورقة","خروج السكر/الطاقة والأكسجين"];
+  }else if(plant&&hasAny(q,["ينمو","نمو","grow","growth"])){
+    relation="growth";
+    coreEssence="نمو النبات نتيجة تفاعل امتصاص الماء والمغذيات مع الضوء وتبادل الغازات ثم بناء أنسجة جديدة.";
+    essentialElements=["الجذور","الماء والمغذيات","الضوء","الأوراق وتبادل الغازات","نسيج جديد/مرحلة نمو"];
+    mustShow=["مصدر الماء والمغذيات","التقاط الضوء عبر الأوراق","التغير التدريجي إلى نسيج جديد"];
+  }
+
+  return {
+    name:"المبادئ الحاكمة للفهم",
+    question:clean(question,700),
+    audience:clean(audience||"عام",80),
+    relation,
+    coreEssence,
+    essentialElements:cleanList(essentialElements,8,90),
+    mustShow:cleanList(mustShow,6,120),
+    primaryMotionRule:"حركة أساسية واحدة فقط تمثل أهم انتقال أو تحول في الفكرة.",
+    microMotionRule:"Micro motion خفيف جداً لدعم الحياة والانتباه من دون منافسة الحركة الأساسية."
+  };
+}
+
+function understandingBlock(u){
+  return [
+    "Core essence: "+clean(u?.coreEssence,420),
+    "Indispensable elements: "+cleanList(u?.essentialElements,8,90).join(" | "),
+    "Must-show relations: "+cleanList(u?.mustShow,6,120).join(" | "),
+    "Semantic relation: "+clean(u?.relation,80),
+    "Motion policy: "+clean(u?.primaryMotionRule,180)+" "+clean(u?.microMotionRule,180)
+  ].join("\n");
+}
 
 function referencePart(){
   const match=String(MYBEE_REFERENCE||"").match(/^data:([^;]+);base64,(.+)$/s);
