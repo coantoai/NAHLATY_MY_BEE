@@ -83,6 +83,31 @@ function normalizePriorityMap(value,understanding){
   }));
 }
 
+function normalizeSemanticAnchors(value,priorityMap=[]){
+  const fallbackPositions=[[28,46],[52,50],[76,48]];
+  const source=Array.isArray(value)?value:[];
+  const parsed=source.map((item,index)=>{
+    if(!item||typeof item!=="object")return null;
+    const x=Math.max(5,Math.min(95,Number(item.x)||fallbackPositions[index%fallbackPositions.length][0]));
+    const y=Math.max(7,Math.min(93,Number(item.y)||fallbackPositions[index%fallbackPositions.length][1]));
+    return {
+      id:clean(item.id||"anchor-"+(index+1),40),
+      label:clean(item.label||item.target||item.name,60),
+      role:clean(item.role||"part",40),
+      x,
+      y
+    };
+  }).filter(x=>x&&x.label).slice(0,4);
+  if(parsed.length>=2)return parsed;
+  return normalizePriorityMap(priorityMap,{essentialElements:[]}).slice(0,3).map((item,index)=>({
+    id:"priority-"+(index+1),
+    label:item.target,
+    role:index===0?"source":index===2?"destination":"process",
+    x:fallbackPositions[index][0],
+    y:fallbackPositions[index][1]
+  }));
+}
+
 function buildAnnotationPolicy(understanding,grammar){
   const relation=clean(understanding?.relation,60);
   const policy={
@@ -258,6 +283,7 @@ Micro motion: ${microMotion.join(" | ")}
 Meaningful directional cue: ${arrows.join(" | ")}
 Short Arabic labels: ${labels.join(" | ")}
 Selected explanation devices: ${visualDevices.map(deviceLine).join(" | ") || "none"}
+Semantic interaction anchors: ${normalizeSemanticAnchors(brief?.semanticAnchors,brief?.visualPriorityMap).map(a=>a.id+"="+a.label+" @ "+a.x+"%,"+a.y+"%").join(" | ")}
 Visual priority #1/#2/#3: ${normalizePriorityMap(brief?.visualPriorityMap,understanding).map(x=>x.rank+". "+x.target).join(" | ")}
 Visual grammar: ${buildVisualGrammar(understanding).structure} / ${buildVisualGrammar(understanding).layout}
 Composition: ${clean(brief?.composition,650)}
@@ -311,11 +337,12 @@ Think like a film production designer + scientific illustrator + information des
 Choose the visual world according to the topic. Determine what the eye notices first, what spatial relationship carries the meaning, what should be foreground/midground/background, and which tiny set of arrows/labels truly improves understanding.
 
 Return JSON only with:
-title, coreIdea, heroSubject, visualStory, objects, visualPriorityMap, primaryMotion, microMotion, visualDevices, arrows, labels, composition, depthPlan, lighting, palette, accuracyNotes.
+title, coreIdea, heroSubject, visualStory, objects, visualPriorityMap, semanticAnchors, primaryMotion, microMotion, visualDevices, arrows, labels, composition, depthPlan, lighting, palette, accuracyNotes.
 
 Rules:
 - heroSubject: one dominant visual focus.
 - visualPriorityMap: exactly 3 ranked items [{rank,target,reason}] describing what the eye must notice first, second, third.
+- semanticAnchors: exactly 3-4 concrete visible targets [{id,label,role,x,y}]. x and y are percentages from 0-100 in the final 16:9 composition. Put anchors on real visible objects, not empty space. Use stable roles such as source, process, destination, hero, part, cause, effect.
 - objects: 3-7 concrete visible elements only.
 - primaryMotion: exactly ONE sentence for the single most important semantic movement/transition.
 - microMotion: 0-2 subtle supporting motions only.
@@ -378,7 +405,7 @@ Pass only if the plan can communicate the core idea visually, preserves indispen
   if(audit?.pass===false){
     const revisionPrompt=`Revise this NAHLATY visual plan using the critic instructions.
 Keep one hero subject, one primary semantic motion, minimal micro-motion, the visual grammar, density budget and misconception guard.
-Return the SAME JSON schema as the original plan, including visualPriorityMap.
+Return the SAME JSON schema as the original plan, including visualPriorityMap and semanticAnchors.
 
 ORIGINAL PLAN:
 ${JSON.stringify(brief)}
@@ -440,7 +467,8 @@ ${understandingBlock(understanding)}`;
       arrows:cleanList(brief?.arrows,1,100),
       primaryMotion:clean(brief?.primaryMotion||cleanList(brief?.arrows,1,100)[0],120),
       microMotion:cleanList(brief?.microMotion,2,90),
-      visualDevices:normalizeVisualDevices(brief?.visualDevices)
+      visualDevices:normalizeVisualDevices(brief?.visualDevices),
+      semanticAnchors:normalizeSemanticAnchors(brief?.semanticAnchors,priorityMap)
     },
     understanding:{name:understanding.name,relation:understanding.relation,coreEssence:understanding.coreEssence,essentialElements:understanding.essentialElements,mustShow:understanding.mustShow,recommendedDevices:understanding.recommendedDevices},
     visualGrammar,
