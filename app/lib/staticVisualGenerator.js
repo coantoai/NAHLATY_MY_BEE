@@ -56,16 +56,20 @@ function buildUnderstandingPrinciples(question,audience){
   let coreEssence=clean(question,420);
   let essentialElements=["الموضوع الرئيسي","العلاقة الأساسية","النتيجة أو المعنى"];
   let mustShow=["بداية أو سبب واضح","العلاقة أو التحول الأساسي","نتيجة مرئية"];
+  let recommendedDevices=["icon","hotspot","explanation-card"];
 
   if(hasAny(q,["كيف","how ","ماذا يحدث","what happens"])){
     relation="mechanism";
     essentialElements=["الموضوع الرئيسي","المدخل أو السبب","الآلية/التحول","النتيجة"];
+    recommendedDevices=["stage-number","3d-model","hotspot"];
   }else if(hasAny(q,["لماذا","ليش","why "])){
     relation="causality";
     essentialElements=["السبب","الآلية التي تربط السبب بالنتيجة","النتيجة"];
+    recommendedDevices=["contrast-marker","stage-number","explanation-card"];
   }else if(hasAny(q,["الفرق","مقارنة","compare"," vs ","versus"])){
     relation="comparison";
     essentialElements=["العنصر الأول","العنصر الثاني","معيار الفرق الأساسي"];
+    recommendedDevices=["contrast-marker","frame","container"];
   }
 
   const plant=hasAny(q,["نبات","النبات","النباتات","ورقة","الأوراق","photosynthesis","plant"]);
@@ -74,11 +78,13 @@ function buildUnderstandingPrinciples(question,audience){
     coreEssence="النبات يحوّل ضوء الشمس والماء وثاني أكسيد الكربون داخل الورقة إلى سكريات تخزن طاقة كيميائية، مع إطلاق الأكسجين.";
     essentialElements=["ضوء الشمس","الماء من الجذور","ثاني أكسيد الكربون","الورقة/البلاستيدات الخضراء","السكر الناتج","الأكسجين الناتج"];
     mustShow=["دخول الضوء والماء وثاني أكسيد الكربون","مكان التحول داخل الورقة","خروج السكر/الطاقة والأكسجين"];
+    recommendedDevices=["3d-model","hotspot","stage-number","explanation-card"];
   }else if(plant&&hasAny(q,["ينمو","نمو","grow","growth"])){
     relation="growth";
     coreEssence="نمو النبات نتيجة تفاعل امتصاص الماء والمغذيات مع الضوء وتبادل الغازات ثم بناء أنسجة جديدة.";
     essentialElements=["الجذور","الماء والمغذيات","الضوء","الأوراق وتبادل الغازات","نسيج جديد/مرحلة نمو"];
     mustShow=["مصدر الماء والمغذيات","التقاط الضوء عبر الأوراق","التغير التدريجي إلى نسيج جديد"];
+    recommendedDevices=["stage-number","progress-bar","3d-model"];
   }
 
   return {
@@ -89,6 +95,7 @@ function buildUnderstandingPrinciples(question,audience){
     coreEssence,
     essentialElements:cleanList(essentialElements,8,90),
     mustShow:cleanList(mustShow,6,120),
+    recommendedDevices:cleanList(recommendedDevices,6,40),
     primaryMotionRule:"حركة أساسية واحدة فقط تمثل أهم انتقال أو تحول في الفكرة.",
     microMotionRule:"Micro motion خفيف جداً لدعم الحياة والانتباه من دون منافسة الحركة الأساسية."
   };
@@ -100,6 +107,7 @@ function understandingBlock(u){
     "Indispensable elements: "+cleanList(u?.essentialElements,8,90).join(" | "),
     "Must-show relations: "+cleanList(u?.mustShow,6,120).join(" | "),
     "Semantic relation: "+clean(u?.relation,80),
+    "Recommended visual device families: "+cleanList(u?.recommendedDevices,6,40).join(" | "),
     "Motion policy: "+clean(u?.primaryMotionRule,180)+" "+clean(u?.microMotionRule,180)
   ].join("\n");
 }
@@ -135,7 +143,7 @@ ${audience}
 GOVERNING UNDERSTANDING PRINCIPLES — DECIDED BY NAHLATY BEFORE GEMINI:
 ${understandingBlock(understanding)}
 
-These principles are a semantic contract. Preserve the indispensable elements and must-show relation; visual beauty must not erase meaning.
+These principles are a semantic contract. Preserve the indispensable elements and must-show relation; visual beauty must not erase meaning. The recommended device families are candidates, not a checklist: use only those that improve comprehension.
 
 VISUAL DIRECTOR PLAN:
 Title: ${clean(brief?.title,90)}
@@ -260,7 +268,7 @@ Audience: ${audience}`;
       microMotion:cleanList(brief?.microMotion,2,90),
       visualDevices:normalizeVisualDevices(brief?.visualDevices)
     },
-    understanding:{name:understanding.name,relation:understanding.relation,coreEssence:understanding.coreEssence,essentialElements:understanding.essentialElements,mustShow:understanding.mustShow},
+    understanding:{name:understanding.name,relation:understanding.relation,coreEssence:understanding.coreEssence,essentialElements:understanding.essentialElements,mustShow:understanding.mustShow,recommendedDevices:understanding.recommendedDevices},
     benchmark:"NAHLATY_OFFICIAL_CINEMATIC_REFERENCE",
     model:IMAGE_MODEL
   };
