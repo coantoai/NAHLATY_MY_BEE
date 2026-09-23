@@ -3,9 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import styles from "./page.module.css";
-import { getSmartAsset } from "../lib/assets/smartAssets";
-
-const ASSET = getSmartAsset("engine-piston-v1");
+import { resolveSmartAsset } from "../lib/assets/smartAssets";
 
 function disposeObject(root){
   root.traverse(obj=>{
@@ -17,10 +15,18 @@ function disposeObject(root){
   });
 }
 
-export default function SmartAssetDemo(){
+export default function SmartAssetDemo({question}){
+  const ASSET=resolveSmartAsset(question);
   const mountRef=useRef(null);
   const engineRef=useRef(null);
   const [mode,setMode]=useState("running");
+
+  if(!ASSET){
+    return <div className={styles.assetUnavailable}>
+      <b>لا يوجد أصل ذكي محفوظ لهذا السؤال بعد.</b>
+      <span>لن نعرض مثالًا غير مرتبط بالسؤال. التوليد أو بناء أصل مناسب يأتي فقط عند الحاجة.</span>
+    </div>;
+  }
 
   useEffect(()=>{
     const mount=mountRef.current;
@@ -280,7 +286,7 @@ export default function SmartAssetDemo(){
       crankLabel.remove();
       renderer.domElement.remove();
     };
-  },[]);
+  },[ASSET?.id]);
 
   function select(next){
     setMode(next);
