@@ -1,0 +1,35 @@
+name: Inspect Ijiri Heart Asset
+
+on:
+  push:
+    branches:
+      - static-visual-explainer-mvp
+    paths:
+      - "scripts/acquire_ijiri_heart.py"
+      - ".github/workflows/inspect-ijiri-heart.yml"
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Acquire public-domain HeartModel only
+        run: python3 scripts/acquire_ijiri_heart.py
+
+      - name: Print inventory
+        run: cat .asset-cache/ijiri-heart-v4/inventory.json
+
+      - name: Upload inspection artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ijiri-heart-v4-inspection
+          path: |
+            .asset-cache/ijiri-heart-v4/inventory.json
+            .asset-cache/ijiri-heart-v4/raw/
+          if-no-files-found: error
+          retention-days: 7
