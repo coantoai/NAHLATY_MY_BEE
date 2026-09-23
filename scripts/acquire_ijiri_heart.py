@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Acquire only the public-domain HeartModel portion of Takashi Ijiri HeartSim v4.
+"""Acquire only the public-domain heart-model files from Takashi Ijiri HeartSim v4.
 
-This script intentionally does not copy or redistribute the bundled simulator,
-whose project page limits it to demonstration use.
+The source project page states that the heart models are Public Domain while the
+bundled simulator is demonstration-only and must not be redistributed. This
+script therefore extracts only documented model files and never the simulator.
 """
 
 from __future__ import annotations
@@ -23,6 +24,25 @@ ARCHIVE = CACHE / "HeartSim20150114_v4.zip"
 RAW = CACHE / "raw"
 INVENTORY = CACHE / "inventory.json"
 
+DOCUMENTED_PREFIXES = (
+    "version4",
+    "Model_A",
+    "Model_B",
+    "Model_C",
+)
+
+ALLOWED_EXTENSIONS = {
+    ".blend",
+    ".obj",
+    ".off",
+    ".node",
+    ".ele",
+    ".face",
+    ".edge",
+    ".msh",
+    ".txt",
+}
+
 def git_blob_sha(data: bytes) -> str:
     header = f"blob {len(data)}\0".encode("utf-8")
     return hashlib.sha1(header + data).hexdigest()
@@ -36,7 +56,14 @@ def download() -> bytes:
     ARCHIVE.write_bytes(data)
     return data
 
-def safe_extract_heart_model(data: bytes) -> list[dict]:
+def is_documented_heart_model(info: zipfile.ZipInfo) -> bool:
+    if info.is_dir():
+        return False
+    name = pathlib.PurePosixPath(info.filename.replace("\\", "/")).name
+    suffix = pathlib.PurePosixPath(name).suffix.lower()
+    return name.startswith(DOCUMENTED_PREFIXES) and suffix in ALLOWED_EXTENSIONS
+
+def safe_extract_heart_models() -> list[dict]:
     if RAW.exists():
         shutil.rmtree(RAW)
     RAW.mkdir(parents=True, exist_ok=True)
@@ -44,22 +71,11 @@ def safe_extract_heart_model(data: bytes) -> list[dict]:
     entries = []
     with zipfile.ZipFile(ARCHIVE) as zf:
         for info in zf.infolist():
+            if not is_documented_heart_model(info):
+                continue
             normalized = info.filename.replace("\\", "/").lstrip("/")
-            parts = pathlib.PurePosixPath(normalized).parts
-            if "HeartModel" not in parts:
-                continue
-            heart_index = parts.index("HeartModel")
-            relative_parts = parts[heart_index + 1 :]
-            if not relative_parts:
-                continue
-            target = RAW.joinpath(*relative_parts)
-            resolved = target.resolve()
-            if RAW.resolve() not in resolved.parents and resolved != RAW.resolve():
-                raise RuntimeError(f"Unsafe archive path: {info.filename}")
-            if info.is_dir():
-                target.mkdir(parents=True, exist_ok=True)
-                continue
-            target.parent.mkdir(parents=True, exist_ok=True)
+            name = pathlib.PurePosixPath(normalized).name
+            target = RAW / name
             with zf.open(info) as src, target.open("wb") as dst:
                 shutil.copyfileobj(src, dst)
             entries.append({
@@ -68,6 +84,11 @@ def safe_extract_heart_model(data: bytes) -> list[dict]:
                 "bytes": info.file_size,
                 "crc32": f"{info.CRC:08x}",
             })
+
+        if not entries:
+            names = [info.filename for info in zf.infolist()]
+            print("Archive members:", json.dumps(names[:250], indent=2))
+
     return entries
 
 def main() -> None:
@@ -78,19 +99,19 @@ def main() -> None:
             f"Source integrity check failed. Expected Git blob {EXPECTED_GIT_BLOB_SHA}, got {actual}."
         )
 
-    entries = safe_extract_heart_model(data)
+    entries = safe_extract_heart_models()
     if not entries:
-        raise SystemExit("No HeartModel files found; refusing to continue.")
+        raise SystemExit("No documented heart-model files found; refusing to continue.")
 
     payload = {
         "sourceUrl": URL,
         "sourceGitBlobSha": actual,
-        "licenseScope": "HeartModel files only: Public Domain per source project page.",
-        "simulatorRedistribution": "DISALLOWED by source project page; simulator is intentionally not extracted.",
+        "licenseScope": "Documented heart-model files only: Public Domain per source project page.",
+        "simulatorRedistribution": "DISALLOWED by source project page; simulator files are intentionally excluded.",
         "files": entries,
     }
     INVENTORY.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"Verified and extracted {len(entries)} HeartModel files to {RAW}")
+    print(f"Verified and extracted {len(entries)} documented heart-model files to {RAW}")
     print(f"Inventory: {INVENTORY}")
 
 if __name__ == "__main__":
