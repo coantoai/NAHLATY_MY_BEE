@@ -21,7 +21,9 @@ def material(name, color, roughness=0.5, transmission=0):
     bsdf = m.node_tree.nodes.get("Principled BSDF")
     bsdf.inputs["Base Color"].default_value = (*color, 1)
     bsdf.inputs["Roughness"].default_value = roughness
-    bsdf.inputs["Transmission Weight"].default_value = transmission
+    transmission_input = bsdf.inputs.get("Transmission Weight") or bsdf.inputs.get("Transmission")
+    if transmission_input is not None:
+        transmission_input.default_value = transmission
     return m
 
 muscle = material("muscle_warm_crimson", (0.35, 0.055, 0.085), 0.43)
@@ -83,6 +85,10 @@ for name, position in (
     anchor = bpy.data.objects.new(name, None)
     anchor.location = position
     bpy.context.collection.objects.link(anchor)
+
+for obj in list(bpy.context.scene.objects):
+    obj.rotation_mode = "XYZ"
+    obj.rotation_euler.rotate_axis("X", math.pi / 2)
 
 bpy.ops.export_scene.gltf(filepath=str(OUT), export_format="GLB", export_yup=True)
 print("Exported", OUT)
