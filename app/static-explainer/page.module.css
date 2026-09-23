@@ -125,3 +125,6 @@
   .smartAssetStage{min-height:350px;border-radius:18px}.smartAssetControls{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:7px}.smartAssetControls button{white-space:nowrap}
   .smartAssetFooter{gap:7px;font-size:7px}.smartAssetLegend{max-width:80%}
 }
+
+.assetUnavailable{min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:32px;color:#e8eee9;background:#0b100d}
+.assetUnavailable b{font-size:18px}.assetUnavailable span{max-width:520px;color:#91a098;font-size:11px;line-height:1.7}
