@@ -96,7 +96,7 @@ export default function HeartPilotPage() {
     floor.position.y = -1.6;
     scene.add(floor);
 
-    const clippingPlane = new THREE.Plane(new THREE.Vector3(0.4, 0, 1).normalize(), -3.2);
+    const clippingPlane = new THREE.Plane(new THREE.Vector3(0.4, 0, 1).normalize(), 3.2);
     let heart = null;
     let desired = STAGES.whole;
     let desiredClip = desired.clip;
