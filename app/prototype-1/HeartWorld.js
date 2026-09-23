@@ -179,7 +179,20 @@ export default function HeartWorld({ world, onSelectValve, onPhase }) {
     addLabel("البطين الأيسر", -3.0, -2.65, 2);
     addLabel("الأبهر", 4.4, 4.55, 2);
 
-    const particleGeometry = new THREE.SphereGeometry(0.105, 10, 8);
+    // Biconcave red blood cells are real 3D meshes, not flat video overlays.
+    function redCellGeometry() {
+      const geometry = new THREE.SphereGeometry(0.14, 20, 12);
+      const positions = geometry.attributes.position;
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
+        const radius = Math.min(1, Math.hypot(x, y) / 0.14);
+        const dimple = 0.36 + 0.64 * Math.pow(radius, 1.7);
+        positions.setXYZ(i, x, y, z * 0.43 * dimple);
+      }
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+    const particleGeometry = redCellGeometry();
     function particles(curve, count, color) {
       return Array.from({ length: count }, (_, i) => {
         const mesh = new THREE.Mesh(
@@ -257,6 +270,7 @@ export default function HeartWorld({ world, onSelectValve, onPhase }) {
           if (!active) return;
           const u = (progress + mesh.userData.offset) % 1;
           mesh.position.copy(curve.getPoint(u));
+          mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curve.getTangent(u));
         });
       };
       updateParticles(inbound, inletFlow, filling, fraction / 0.53);
