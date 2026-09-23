@@ -67,7 +67,7 @@ export default function StaticExplainer(){
     {error&&<div className={styles.error}>{error}</div>}
 
     <section className={styles.output}>
-      {!result&&!loading&&<SmartAssetDemo/>}
+      {!result&&!loading&&<SmartAssetDemo question={question}/>}
 
       {loading&&<div className={styles.loading}>
         <div className={styles.scan}/>
