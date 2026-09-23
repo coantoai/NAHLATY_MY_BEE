@@ -1,0 +1,40 @@
+name: Build cinematic heart GLB
+on:
+  workflow_dispatch:
+  push:
+    branches: [prototype-1-cinematic-heart-3d]
+    paths:
+      - 'tools/blender/build_cinematic_heart.py'
+      - '.github/workflows/build-heart-model.yml'
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: prototype-1-cinematic-heart-3d
+          persist-credentials: true
+      - name: Install Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y blender
+          blender --version
+      - name: Export 3D model
+        run: blender --background --python tools/blender/build_cinematic_heart.py
+      - name: Verify exported asset
+        run: |
+          test -s public/models/nahlaty-heart-blockout.glb
+          file public/models/nahlaty-heart-blockout.glb
+          ls -lh public/models/nahlaty-heart-blockout.glb
+      - name: Commit model on isolated branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/models/nahlaty-heart-blockout.glb
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate Blender heart GLB blockout"
+            git push origin HEAD:prototype-1-cinematic-heart-3d
+          fi
