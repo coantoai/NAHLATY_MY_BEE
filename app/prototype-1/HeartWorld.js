@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import styles from "./page.module.css";
 
 // An intentionally schematic, semantic left-heart world. Nothing is video or raster animation.
@@ -57,6 +58,21 @@ export default function HeartWorld({ world, onSelectValve, onPhase }) {
     redLight.position.set(-5, -4, 7);
     scene.add(redLight);
 
+    // Load the Blender-generated cutaway when it exists. Keep the working
+    // procedural scene as an explicit fallback if export or network fails.
+    let exportedModel = null;
+    let cancelled = false;
+    const loader = new GLTFLoader();
+    loader.load("/models/nahlaty-heart-blockout.glb", (gltf) => {
+      if (cancelled) return;
+      exportedModel = gltf.scene;
+      exportedModel.name = "Blender cutaway heart";
+      exportedModel.scale.setScalar(1);
+      exportedModel.rotation.y = -0.12;
+      scene.add(exportedModel);
+    }, undefined, () => {
+      // Missing generated asset: existing interactive scene remains usable.
+    });
     const heart = new THREE.Group();
     heart.rotation.y = -0.12;
     scene.add(heart);
@@ -297,6 +313,7 @@ export default function HeartWorld({ world, onSelectValve, onPhase }) {
     frame = requestAnimationFrame(render);
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(frame);
       ro?.disconnect();
       window.removeEventListener("resize", resize);
