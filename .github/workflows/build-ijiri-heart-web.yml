@@ -27,7 +27,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install mesh tooling
-        run: python -m pip install --disable-pip-version-check trimesh numpy
+        run: python -m pip install --disable-pip-version-check trimesh numpy scipy networkx
 
       - name: Acquire verified public-domain heart model
         run: python scripts/acquire_ijiri_heart.py
