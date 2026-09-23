@@ -4,6 +4,7 @@ export const SMART_ASSETS = Object.freeze({
     title: "محرك — بستم ومرفق",
     type: "procedural-3d",
     domain: "mechanics",
+    matchTerms: ["محرك","المحرك","بستم","مكبس","engine","piston","crank"],
     semanticParts: Object.freeze({
       piston: { id: "piston", label: "البستم", role: "moving-part", capabilities: ["translate-y","focus","isolate"] },
       rod: { id: "rod", label: "ذراع التوصيل", role: "connector", capabilities: ["rotate","focus"] },
@@ -37,4 +38,12 @@ export const SMART_ASSETS = Object.freeze({
 
 export function getSmartAsset(id){
   return SMART_ASSETS[id] || null;
+}
+
+export function resolveSmartAsset(question=""){
+  const q=String(question||"").toLowerCase();
+  for(const asset of Object.values(SMART_ASSETS)){
+    if((asset.matchTerms||[]).some(term=>q.includes(term))) return asset;
+  }
+  return null;
 }
