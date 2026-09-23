@@ -105,3 +105,23 @@
   .pollenLayer i{animation:none;opacity:.75}
   .cinematicImage{transition:none}
 }
+
+/* Smart Asset Runtime */
+.smartAssetShell{background:radial-gradient(circle at 50% 18%,#1b2620 0%,#0a0f0c 48%,#070a08 100%);color:#eef3ef;padding:18px}
+.smartAssetHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:4px 5px 14px}
+.smartAssetHeader>div:first-child{display:grid;gap:4px}.smartAssetHeader span{font-size:9px;letter-spacing:.16em;color:#c5a968}.smartAssetHeader b{font-size:18px}.smartAssetHeader small{font-size:10px;color:#9aa69e;line-height:1.6}
+.smartAssetMeta{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.smartAssetMeta i{font-style:normal;font-size:8px;padding:5px 7px;border-radius:999px;border:1px solid #ffffff1c;background:#ffffff09;color:#bdc7c0}
+.smartAssetStage{position:relative;min-height:360px;border-radius:24px;overflow:hidden;border:1px solid #26332c;background:#070b09;box-shadow:inset 0 0 80px #0008}
+.smartAssetStage canvas{display:block;width:100%;height:100%}
+.threeLabel{position:absolute;left:0;top:0;pointer-events:none;z-index:3;padding:5px 7px;border-radius:9px;background:#06100bd0;border:1px solid #ffffff24;color:#f2f4f2;font-size:9px;line-height:1;white-space:nowrap;backdrop-filter:blur(8px);transition:opacity .25s ease}
+.smartAssetLegend{position:absolute;top:12px;left:12px;z-index:4;display:flex;gap:6px;flex-wrap:wrap;max-width:55%}
+.smartAssetLegend span{font-size:8px;color:#c8d0ca;border:1px solid #ffffff17;background:#07100ba6;border-radius:999px;padding:5px 7px;backdrop-filter:blur(8px)}
+.smartAssetControls{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;padding:14px 2px 4px}
+.smartAssetControls button{appearance:none;border:1px solid #ffffff1b;background:#ffffff08;color:#dce4de;border-radius:999px;padding:8px 11px;font:inherit;font-size:9px;cursor:pointer;transition:background .2s ease,color .2s ease,border-color .2s ease}
+.smartAssetControls button:hover{background:#ffffff0e}.smartAssetControls .smartAssetButtonActive{background:#eef2ed;color:#152019;border-color:#fff}
+.smartAssetFooter{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;padding:10px 0 2px;color:#86958b;font-size:8px}
+@media(max-width:650px){
+  .smartAssetShell{padding:10px}.smartAssetHeader{display:grid}.smartAssetHeader b{font-size:15px}.smartAssetHeader small{font-size:9px}.smartAssetMeta{justify-content:flex-start}
+  .smartAssetStage{min-height:350px;border-radius:18px}.smartAssetControls{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:7px}.smartAssetControls button{white-space:nowrap}
+  .smartAssetFooter{gap:7px;font-size:7px}.smartAssetLegend{max-width:80%}
+}
