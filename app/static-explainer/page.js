@@ -2,7 +2,7 @@
 import {useState} from "react";
 import styles from "./page.module.css";
 import InteractionRuntime from "./InteractionRuntime";
-import InteractionDemo from "./InteractionDemo";
+import SmartAssetDemo from "./SmartAssetDemo";
 
 const EXAMPLES=["كيف تنقل النحلة حبوب اللقاح؟","كيف يعمل القلب؟","كيف يحدث البرق؟","كيف تعمل الخلية الشمسية؟"];
 
@@ -49,7 +49,7 @@ export default function StaticExplainer(){
     <section className={styles.hero}>
       <p className={styles.eyebrow}>شرح بصري من سؤال واحد</p>
       <h1>اكتب ما تريد أن تفهمه.<br/><span>نحلتي ترسمه لك.</span></h1>
-      <p className={styles.sub}>صورة واحدة، سينمائية وواضحة، تختار وسائل الإيضاح المناسبة للفكرة: مجسمات، نقاط ساخنة، مراحل، مقاييس، بطاقات أو أسهم عند الحاجة.</p>
+      <p className={styles.sub}>المشهد يصبح أصلًا ذكيًا: أجزاء، حالات، حركة وتفاعل قابلة لإعادة الاستخدام حسب معنى السؤال.</p>
 
       <div className={styles.composer}>
         <textarea value={question} onChange={e=>setQuestion(e.target.value)} rows={3} placeholder="مثلاً: كيف يحدث التلقيح؟"/>
@@ -67,7 +67,7 @@ export default function StaticExplainer(){
     {error&&<div className={styles.error}>{error}</div>}
 
     <section className={styles.output}>
-      {!result&&!loading&&<InteractionDemo/>}
+      {!result&&!loading&&<SmartAssetDemo/>}
 
       {loading&&<div className={styles.loading}>
         <div className={styles.scan}/>
