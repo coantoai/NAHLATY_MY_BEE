@@ -109,6 +109,15 @@ export default function HeartPilotPage() {
       "/assets/heart/ijiri-heart-v4.glb",
       (gltf) => {
         heart = gltf.scene;
+
+        // Normalize again at runtime. This guarantees that any GLB scene transform
+        // or exporter metadata cannot push the heart outside the camera frustum.
+        const sourceBox = new THREE.Box3().setFromObject(heart);
+        const sourceCenter = sourceBox.getCenter(new THREE.Vector3());
+        const sourceSize = sourceBox.getSize(new THREE.Vector3());
+        heart.position.sub(sourceCenter);
+        const maxExtent = Math.max(sourceSize.x, sourceSize.y, sourceSize.z) || 1;
+        heart.scale.setScalar(2.8 / maxExtent);
         heart.rotation.set(-0.05, -0.55, -0.08);
 
         heart.traverse((obj) => {
@@ -120,10 +129,12 @@ export default function HeartPilotPage() {
             metalness: 0.02,
             clearcoat: 0.22,
             clearcoatRoughness: 0.55,
+            emissive: new THREE.Color(0x3a0906),
+            emissiveIntensity: 0.55,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 1,
-            clippingPlanes: [clippingPlane],
+            clippingPlanes: [],
             clipShadows: true
           });
         });
@@ -181,6 +192,16 @@ export default function HeartPilotPage() {
         desiredCamera.set(...desired.camera);
         desiredTarget.set(...desired.target);
         controls.enabled = next !== "enter";
+
+        if (heart) {
+          const shouldClip = next === "cutaway" || next === "enter";
+          heart.traverse((obj) => {
+            if (obj.isMesh && obj.material) {
+              obj.material.clippingPlanes = shouldClip ? [clippingPlane] : [];
+              obj.material.needsUpdate = true;
+            }
+          });
+        }
       },
       reset() {
         desired = STAGES.whole;
@@ -189,6 +210,14 @@ export default function HeartPilotPage() {
         desiredCamera.set(...desired.camera);
         desiredTarget.set(...desired.target);
         controls.enabled = true;
+        if (heart) {
+          heart.traverse((obj) => {
+            if (obj.isMesh && obj.material) {
+              obj.material.clippingPlanes = [];
+              obj.material.needsUpdate = true;
+            }
+          });
+        }
       },
       saveSnapshot() {
         renderer.render(scene, camera);
