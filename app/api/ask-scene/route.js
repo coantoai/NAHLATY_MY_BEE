@@ -11,7 +11,8 @@ export async function POST(req){
   const cleanEdges=(Array.isArray(edges)?edges:[]).slice(0,12).map(e=>({id:cut(e?.id,40),from:cut(e?.from,40),to:cut(e?.to,40),label:cut(e?.label,80),sourceRef:cut(e?.sourceRef,80)})).filter(e=>ids.has(e.from)&&ids.has(e.to));
   const edgeIds=new Set(cleanEdges.map(e=>e.id));
   const cleanSteps=(Array.isArray(steps)?steps:[]).slice(0,8).map(s=>({title:cut(s?.title,100),text:cut(s?.text,240),why:cut(s?.why,180),outcome:cut(s?.outcome,180)}));
-  const cleanConversation=(Array.isArray(conversation)?conversation:[]).slice(-6).map(x=>({question:cut(x?.question,240),answer:cut(x?.answer,420)}));\n  const key=process.env.GEMINI_API_KEY;
+  const cleanConversation=(Array.isArray(conversation)?conversation:[]).slice(-6).map(x=>({question:cut(x?.question,240),answer:cut(x?.answer,420)}));
+  const key=process.env.GEMINI_API_KEY;
 
   if(!key){
    const q=cut(question,600).toLowerCase();
