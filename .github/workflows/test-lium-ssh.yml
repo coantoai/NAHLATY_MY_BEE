@@ -27,30 +27,25 @@ jobs:
           test -n "$LIUM_SSH_PRIVATE_KEY"
           mkdir -p ~/.ssh
 
-          # Normalize common secret-paste issues without exposing the key.
-          KEY="$LIUM_SSH_PRIVATE_KEY"
-          if [[ "$KEY" == *'\n'* ]]; then
-            KEY="${KEY//\\n/$'\n'}"
+          # The repository secret currently contains base64 of the raw OpenSSH
+          # private-key payload (it starts with the decoded bytes "openssh-key-v1").
+          # Convert it to the standard armored OpenSSH private-key format.
+          KEY_B64="$(printf '%s' "$LIUM_SSH_PRIVATE_KEY" | tr -d '[:space:]')"
+          printf '%s' "$KEY_B64" | base64 --decode > /tmp/lium_key_raw
+
+          if ! head -c 14 /tmp/lium_key_raw | grep -qx 'openssh-key-v1'; then
+            echo "ERROR: LIUM_SSH_PRIVATE_KEY is not base64-encoded OpenSSH private-key data."
+            exit 2
           fi
-          printf '%s' "$KEY" | tr -d '\r' > ~/.ssh/lium_nahlaty
+
+          {
+            echo '-----BEGIN OPENSSH PRIVATE KEY-----'
+            base64 -w 0 /tmp/lium_key_raw
+            echo
+            echo '-----END OPENSSH PRIVATE KEY-----'
+          } > ~/.ssh/lium_nahlaty
+
           chmod 600 ~/.ssh/lium_nahlaty
-
-          # Diagnose the secret format without printing its contents.
-          first_line="$(head -n 1 ~/.ssh/lium_nahlaty)"
-          if [[ "$first_line" == SHA256:* ]]; then
-            echo "ERROR: LIUM_SSH_PRIVATE_KEY contains an SSH fingerprint (SHA256:...), not a private key."
-            exit 2
-          fi
-          if [[ "$first_line" == ssh-* ]]; then
-            echo "ERROR: LIUM_SSH_PRIVATE_KEY contains a public SSH key, not a private key."
-            exit 2
-          fi
-          if [[ "$first_line" != "-----BEGIN "*" PRIVATE KEY-----" ]]; then
-            echo "ERROR: LIUM_SSH_PRIVATE_KEY does not start with a recognized private-key header."
-            echo "Detected first-line format: ${first_line:0:24}"
-            exit 2
-          fi
-
           ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
           echo "PRIVATE_KEY_OK"
 
