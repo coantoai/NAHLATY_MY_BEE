@@ -26,8 +26,31 @@ jobs:
           set -euo pipefail
           test -n "$LIUM_SSH_PRIVATE_KEY"
           mkdir -p ~/.ssh
-          printf '%s\n' "$LIUM_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/lium_nahlaty
+
+          # Normalize common secret-paste issues without exposing the key.
+          KEY="$LIUM_SSH_PRIVATE_KEY"
+          if [[ "$KEY" == *'\n'* ]]; then
+            KEY="${KEY//\\n/$'\n'}"
+          fi
+          printf '%s' "$KEY" | tr -d '\r' > ~/.ssh/lium_nahlaty
           chmod 600 ~/.ssh/lium_nahlaty
+
+          # Diagnose the secret format without printing its contents.
+          first_line="$(head -n 1 ~/.ssh/lium_nahlaty)"
+          if [[ "$first_line" == SHA256:* ]]; then
+            echo "ERROR: LIUM_SSH_PRIVATE_KEY contains an SSH fingerprint (SHA256:...), not a private key."
+            exit 2
+          fi
+          if [[ "$first_line" == ssh-* ]]; then
+            echo "ERROR: LIUM_SSH_PRIVATE_KEY contains a public SSH key, not a private key."
+            exit 2
+          fi
+          if [[ "$first_line" != "-----BEGIN "*" PRIVATE KEY-----" ]]; then
+            echo "ERROR: LIUM_SSH_PRIVATE_KEY does not start with a recognized private-key header."
+            echo "Detected first-line format: ${first_line:0:24}"
+            exit 2
+          fi
+
           ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
           echo "PRIVATE_KEY_OK"
 
