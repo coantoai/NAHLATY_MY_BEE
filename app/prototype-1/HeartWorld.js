@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import styles from "./page.module.css";
 
 // An intentionally schematic, semantic left-heart world. Nothing is video or raster animation.
@@ -60,15 +61,42 @@ export default function HeartWorld({ world, onSelectValve, onPhase }) {
     const heart = new THREE.Group();
     heart.rotation.y = -0.12;
     scene.add(heart);
+    // Keep the semantic engine, but give it a real heart silhouette.
+    // The public-domain Ijiri mesh is only an exterior visual shell; all teaching
+    // states, flow and valve behavior remain owned by the persistent Nahlaty world.
     const tissue = new THREE.MeshPhysicalMaterial({
-      color: 0x9d384b, roughness: 0.57, metalness: 0,
-      transparent: true, opacity: 0.11, depthWrite: false,
-      side: THREE.DoubleSide, clearcoat: 0.26
+      color: 0x8f2635, roughness: 0.52, metalness: 0,
+      transparent: true, opacity: 0.16, depthWrite: false,
+      side: THREE.DoubleSide, clearcoat: 0.32,
+      emissive: new THREE.Color(0x260407), emissiveIntensity: 0.24
     });
-    const shell = new THREE.Mesh(new THREE.SphereGeometry(5.1, 44, 32), tissue);
-    shell.scale.set(1, 1.2, 0.66);
-    shell.position.set(0, -0.5, -1.3);
-    heart.add(shell);
+    const shellFallback = new THREE.Mesh(new THREE.SphereGeometry(5.1, 44, 32), tissue.clone());
+    shellFallback.scale.set(1, 1.2, 0.66);
+    shellFallback.position.set(0, -0.5, -1.3);
+    shellFallback.material.opacity = 0.045;
+    heart.add(shellFallback);
+
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load("/assets/heart/ijiri-heart-v4.glb", gltf => {
+      const anatomicalShell = gltf.scene;
+      const box = new THREE.Box3().setFromObject(anatomicalShell);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      anatomicalShell.position.sub(center);
+      const maxExtent = Math.max(size.x, size.y, size.z) || 1;
+      anatomicalShell.scale.setScalar(10.3 / maxExtent);
+      anatomicalShell.rotation.set(-0.02, -0.48, -0.06);
+      anatomicalShell.position.set(0.15, -0.45, -1.85);
+      anatomicalShell.traverse(object => {
+        if (!object.isMesh) return;
+        object.geometry.computeVertexNormals();
+        object.material = tissue.clone();
+      });
+      heart.add(anatomicalShell);
+    }, undefined, () => {
+      // Fallback stays visible; failure must never break the semantic experience.
+      shellFallback.material.opacity = 0.095;
+    });
 
     const chamberMaterial = color => new THREE.MeshPhysicalMaterial({
       color, emissive: color, emissiveIntensity: 0.1, roughness: 0.35,
