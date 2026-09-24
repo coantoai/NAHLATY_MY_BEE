@@ -28,3 +28,5 @@ Authentication header: `X-API-Key: $LIUM_API_KEY`
 
 
 Deployment sync: Lium Preview secret configured; health check deployment requested.
+
+Protection sync: trigger fresh Preview deployment for direct Lium health verification.
