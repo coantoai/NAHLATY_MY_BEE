@@ -19,7 +19,7 @@ const heart=[
 const symbols=["♥","↙","◉","◇","↗","◎","✦","↩","◇","♥","⇧","∞"];
 function loadHistory(){try{return JSON.parse(localStorage.getItem("nahlaty-discovery-world-v1")||"[]")}catch{return []}}
 export default function DiscoveryWorld(){
- const [question,setQuestion]=useState(""),[result,setResult]=useState(null),[active,setActive]=useState(0),[history,setHistory]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState(""),[showMap,setShowMap]=useState(true);
+ const [question,setQuestion]=useState(""),[result,setResult]=useState(null),[active,setActive]=useState(0),[history,setHistory]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState(""),[showMap,setShowMap]=useState(true),[conversation,setConversation]=useState([]);
  const strip=useRef(null);
  useEffect(()=>{setHistory(loadHistory())},[]);
  const cards=result?.steps?.length?result.steps.map((s,i)=>({title:s.title||"اكتشاف "+(i+1),label:"الخطوة "+(i+1),summary:s.text||s.why||s.outcome||""})):heart.map(([title,label,summary])=>({title,label,summary}));
@@ -28,14 +28,24 @@ export default function DiscoveryWorld(){
   e?.preventDefault();const q=question.trim();if(!q||busy)return;
   setBusy(true);setError("");
   try{
-   const res=await fetch("/api/explain",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content:q,audience:"عام",preserve:result?{title:result.title,sceneGraph:result.sceneGraph,truthAnchors:result.truthAnchors}:null})});
+   if(result){
+    const res=await fetch("/api/ask-scene",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({question:q,title:result.title,nodes:(result.sceneGraph?.nodes||[]).map(n=>({id:n.id,label:n.label,detail:n.detail,sourceRef:n.sourceRef})),edges:(result.sceneGraph?.edges||[]).map(x=>({id:x.id,from:x.from,to:x.to,label:x.label,sourceRef:x.sourceRef})),steps:result.steps||[],conversation:conversation.slice(-6)})});
+    const data=await res.json();if(!res.ok||data.error)throw new Error(data.error||"تعذّر فهم سؤال المتابعة");
+    const ids=new Set(data.nodeIds||[]),nodes=result.sceneGraph?.nodes||[];
+    const focus=Math.max(0,nodes.findIndex(n=>ids.has(n.id)));
+    if(focus>=0)setActive(Math.min(focus,Math.max(0,cards.length-1)));
+    setConversation(prev=>[...prev,{question:q,answer:data.answer||""}].slice(-8));
+    setError(data.answer||"تم ربط السؤال بالمشهد الحالي.");
+    setQuestion("");setShowMap(false);return;
+   }
+   const res=await fetch("/api/explain",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content:q,audience:"عام"})});
    const data=await res.json();if(!res.ok||data.error)throw new Error(data.error||"تعذّر إنشاء الشرح");
-   setResult(data);setActive(0);setShowMap(false);
+   setResult(data);setConversation([{question:q,answer:data.summary||data.title||""}]);setActive(0);setShowMap(false);setQuestion("");
    setHistory(prev=>{const next=[{question:q,title:data.title||q,date:new Date().toISOString()},...prev.filter(x=>x.question!==q)].slice(0,30);try{localStorage.setItem("nahlaty-discovery-world-v1",JSON.stringify(next))}catch{}return next});
   }catch(e){setError(e.message||"تعذّر إنشاء الشرح")}finally{setBusy(false)}
  }
  function choose(i){setActive(i);setShowMap(false)}
- function goHome(){setShowMap(true);setResult(null);setActive(0);setError("")}
+ function goHome(){setShowMap(true);setResult(null);setConversation([]);setActive(0);setError("")}
  return <main className={styles.shell} dir="rtl">
   <aside className={styles.sidebar}><div className={styles.brand}><span>✦</span><div><strong>نحلتي</strong><small>My Bee · من الفضول إلى الفهم</small></div></div>
    <button className={styles.navActive} onClick={goHome}>⌂ &nbsp; عالمي البصري</button>
