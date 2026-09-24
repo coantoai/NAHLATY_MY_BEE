@@ -4,22 +4,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-secret:
+  test-ssh:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify Lium SSH private key
+      - name: Prepare SSH key
         shell: bash
         env:
           LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
         run: |
-          if [ -z "$LIUM_SSH_PRIVATE_KEY" ]; then
-            echo "ERROR: LIUM_SSH_PRIVATE_KEY is missing"
-            exit 1
-          fi
-
           mkdir -p ~/.ssh
           printf '%s\n' "$LIUM_SSH_PRIVATE_KEY" > ~/.ssh/lium_nahlaty
           chmod 600 ~/.ssh/lium_nahlaty
+          ssh-keyscan -p 20300 -H 150.136.88.209 >> ~/.ssh/known_hosts
 
-          ssh-keygen -y -f ~/.ssh/lium_nahlaty > /dev/null
-          echo "SUCCESS: Lium SSH private key is valid"
+      - name: Test Lium B200 connection
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/lium_nahlaty -p 20300 root@150.136.88.209 'echo SSH_OK && nvidia-smi'
