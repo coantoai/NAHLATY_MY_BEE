@@ -1,42 +1,49 @@
-name: Test Lium SSH
+name: Lium B200 Preflight
 
 on:
   workflow_dispatch:
+    inputs:
+      host:
+        description: "Lium pod SSH host"
+        required: true
+        type: string
+      port:
+        description: "Lium pod SSH port"
+        required: true
+        type: string
+        default: "20300"
 
 jobs:
-  setup-fastvideo:
+  preflight:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Prepare SSH key
         shell: bash
         env:
           LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
         run: |
+          set -euo pipefail
+          test -n "$LIUM_SSH_PRIVATE_KEY"
           mkdir -p ~/.ssh
-          printf '%s\n' "$LIUM_SSH_PRIVATE_KEY" > ~/.ssh/lium_nahlaty
+          printf '%s\n' "$LIUM_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/lium_nahlaty
           chmod 600 ~/.ssh/lium_nahlaty
-          ssh-keyscan -p 20300 -H 150.136.88.209 >> ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
+          echo "PRIVATE_KEY_OK"
 
-      - name: Install and verify FastVideo on B200
+      - name: Test new Lium pod
         shell: bash
+        env:
+          HOST: ${{ inputs.host }}
+          PORT: ${{ inputs.port }}
         run: |
-          ssh -i ~/.ssh/lium_nahlaty -p 20300 root@150.136.88.209 'bash -s' <<'REMOTE'
-          set -euxo pipefail
-          nvidia-smi
-          if ! command -v uv >/dev/null 2>&1; then
-            curl -LsSf https://astral.sh/uv/install.sh | sh
-          fi
-          export PATH="$HOME/.local/bin:$PATH"
-          mkdir -p /root/fastvideo-runtime
-          cd /root/fastvideo-runtime
-          uv venv --python 3.12 --seed .venv
-          source .venv/bin/activate
-          if command -v nvcc >/dev/null 2>&1 && nvcc --version | grep -q 'release 13'; then
-            UV_TORCH_BACKEND=cu130 uv pip install fastvideo
-          else
-            UV_TORCH_BACKEND=cu126 uv pip install fastvideo
-          fi
-          python -c "import fastvideo, torch; print('FASTVIDEO_OK'); print('cuda', torch.cuda.is_available()); print('gpu', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'none')"
-          fastvideo --help >/dev/null
-          echo FASTVIDEO_CLI_OK
-          REMOTE
+          set -euo pipefail
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+          ssh -o BatchMode=yes -o ConnectTimeout=10 -i ~/.ssh/lium_nahlaty -p "$PORT" root@"$HOST" '
+            set -e
+            echo SSH_OK
+            nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+            python3 --version
+            df -h /
+          '
+          echo "LIUM_B200_PREFLIGHT_OK"
