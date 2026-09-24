@@ -25,3 +25,6 @@ Authentication header: `X-API-Key: $LIUM_API_KEY`
 5. Rent with a hard TTL and one GPU.
 6. Run smoke tests and benchmark.
 7. Terminate immediately after the test.
+
+
+Deployment sync: Lium Preview secret configured; health check deployment requested.
