@@ -1,0 +1,91 @@
+name: Generate First LTX Heart Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "Lium pod SSH host"
+        required: true
+        default: "150.136.88.209"
+        type: string
+      port:
+        description: "Lium pod SSH port"
+        required: true
+        default: "20300"
+        type: string
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        env:
+          LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s' "$LIUM_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/lium_nahlaty
+          chmod 600 ~/.ssh/lium_nahlaty
+          ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
+          ssh-keyscan -p "${{ inputs.port }}" -H "${{ inputs.host }}" >> ~/.ssh/known_hosts
+
+      - name: Install LTX-2.3 and generate heart video
+        shell: bash
+        env:
+          HOST: ${{ inputs.host }}
+          PORT: ${{ inputs.port }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes -o ConnectTimeout=10 -i ~/.ssh/lium_nahlaty -p "$PORT" root@"$HOST" "HF_TOKEN='$HF_TOKEN' bash -s" <<'REMOTE'
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          export PATH="$HOME/.local/bin:$PATH"
+
+          apt-get update -qq
+          apt-get install -y -qq git ffmpeg curl
+          command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
+          export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+          if [ ! -d /workspace/LTX-2/.git ]; then
+            rm -rf /workspace/LTX-2
+            git clone --depth 1 https://github.com/Lightricks/LTX-2.git /workspace/LTX-2
+          fi
+          cd /workspace/LTX-2
+          git pull --ff-only
+
+          uv sync --frozen
+          uv pip install 'flash-attn-4==4.0.0b9'
+
+          mkdir -p models/ltx-2.3 models/gemma-3-12b /workspace/nahlaty-output
+          if [ -n "${HF_TOKEN:-}" ]; then
+            uv run hf auth login --token "$HF_TOKEN"
+          fi
+
+          uv run hf download Lightricks/LTX-2.3             ltx-2.3-22b-distilled-1.1.safetensors             ltx-2.3-spatial-upscaler-x2-1.1.safetensors             --local-dir models/ltx-2.3
+
+          uv run hf download google/gemma-3-12b-it-qat-q4_0-unquantized             --local-dir models/gemma-3-12b
+
+          PROMPT='A cinematic medical visualization of a human heart beating inside a dark clean anatomical space. The camera slowly moves toward the heart as oxygen-poor blue blood flows into the right atrium, passes through the tricuspid valve into the right ventricle, then is pumped toward the lungs. Oxygen-rich red blood returns from the lungs into the left atrium, passes into the left ventricle, and is powerfully pumped through the aorta. Clear physically coherent blood-flow motion, anatomically plausible valves opening and closing, premium scientific visualization, realistic tissue, subtle volumetric lighting, strong depth, no text, no labels, no narration, no people, no gore.'
+
+          uv run python -m ltx_pipelines.distilled             --distilled-checkpoint-path models/ltx-2.3/ltx-2.3-22b-distilled-1.1.safetensors             --spatial-upsampler-path models/ltx-2.3/ltx-2.3-spatial-upscaler-x2-1.1.safetensors             --gemma-root models/gemma-3-12b             --seed 42             --output-path /workspace/nahlaty-output/heart-with-audio.mp4             --prompt "$PROMPT"
+
+          ffmpeg -y -i /workspace/nahlaty-output/heart-with-audio.mp4 -an -c:v copy /workspace/nahlaty-output/nahlaty-heart-first.mp4
+          ls -lh /workspace/nahlaty-output/nahlaty-heart-first.mp4
+          REMOTE
+
+      - name: Download video from B200
+        shell: bash
+        run: |
+          set -euo pipefail
+          scp -o BatchMode=yes -i ~/.ssh/lium_nahlaty -P "${{ inputs.port }}"             root@"${{ inputs.host }}":/workspace/nahlaty-output/nahlaty-heart-first.mp4             ./nahlaty-heart-first.mp4
+
+      - name: Upload video artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nahlaty-heart-first-video
+          path: nahlaty-heart-first.mp4
+          if-no-files-found: error
+          retention-days: 7
