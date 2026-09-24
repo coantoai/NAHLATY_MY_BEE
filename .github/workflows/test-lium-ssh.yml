@@ -21,12 +21,12 @@ jobs:
       - name: Prepare SSH key
         shell: bash
         env:
-          LIUM_SSH_PRIVATE_KEY_B64: ${{ secrets.LIUM_SSH_PRIVATE_KEY_B64 }}
+          LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          test -n "$LIUM_SSH_PRIVATE_KEY_B64"
+          test -n "$LIUM_SSH_PRIVATE_KEY"
           mkdir -p ~/.ssh
-          printf '%s' "$LIUM_SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/lium_nahlaty
+          printf '%s\n' "$LIUM_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/lium_nahlaty
           chmod 600 ~/.ssh/lium_nahlaty
           ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
           echo "PRIVATE_KEY_OK"
