@@ -11,7 +11,7 @@ on:
       port:
         description: "Lium pod SSH port"
         required: true
-        default: "20300"
+        default: "20309"
         type: string
 
 jobs:
