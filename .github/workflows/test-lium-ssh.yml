@@ -1,0 +1,25 @@
+name: Test Lium SSH
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Lium SSH private key
+        shell: bash
+        env:
+          LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$LIUM_SSH_PRIVATE_KEY" ]; then
+            echo "ERROR: LIUM_SSH_PRIVATE_KEY is missing"
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          printf '%s\n' "$LIUM_SSH_PRIVATE_KEY" > ~/.ssh/lium_nahlaty
+          chmod 600 ~/.ssh/lium_nahlaty
+
+          ssh-keygen -y -f ~/.ssh/lium_nahlaty > /dev/null
+          echo "SUCCESS: Lium SSH private key is valid"
