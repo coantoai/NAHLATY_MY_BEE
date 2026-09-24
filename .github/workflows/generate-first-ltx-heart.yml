@@ -63,7 +63,7 @@ jobs:
           cd /workspace/LTX-2
           git pull --ff-only
 
-          uv sync --frozen
+          uv sync
           uv pip install 'flash-attn-4==4.0.0b9'
 
           mkdir -p models/ltx-2.3 models/gemma-3-12b /workspace/nahlaty-output
