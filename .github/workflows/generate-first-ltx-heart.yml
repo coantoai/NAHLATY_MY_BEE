@@ -26,7 +26,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
-          printf '%s' "$LIUM_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/lium_nahlaty
+          KEY_B64="$(printf '%s' "$LIUM_SSH_PRIVATE_KEY" | tr -d '[:space:]')"
+          printf '%s' "$KEY_B64" | base64 --decode > /tmp/lium_key_raw
+          {
+            echo '-----BEGIN OPENSSH PRIVATE KEY-----'
+            base64 -w 0 /tmp/lium_key_raw
+            echo
+            echo '-----END OPENSSH PRIVATE KEY-----'
+          } > ~/.ssh/lium_nahlaty
           chmod 600 ~/.ssh/lium_nahlaty
           ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
           ssh-keyscan -p "${{ inputs.port }}" -H "${{ inputs.host }}" >> ~/.ssh/known_hosts
