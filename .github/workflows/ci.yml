@@ -2,19 +2,31 @@ name: My Bee CI
 
 on:
   push:
-  pull_request:
+  workflow_dispatch:
 
 jobs:
-  build:
+  generate-first-video:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install
-        run: npm install
-      - name: Test
-        run: npm test
-      - name: Build
-        run: npm run build
+      - name: Generate first video on Lium B200
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p 20300 150.136.88.209 >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_ed25519 -p 20300 root@150.136.88.209 'bash -se' <<'REMOTE'
+          set -euxo pipefail
+          cd /root
+          mkdir -p mybee-output
+          python - <<'PY'
+          import fastvideo
+          print("FastVideo import OK")
+          PY
+          if command -v fastvideo >/dev/null 2>&1; then
+            fastvideo --help | head -80
+          fi
+          find /root -maxdepth 4 -type f \( -name '*ltx*' -o -name '*inference*' \) | head -100
+          nvidia-smi
+          REMOTE
