@@ -1,0 +1,9 @@
+
+# Lium / GPU secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_ed25519
+id_ed25519.pub
