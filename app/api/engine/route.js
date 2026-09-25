@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildEnginePrompt, localHeartResult, sanitizeEngineResult } from "../../../lib/nahlaty-engine";
+import { buildEnginePrompt, contextualHeartResult, localHeartResult, sanitizeEngineResult } from "../../../lib/nahlaty-engine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -75,7 +75,7 @@ export async function POST(request) {
   if(question.length<4) return jsonError("السؤال قصير جدًا. اكتب ما الذي تريد أن تفهمه بوضوح.",422,"QUESTION_TOO_SHORT");
   if(question.length>700) return jsonError("السؤال طويل جدًا لهذه النسخة التجريبية.",422,"QUESTION_TOO_LONG");
 
-  const local=localHeartResult(question);
+  const local=localHeartResult(question) || contextualHeartResult(question,context);
 
   if(!API_KEY) {
     if(!local) return jsonError("Gemini API key is not configured yet for open-domain questions.",503,"MODEL_PROVIDER_NOT_CONFIGURED");
