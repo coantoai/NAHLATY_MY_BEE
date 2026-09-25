@@ -1,11 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {
+import { readFileSync } from "node:fs";
+
+async function importSource(relativePath){
+  const url=new URL(relativePath,import.meta.url);
+  const source=readFileSync(url,"utf8");
+  const data="data:text/javascript;base64,"+Buffer.from(source).toString("base64");
+  return import(data);
+}
+
+const {
   contextualHeartResult,
   localHeartResult,
   sanitizeEngineResult
-} from "../lib/nahlaty-engine.js";
-import { compileVisualPlan } from "../lib/visual-director.js";
+}=await importSource("../lib/nahlaty-engine.js");
+
+const { compileVisualPlan }=await importSource("../lib/visual-director.js");
 
 test("valve question maps to curated valve scene",()=>{
   const r=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
