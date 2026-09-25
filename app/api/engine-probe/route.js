@@ -4,7 +4,7 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const maxDuration=120;
 
-async function probe(question,context={}){
+async function probe(question,context={},expectedTopic=null){
  const request=new Request("http://nahlaty.local/api/engine",{
   method:"POST",
   headers:{"content-type":"application/json"},
@@ -22,19 +22,21 @@ async function probe(question,context={}){
   scene:payload?.result?.scene??null,
   nodes:payload?.result?.experience?.sceneGraph?.nodes?.length||0,
   edges:payload?.result?.experience?.sceneGraph?.edges?.length||0,
-  renderPlan:Boolean(payload?.result?.renderPlan)
+  renderPlan:Boolean(payload?.result?.renderPlan),
+  expectedTopic,
+  topicMatched:expectedTopic?payload?.result?.topic===expectedTopic:true
  };
 }
 
 export async function GET(request){
  const deep=new URL(request.url).searchParams.get("deep")==="1";
  const checks=[];
- checks.push(await probe("كيف تمنع صمامات القلب رجوع الدم؟"));
- checks.push(await probe("كيف تنمو النباتات؟"));
- checks.push(await probe("كيف تعمل الخلية الشمسية؟"));
- checks.push(await probe("كيف يلقح النحل الأزهار؟"));
- checks.push(await probe("كيف يعمل محرك الاحتراق الداخلي؟"));
- const followUp=await probe("ليش؟",{previous:{topic:"solar-cell",title:"كيف تعمل الخلية الشمسية؟",summary:"تحول الخلية الشمسية طاقة الضوء إلى تيار كهربائي."}});
+ checks.push(await probe("كيف تمنع صمامات القلب رجوع الدم؟",{},"valves"));
+ checks.push(await probe("كيف تنمو النباتات؟",{},"plant-growth"));
+ checks.push(await probe("كيف تعمل الخلية الشمسية؟",{},"solar-cell"));
+ checks.push(await probe("كيف يلقح النحل الأزهار؟",{},"bee-pollination"));
+ checks.push(await probe("كيف يعمل محرك الاحتراق الداخلي؟",{},"combustion-engine"));
+ const followUp=await probe("ليش؟",{previous:{topic:"solar-cell",title:"كيف تعمل الخلية الشمسية؟",summary:"تحول الخلية الشمسية طاقة الضوء إلى تيار كهربائي."}},"solar-cell");
  followUp.kind="context-follow-up";
  checks.push(followUp);
  if(deep){
@@ -42,7 +44,7 @@ export async function GET(request){
   general.kind="open-domain";
   checks.push(general);
  }
- const passed=checks.every(x=>x.ok&&x.renderPlan&&(x.scene!==null||x.nodes>=3));
+ const passed=checks.every(x=>x.ok&&x.renderPlan&&x.topicMatched&&(x.scene!==null||x.nodes>=3));
  return Response.json({
   ok:passed,
   version:"engine-e2e/v2",
