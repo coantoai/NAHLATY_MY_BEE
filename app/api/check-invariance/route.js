@@ -1,8 +1,11 @@
 import { createGemini, generateJson } from "../../lib/genai";
+import { requestLimit } from "../../lib/requestGuard";
 
 const cut=(v,n=500)=>String(v||"").slice(0,n);
 
 export async function POST(req){
+ const blocked=requestLimit(req,{scope:"check-invariance",limit:20,windowMs:60_000});
+ if(blocked)return blocked;
  try{
   const {response,truthAnchors=[],node=null,title=""}=await req.json();
   const answer=cut(response,1600).trim();
@@ -49,6 +52,7 @@ nextHint: تلميح واحد فقط إذا احتاج، بدون إعطائه �
    nextHint:cut(data?.nextHint,240)
   });
  }catch(e){
-  return Response.json({error:"تعذر فحص الثابت بين التمثيلات",detail:String(e?.message||e)},{status:500});
+  console.error("[NAHLATY_CHECK_INVARIANCE_ERROR]",String(e?.message||e),e?.stack||"");
+  return Response.json({error:"تعذر فحص الثابت بين التمثيلات",code:"CHECK_INVARIANCE_FAILED"},{status:500});
  }
 }
