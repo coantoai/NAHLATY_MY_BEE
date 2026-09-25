@@ -1,4 +1,14 @@
 const STORE_KEY="__nahlatyRequestBucketsV1";
+const INTERNAL_TOKEN_KEY="__nahlatyInternalRequestTokenV1";
+
+function internalToken(){
+ if(!globalThis[INTERNAL_TOKEN_KEY])globalThis[INTERNAL_TOKEN_KEY]=`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+ return globalThis[INTERNAL_TOKEN_KEY];
+}
+
+export function internalRequestHeaders(){
+ return {"x-nahlaty-internal":internalToken()};
+}
 
 function store(){
  if(!globalThis[STORE_KEY])globalThis[STORE_KEY]=new Map();
@@ -23,7 +33,7 @@ function identity(request){
 }
 
 export function requestLimit(request,{scope="api",limit=30,windowMs=60_000}={}){
- if(request?.headers?.get?.("x-nahlaty-internal")==="1")return null;
+ if(request?.headers?.get?.("x-nahlaty-internal")===internalToken())return null;
  const now=Date.now();
  const key=scope+":"+identity(request);
  const buckets=store();
