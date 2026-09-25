@@ -1,31 +1,42 @@
 "use client";
 import {useState} from "react";
-import MYBEE_REFERENCE from "../mybee-reference-data.js";
-const stages=[
-["01","البداية","نظرة عامة على القلب","القلب مضخة عضلية قوية تعمل باستمرار لضخ الدم إلى الرئتين لأخذ الأكسجين، ثم إلى جميع أنحاء الجسم."],
-["02","داخل القلب","رحلة إلى الداخل","ندخل إلى القلب ونكشف بنيته الداخلية لنرى كيف تتصل الحجرات ومسارات الدم."],
-["03","الحجرات","الأربع حجرات","نرى الأذينين والبطينين وكيف يستقبل كل جزء الدم أو يدفعه إلى المرحلة التالية."],
-["04","الصمامات","تعمل كأبواب","نقترب من الصمامات لنرى كيف تفتح في اتجاه واحد وتمنع رجوع الدم."],
-["05","رحلة الدم","المسار الكامل","نتبع قطرة دم واحدة خطوة بخطوة خلال القلب لنفهم المسار بدل حفظه."],
-["06","إلى الرئتين","لأخذ الأكسجين","نخرج مع الدم إلى الرئتين حيث يتخلص من ثاني أكسيد الكربون ويحمل الأكسجين."],
-["07","إلى الجسم","توزيع الأكسجين","نعود إلى القلب ثم ننطلق عبر الشريان الأبهر لتوزيع الأكسجين على الجسم."],
-["08","الشرايين التاجية","تغذية القلب","نرى شبكة الأوعية التي تغذي عضلة القلب نفسها بالدم والأكسجين."],
-["09","النظام الكهربائي","تنظيم الخفقان","نكشف شبكة الإشارات الكهربائية التي تنظم توقيت انقباض حجرات القلب."],
-["10","الصورة الكاملة","القلب والجسم","نبتعد لنرى القلب والرئتين والأوعية والجسم كنظام واحد مترابط."]
-];
-function Art({i}){return <div className={"art art"+i}><div className="mist"/><div className="vessel vb"/><div className="vessel vr"/><div className="heart">♥</div><div className="cells blue">● ● ●</div><div className="cells red">● ● ● ●</div><div className="flow f1">➜</div><div className="flow f2">➜</div></div>}
-export default function Page(){const [active,setActive]=useState(0);const [started,setStarted]=useState(false);const s=stages[active];return <div className="journey" dir="rtl">
- <section className={"lockedHome"+(started?" hidden":"")}><img src={MYBEE_REFERENCE} alt="واجهة نحلتي"/><button className="heartHot" onClick={()=>{setStarted(true);setActive(0)}} aria-label="كيف يعمل القلب؟"/></section>
- <section id="heartJourney" className={"result"+(started?" show":"")}>
-  <header className="resultHead"><b>نحلتي <span>🐝</span></b><div>⌕　كيف يعمل القلب؟</div><nav>◎　☼　●</nav></header>
-  <div className="resultBody"><aside className="rail"><button className="on">⌂　الرئيسية</button><button>◈　اكتشف</button><button>▣　مكتبتي</button><button>♡　المفضلة</button><button>◷　تاريخي</button><i/><button className="round">▶</button></aside>
-  <main className="lesson">
-   <div className="stage"><div className="visual"><Art i={active}/></div><article><strong>{s[0]}</strong><em/><h1>{s[1]}: {s[2]}</h1><p>{s[3]}</p><div className="fact"><b>💡 معلومة سريعة</b><span>{active===0?"يخفق قلب الإنسان حوالي 100,000 مرة في اليوم.":"كل مشهد يكمل الرحلة نفسها من دون مغادرة عالم القلب."}</span></div></article></div>
-   <div className="ask"><span>✦</span><input placeholder="اسأل عن أي شيء تراه الآن…"/><button>▧</button><button>♩</button><button className="send">➤</button></div>
-   <div className="cards">{stages.map((x,i)=><button key={i} className={i===active?"active":""} onClick={()=>setActive(i)}><div className={"thumb t"+i}><Art i={i}/><b>{x[0]}</b></div><strong>{x[1]}</strong><small>{x[2]}</small></button>)}</div>
-  </main></div>
- </section>
- <style jsx global>{`
- *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#030a13;color:#f7fbff;font-family:Arial,Tahoma,sans-serif}.journey{background:#030a13}.lockedHome{position:relative;width:100%;max-width:1536px;aspect-ratio:3/2;margin:auto;background:#060b12}.lockedHome img{display:block;width:100%;height:100%;object-fit:contain}.heartHot{position:absolute;left:17.8%;top:70.8%;width:12.3%;height:16.3%}
- .lockedHome.hidden{display:none}.result{display:none;min-height:100vh;background:radial-gradient(circle at 52% 30%,#0b2239,#04111e 46%,#020812 82%);border-top:1px solid #17344e}.result.show{display:block}.resultHead{height:84px;display:grid;grid-template-columns:220px 1fr 220px;align-items:center;padding:0 22px;border-bottom:1px solid #17344e;direction:ltr}.resultHead>b{font-size:31px;direction:rtl}.resultHead>div{justify-self:center;width:min(650px,100%);height:54px;border:1px solid #315a81;border-radius:28px;background:#0c2035;display:flex;align-items:center;justify-content:center;color:#8fa4b8;font-size:18px;direction:rtl}.resultHead nav{text-align:right;font-size:25px}.resultBody{display:grid;grid-template-columns:144px 1fr;direction:ltr}.rail{min-height:calc(100vh - 84px);border-right:1px solid #173149;background:#03101b;padding:27px 10px;display:flex;flex-direction:column;gap:11px;direction:rtl}.rail button{border:0;background:transparent;color:#c7d4df;padding:14px 10px;border-radius:11px;text-align:right;font-size:14px}.rail .on{background:#062e50;color:#25a9ff}.rail i{flex:1}.rail .round{width:60px;height:60px;border:2px solid #395e80;border-radius:50%;text-align:center;margin:auto}.lesson{padding:20px;direction:rtl}.stage{height:555px;display:grid;grid-template-columns:minmax(0,2.5fr) 390px;direction:ltr;border:1px solid #173751;border-radius:19px;overflow:hidden;background:#071522;box-shadow:0 28px 70px #0009}.visual{position:relative;overflow:hidden}.stage article{direction:rtl;padding:28px;background:linear-gradient(#071522,#05101a);border-left:1px solid #173751}.stage article>strong{font-size:36px}.stage article>em{display:block;width:58px;height:5px;background:#18aaff;border-radius:8px;margin:12px 0 25px}.stage h1{font-size:27px;line-height:1.45;margin:0 0 20px}.stage p{font-size:17px;line-height:2;color:#c7d3df}.fact{border:1px solid #149ce8;border-radius:14px;padding:18px;margin-top:28px;display:grid;gap:10px}.fact b{color:#ffd14e}.fact span{font-size:14px;line-height:1.7}.ask{height:72px;margin:18px 0;border:1.5px solid #16aaff;border-radius:38px;background:#0a1e31;display:flex;align-items:center;gap:13px;padding:0 20px}.ask>span{color:#44baff;font-size:25px}.ask input{flex:1;border:0;outline:0;background:transparent;color:white;font-size:19px;direction:rtl}.ask button{border:0;background:#0b1c2d;color:white;font-size:21px}.ask .send{width:44px;height:44px;border-radius:50%;background:#123d5d}.cards{display:flex;gap:12px;overflow-x:auto;padding:2px 0 13px;direction:ltr}.cards>button{flex:0 0 146px;padding:0 0 11px;background:#06131f;color:white;border:1px solid #23455f;border-radius:14px;overflow:hidden;text-align:right;direction:rtl;cursor:pointer}.cards>button.active{border:2px solid #15aaff;box-shadow:0 0 22px #13aaff77;transform:translateY(-2px)}.thumb{height:112px;position:relative;overflow:hidden}.thumb>b{position:absolute;left:7px;top:6px;z-index:10;font-size:17px}.cards strong,.cards small{display:block;padding:0 9px}.cards strong{font-size:16px;margin-top:8px}.cards small{font-size:11px;color:#91a5b7;margin-top:5px}.art{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 55% 48%,#40203a 0,#11233a 40%,#04111d 75%)}.mist{position:absolute;inset:10%;border-radius:50%;box-shadow:0 0 90px #ff315844 inset;filter:blur(7px)}.heart{position:absolute;z-index:4;left:51%;top:53%;transform:translate(-50%,-50%) rotate(-8deg);font-size:min(38vw,480px);line-height:.75;color:#f13250;text-shadow:-25px 18px 0 #7e1734,0 0 50px #ff315899}.vessel{position:absolute;z-index:3;top:-160px;width:95px;height:410px;border-radius:70px}.vb{left:35%;background:linear-gradient(90deg,#103d7b,#198ef0,#153e82);transform:rotate(-13deg)}.vr{left:49%;background:linear-gradient(90deg,#8c1d2d,#ff6047,#9f2030);transform:rotate(12deg)}.cells{position:absolute;z-index:6;font-size:24px;letter-spacing:13px}.blue{left:7%;top:43%;color:#3ba9ff}.red{right:5%;top:36%;color:#ff435b}.flow{position:absolute;z-index:7;font-size:52px;text-shadow:0 0 18px currentColor}.f1{left:17%;top:54%;color:#38aaff;transform:rotate(25deg)}.f2{right:16%;top:51%;color:#ff5368;transform:rotate(155deg)}.art1 .heart{font-size:min(46vw,560px)}.art2 .heart{text-shadow:-90px 0 #174184,90px 0 #a51c37}.art3 .heart{filter:contrast(1.4)}.art4 .cells{font-size:38px}.art5{background:radial-gradient(circle,#174d7b,#071522 65%)}.art6 .heart{transform:translate(-50%,-50%) scale(.9) rotate(10deg)}.art7 .heart{text-shadow:0 0 20px #ff9a2f,0 0 70px #ff542f}.art8 .heart{color:#a52745}.art8:after{content:"ϟ";position:absolute;z-index:9;left:53%;top:39%;font-size:140px;color:#ffd03b;text-shadow:0 0 25px #ff9f00}.art9 .heart{font-size:min(29vw,360px)}.thumb .art .heart{font-size:88px}.thumb .art .vessel{width:22px;height:100px;top:-42px}.thumb .art .cells{font-size:7px;letter-spacing:2px}.thumb .art .flow{font-size:13px}@media(max-width:900px){.resultHead{grid-template-columns:1fr auto}.resultHead>div{display:none}.resultBody{grid-template-columns:1fr}.rail{display:none}.lesson{padding:10px}.stage{height:auto;grid-template-columns:1fr}.visual{height:420px}.stage article{border-left:0;border-top:1px solid #173751}.cards>button{flex-basis:132px}}
- `}</style></div>}
+
+const cardLeft=[1.45,11.05,20.75,30.45,40.15,49.85,59.55,69.25,78.95,88.65];
+
+export default function Page(){
+  const [view,setView]=useState("home");
+  const [active,setActive]=useState(0);
+  return <main className="exactPlatform" dir="rtl">
+    {view==="home" ? (
+      <section className="screen homeScreen" aria-label="واجهة نحلتي الرئيسية">
+        <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/71bc1735-44af-45c3-80c0-94b8cbfb048e.jpg?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMGQ1NWJjZjBiNzVlMGViMiIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQxMzkzNn0.qX2zw2t_9lXqKFWlw8wuFwqZieSCp9YRVTI2dDhbVQk" alt="واجهة نحلتي الرئيسية"/>
+        <button className="hot heartExample" aria-label="كيف يعمل القلب؟" onClick={()=>{setActive(0);setView("heart")}}/>
+      </section>
+    ) : (
+      <section className="screen heartScreen" aria-label="رحلة القلب">
+        <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/078beba2-aa73-4316-a80c-4a9b3146fc01.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDQ2M2JhNDg2Y2JmMzYyOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ2Mzk0NH0.6pzblTKmS7lOudEDHVacbwjtxoVrtUTU7qufyWrRNXY" alt="منصة نحلتي — رحلة القلب"/>
+        <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>setView("home")}/>
+        {cardLeft.map((left,i)=><button key={i} className="hot cardHot" style={{left:left+"%"}} aria-label={"المشهد "+(i+1)} onClick={()=>setActive(i)}/>)}
+        <div className="activeFrame" style={{left:cardLeft[active]+"%"}} aria-hidden="true"/>
+      </section>
+    )}
+    <style jsx global>{`
+      *{box-sizing:border-box}
+      html,body{margin:0;background:#020812}
+      body{overflow-x:hidden}
+      .exactPlatform{min-height:100vh;background:#020812;display:flex;justify-content:center;align-items:flex-start}
+      .screen{position:relative;width:100%;max-width:1536px;aspect-ratio:3/2;background:#020812;overflow:hidden}
+      .screen>img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+      .hot{position:absolute;border:0;background:transparent;cursor:pointer;padding:0;z-index:5}
+      .hot:focus-visible{outline:2px solid #f7bf48;outline-offset:2px}
+      .heartExample{left:17.8%;top:70.8%;width:12.3%;height:16.3%}
+      .homeNav{left:.5%;top:11.2%;width:8.4%;height:6.2%}
+      .cardHot{top:75.2%;width:9.2%;height:21.4%;z-index:7}
+      .activeFrame{position:absolute;top:75.2%;width:9.2%;height:21.4%;border:3px solid #16a9ff;border-radius:16px;box-shadow:0 0 24px rgba(22,169,255,.9),inset 0 0 16px rgba(22,169,255,.12);pointer-events:none;z-index:6;transition:left .22s ease}
+      @media(max-width:700px){
+        .screen{width:100vw;height:auto;aspect-ratio:3/2}
+        .activeFrame{border-width:2px;border-radius:7px}
+      }
+    `}</style>
+  </main>
+}
