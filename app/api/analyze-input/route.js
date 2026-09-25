@@ -1,4 +1,4 @@
-import { createGemini, GEMINI_MODEL } from "../../lib/genai";
+import { createGemini, generateText } from "../../lib/genai";
 import { requestLimit } from "../../lib/requestGuard";
 
 export const maxDuration = 120;
@@ -39,15 +39,10 @@ export async function POST(req){
    ?`اقرأ هذا الـPDF كوثيقة بصرية كاملة، لا كاستخراج نص فقط. حوّله إلى مادة دقيقة جاهزة لمحرك شرح بصري تفاعلي. حافظ على: العنوان والموضوع، المفاهيم الرئيسية، التعريفات، التسلسل، السبب والنتيجة، المقارنات، الأرقام المهمة، وما توضحه الجداول والرسومات والصور. لا تخترع شيئاً غير موجود. إذا كان شيء غير واضح اذكر أنه غير واضح. اكتب بالعربية نصاً منظماً ومكثفاً، لكن لا تختصر لدرجة تفقد العلاقات المهمة. عندما تستطيع تحديد الصفحة بثقة، ضع مرجعاً بالشكل [صفحة N] بجانب المعلومة المرتبطة بها. لا تخمّن رقم الصفحة.`
    :`افهم هذه الصورة بصرياً بدقة وحوّلها إلى مادة جاهزة لمحرك شرح بصري تفاعلي. صف ما يظهر فعلاً، استخرج أي نص ظاهر، وحدد العناصر والعلاقات والمراحل والأسهم أو المقارنات والسبب والنتيجة إن كانت ظاهرة. إذا كانت صورة لشيء مادي فاشرح مكوناته وعلاقاته المكانية. لا تخترع ما لا يظهر. اكتب بالعربية نصاً منظماً يمكن لمحرك آخر تحويله إلى شرح تفاعلي. ضع المرجع [الصورة] بجانب النقاط المستخرجة مباشرةً منها.`;
 
-  const response=await ai.models.generateContent({
-   model:GEMINI_MODEL,
-   contents:[
-    {inlineData:{mimeType:mime,data:bytes}},
-    {text:instruction}
-   ],
-   config:{maxOutputTokens:6000}
-  });
-  const text=String(response.text||"").trim();
+  const text=await generateText(ai,[
+   {inlineData:{mimeType:mime,data:bytes}},
+   {text:instruction}
+  ],{config:{maxOutputTokens:6000},maxAttempts:3,retryBaseMs:450});
   if(!text) return Response.json({error:"لم أستطع استخراج مادة قابلة للشرح من الملف."},{status:422});
   return Response.json({content:text.slice(0,70000),sourceName:name,mimeType:mime,kind:fileKind});
  }catch(e){
