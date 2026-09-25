@@ -1,8 +1,11 @@
 import { createGemini, generateJson } from "../../lib/genai";
+import { requestLimit } from "../../lib/requestGuard";
 
 const safeText=(v,n=500)=>String(v||"").slice(0,n);
 
 export async function POST(req){
+ const blocked=requestLimit(req,{scope:"check-understanding",limit:20,windowMs:60_000});
+ if(blocked)return blocked;
  try{
   const {response,title,nodes=[],edges=[],experience={}}=await req.json();
   if(!safeText(response).trim()) return Response.json({error:"اكتب شرحك أولاً"},{status:400});
@@ -53,6 +56,7 @@ nextHint: تلميح قصير واحد يساعده يكمل الفجوة الت
    remedyMode
   });
  }catch(e){
-  return Response.json({error:"تعذر تقييم الفهم",detail:String(e?.message||e)},{status:500});
+  console.error("[NAHLATY_CHECK_UNDERSTANDING_ERROR]",String(e?.message||e),e?.stack||"");
+  return Response.json({error:"تعذر تقييم الفهم",code:"CHECK_UNDERSTANDING_FAILED"},{status:500});
  }
 }
