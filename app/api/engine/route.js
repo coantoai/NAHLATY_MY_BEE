@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildEnginePrompt, contextualHeartResult, localHeartResult, sanitizeEngineResult } from "../../../lib/nahlaty-engine";
+import { buildEnginePrompt, contextualHeartResult, localHeartResult, sanitizeEngineResult } from "../../../lib/nahlaty-engine";\nimport { compileVisualPlan } from "../../../lib/visual-director";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,13 +83,13 @@ export async function POST(request) {
       ok:true,
       provider:"curated-local",
       model:null,
-      result:sanitizeEngineResult(local,local)
+      result:(()=>{const result=sanitizeEngineResult(local,local);return {...result,renderPlan:compileVisualPlan(result)}})()
     });
   }
 
   try {
     const raw=await callGemini(buildEnginePrompt({question,context,local}));
-    const result=sanitizeEngineResult(raw,local);
+    const result=sanitizeEngineResult(raw,local);\n    const renderPlan=compileVisualPlan(result);
     return NextResponse.json({
       ok:true,
       provider:"gemini",
@@ -103,7 +103,7 @@ export async function POST(request) {
         provider:"curated-fallback",
         model:MODEL,
         warning:"Model provider unavailable; served verified prototype knowledge.",
-        result:sanitizeEngineResult(local,local)
+        result:(()=>{const result=sanitizeEngineResult(local,local);return {...result,renderPlan:compileVisualPlan(result)}})()
       });
     }
     const timedOut=error?.name==="AbortError";
