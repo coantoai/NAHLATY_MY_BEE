@@ -42,3 +42,24 @@ export async function generateJson(ai,prompt,{maxAttempts=3,retryBaseMs=450}={})
  }
  throw lastError||new Error("Gemini generation failed");
 }
+
+export async function generateText(ai,contents,{config={},maxAttempts=3,retryBaseMs=450}={}){
+ let lastError=null;
+ for(let attempt=1;attempt<=Math.max(1,maxAttempts);attempt++){
+  try{
+   const response=await ai.models.generateContent({
+    model:GEMINI_MODEL,
+    contents,
+    config
+   });
+   return String(response.text||"").trim();
+  }catch(error){
+   lastError=error;
+   if(!isTransientGenAIError(error)||attempt>=maxAttempts) throw error;
+   const base=Math.max(0,retryBaseMs);
+   const jitter=base?Math.floor(Math.random()*120):0;
+   await sleep(base*(2**(attempt-1))+jitter);
+  }
+ }
+ throw lastError||new Error("Gemini generation failed");
+}
