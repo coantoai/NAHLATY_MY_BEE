@@ -44,10 +44,15 @@ async function runGeneralExplainEngine(question,context){
  const content=prior?.title && prior?.summary
   ? `السياق السابق: ${prior.title}. ${prior.summary}\nسؤال المتابعة: ${question}`
   : question;
+ const preserve=prior?{
+  truthAnchors:Array.isArray(prior?.truthAnchors)?prior.truthAnchors:[],
+  causalRelations:Array.isArray(prior?.causalRelations)?prior.causalRelations:[],
+  sceneGraph:prior?.sceneGraph&&typeof prior.sceneGraph==="object"?prior.sceneGraph:null
+ }:null;
  const request=new Request("http://nahlaty.local/api/explain",{
   method:"POST",
   headers:{"content-type":"application/json"},
-  body:JSON.stringify({content,audience})
+  body:JSON.stringify({content,audience,preserve})
  });
  const response=await explainPOST(request);
  const data=await response.json();
