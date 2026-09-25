@@ -12,7 +12,7 @@ export const LESSONS = Object.freeze({
   flow: {
     title: "اتبع حركة الدم",
     explanation: "نرى جزءًا محددًا من الدورة: الدم العائد من الرئتين يدخل الأذين الأيسر، يمر عبر الصمام التاجي إلى البطين الأيسر، ثم يخرج عبر الصمام الأبهري إلى الجسم.",
-    cue: "اتبع المسار الأحمر. هذه صورة تفسيرية للقلب الأيسر، وليست نموذجًا تشريحيًا كاملًا.",
+    cue: "اتبع خلايا الدم داخل المسار. المشهد يركّز على القلب الأيسر، وليس نموذجًا تشريحيًا كاملًا.",
     focus: "flow"
   },
   valve: {
@@ -60,6 +60,7 @@ export const LESSONS = Object.freeze({
 });
 
 const VALID_VIEWS = new Set(["flow", "valve", "consequence"]);
+
 export function normalizeWorld(value) {
   const w = value && typeof value === "object" ? value : {};
   return {
@@ -77,15 +78,25 @@ const norm = value => String(value || "").toLowerCase()
   .replace(/\s+/g, " ").trim();
 
 export function localIntent(question, world = DEFAULT_WORLD) {
-  const q = norm(question), w = normalizeWorld(world);
+  const q = norm(question);
+  const w = normalizeWorld(world);
   if (!q) return "unsupported";
-  if (/(ارجع|رجع|طبيعي|اصلح|صلح|reset|restore)/.test(q)) return "restore";
-  if (/(شغل|كمل|استمر|تابع|resume|play)/.test(q)) return "resume";
-  if (/(وقف|اوقف|جمد|pause|stop)/.test(q)) return "pause";
-  if (/(خطير|الخطر|يضر|ليش هيك|ليش هيدا|شو تاثير|النتيجة|الرئة|الرئتين|تنفس|ضيق النفس|consequence|harm)/.test(q) && (w.leaky || w.intent === "regurgitation" || /ارتجاع|تسرب/.test(q))) return "consequence";
-  if (/(ما سكر|ما يسكر|ما ينغلق|ما اغلق|ما يقفل|ما قفل|ارتجاع|تسرب|يرجع الدم|leak|regurgitation)/.test(q)) return "regurgitation";
-  if (/(صمام|بلف|valve|ما بيرجع|ما يرجع|ليش ما|لماذا لا يرجع|فرق الضغط|ضغط|يفتح|يسكر|يغلق)/.test(q)) return "valve";
-  if (/(الدم|القلب|الدورة|مسار|يمشي|يمر|يتحرك|جريان|flow|blood|heart)/.test(q)) return "flow";
+
+  // Keep "بيرجع" / "ما بيرجع" out of restore routing.
+  if (/(الوضع الطبيعي|ارجع.*طبيعي|رجع.*طبيعي|رجع الصمام|اصلح الصمام|صلح الصمام|reset|restore|back to normal)/.test(q)) return "restore";
+  if (/(شغل|كمل|استمر|تابع|resume|play|continue)/.test(q)) return "resume";
+  if (/(وقف|اوقف|جمد|pause|stop|freeze)/.test(q)) return "pause";
+
+  const consequenceWords = /(خطير|الخطر|يضر|ليش هيك|ليش هيدا|شو تاثير|شو اثر|النتيجة|الرئة|الرئتين|تنفس|ضيق النفس|consequence|harm|dangerous|effect|lungs|breath|breathing|symptom)/;
+  const leakContext = w.leaky || w.intent === "regurgitation" || /(ارتجاع|تسرب|leak|regurgitation)/.test(q);
+  if (consequenceWords.test(q) && leakContext) return "consequence";
+
+  if (/(ما سكر|ما يسكر|ما ينغلق|ما اغلق|ما يقفل|ما قفل|ارتجاع|تسرب|leak|regurgitation|doesn.?t close|does not close)/.test(q)) return "regurgitation";
+
+  if (/(صمام|بلف|valve|ما بيرجع|ما يرجع|يرجع لورا|ليش ما|لماذا لا يرجع|فرق الضغط|ضغط|يفتح|يسكر|يغلق|backward|backflow|one.?way)/.test(q)) return "valve";
+
+  if (/(الدم|القلب|الدورة|مسار|يمشي|يمر|يتحرك|جريان|flow|blood|heart|circulation)/.test(q)) return "flow";
+
   return "unsupported";
 }
 
@@ -94,6 +105,7 @@ export function applyIntent(rawIntent, currentWorld = DEFAULT_WORLD) {
   const intent = INTENTS.includes(rawIntent) ? rawIntent : "unsupported";
   const lesson = LESSONS[intent];
   const next = { ...world };
+
   if (lesson.focus) next.view = lesson.focus;
   if (intent === "regurgitation" || intent === "consequence") next.leaky = true;
   if (intent === "restore") next.leaky = false;
@@ -103,5 +115,6 @@ export function applyIntent(rawIntent, currentWorld = DEFAULT_WORLD) {
   if (intent === "resume") next.playing = true;
   if (intent !== "unsupported" && intent !== "pause" && intent !== "resume") next.playing = true;
   if (intent !== "unsupported") next.intent = intent;
+
   return { intent, world: next, lesson };
 }
