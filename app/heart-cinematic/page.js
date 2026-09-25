@@ -87,9 +87,9 @@ export default function Page(){
 
    <div className="stageOverlay">
      <img className="cinematicScene" src={scene.image} alt={scene.title+" — "+scene.sub}/>
-     <VisualGuide index={active}/>
    </div>
 
+   <button className="hot brandHome" aria-label="نحلتي — العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    {cardLeft.map((left,i)=><div key={"thumb-"+i} className="cardThumb" style={{left:(left+.38)+"%"}}><img src={scenes[i].image} alt="" /></div>)}
    {cardLeft.map((left,i)=><button key={i} className="hot cardHot" style={{left:left+"%"}} aria-label={scenes[i].title} aria-pressed={active===i} onClick={()=>setActive(i)}/>)}
@@ -117,7 +117,7 @@ export default function Page(){
    .stageCaption b{font-size:clamp(11px,1.15vw,18px)} .stageCaption span{font-size:clamp(8px,.8vw,13px);color:#9cc5dc;margin-top:2px}
    .particle{position:absolute;border-radius:50%;background:#62d7ff;box-shadow:0 0 13px #36c4ff;opacity:.65}.p1{width:5px;height:5px;left:18%;top:22%}.p2{width:4px;height:4px;left:72%;top:35%}.p3{width:6px;height:6px;left:25%;top:72%}
    .hot{position:absolute;border:0;background:transparent;cursor:pointer;padding:0;z-index:7}.hot:focus-visible{outline:2px solid #f7bf48;outline-offset:2px}
-   .homeNav{left:.5%;top:11.2%;width:8.4%;height:6.2%}.cardHot{top:75.2%;width:9.2%;height:21.4%}
+   .brandHome{left:88.2%;top:1.1%;width:10.8%;height:6.8%}.homeNav{left:.5%;top:11.2%;width:8.4%;height:6.2%}.cardHot{top:75.2%;width:9.2%;height:21.4%}
    .activeFrame{position:absolute;top:75.2%;width:9.2%;height:21.4%;border:3px solid #16a9ff;border-radius:16px;box-shadow:0 0 24px rgba(22,169,255,.9),inset 0 0 16px rgba(22,169,255,.12);pointer-events:none;z-index:6;transition:left .22s ease}
    @media(max-width:700px){.heartScreen{width:100vw;height:auto;aspect-ratio:3/2}.activeFrame{border-width:2px;border-radius:7px}.stageCaption{padding:4px 7px;border-radius:5px}}
   `}</style>
