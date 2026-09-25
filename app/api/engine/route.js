@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { POST as explainPOST } from "../explain/route";
 import { contextualHeartResult, localHeartResult } from "../../../lib/nahlaty-engine";
 import { compileVisualPlan } from "../../../lib/visual-director";
+import { getExperienceProfile } from "../../lib/experienceProfile";
 import { curatedKnowledgeResult, curatedKnowledgeResultById, listCuratedKnowledgePacks } from "../../../lib/knowledge-packs";
 
 export const runtime = "nodejs";
@@ -84,8 +85,10 @@ function adaptGeneralExperience(experience,sourceKind="question"){
  return {...result,renderPlan:compileVisualPlan(result)};
 }
 
-function finalizeCurated(result){
- return {...result,renderPlan:compileVisualPlan(result)};
+function finalizeCurated(result,audience="عام"){
+ const profile=getExperienceProfile(audience);
+ const experience=result?.experience?{...result.experience,audience,presentation:{...profile,profileId:profile.id}}:result?.experience;
+ return {...result,experience,renderPlan:compileVisualPlan(result)};
 }
 
 export async function GET(){
@@ -151,7 +154,7 @@ export async function POST(request){
    ok:true,
    provider:"sourced-knowledge",
    model:null,
-   result:finalizeCurated(sourced)
+   result:finalizeCurated(sourced,context?.audience||"عام")
   });
  }
 
