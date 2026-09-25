@@ -5,6 +5,7 @@ import {
   localHeartResult,
   sanitizeEngineResult
 } from "../lib/nahlaty-engine.js";
+import { compileVisualPlan } from "../lib/visual-director.js";
 
 test("valve question maps to curated valve scene",()=>{
   const r=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
@@ -56,4 +57,13 @@ test("open-domain model output remains unverified and has no forced heart scene"
   assert.equal(out.scene,null);
   assert.equal(out.needsVerification,true);
   assert.equal(out.verification.status,"model-only");
+});
+
+test("visual director compiles semantic operations into executable motion",()=>{
+  const engine=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
+  const plan=compileVisualPlan(engine);
+  assert.equal(plan.renderer,"heart-semantic-svg");
+  assert.equal(plan.sceneId,"heart:valves");
+  assert.ok(plan.motion.some(step=>step.type==="flow"));
+  assert.equal(plan.guardrails.animateMeaning,true);
 });
