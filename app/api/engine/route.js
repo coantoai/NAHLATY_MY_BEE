@@ -4,7 +4,7 @@ import { contextualHeartResult, localHeartResult } from "../../../lib/nahlaty-en
 import { compileVisualPlan } from "../../../lib/visual-director";
 import { getExperienceProfile } from "../../lib/experienceProfile";
 import { curatedKnowledgeResult, curatedKnowledgeResultById, listCuratedKnowledgePacks } from "../../../lib/knowledge-packs";
-import { rateLimitInfo, requestLimit } from "../../lib/requestGuard";
+import { internalRequestHeaders, rateLimitInfo, requestLimit } from "../../lib/requestGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +53,7 @@ async function runGeneralExplainEngine(question,context,sourceKind="question"){
  }:null;
  const request=new Request("http://nahlaty.local/api/explain",{
   method:"POST",
-  headers:{"content-type":"application/json","x-nahlaty-internal":"1"},
+  headers:{"content-type":"application/json",...internalRequestHeaders()},
   body:JSON.stringify({content,audience,preserve})
  });
  const response=await explainPOST(request);
