@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { POST as explainPOST } from "../explain/route";
 import { contextualHeartResult, localHeartResult } from "../../../lib/nahlaty-engine";
 import { compileVisualPlan } from "../../../lib/visual-director";
-import { curatedKnowledgeResult, listCuratedKnowledgePacks } from "../../../lib/knowledge-packs";
+import { curatedKnowledgeResult, curatedKnowledgeResultById, listCuratedKnowledgePacks } from "../../../lib/knowledge-packs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -128,7 +128,10 @@ export async function POST(request){
  if(question.length>700)return jsonError("السؤال طويل جدًا لهذه النسخة التجريبية.",422,"QUESTION_TOO_LONG");
 
  const heart=localHeartResult(question)||contextualHeartResult(question,context);
- const sourced=heart||curatedKnowledgeResult(question);
+ const directPack=curatedKnowledgeResult(question);
+ const shortFollowUp=/^(ليش|لماذا|كيف|وضح|اشرح|وبعدين|ثم ماذا|شو يعني|ماذا يعني|what|why|how)/i.test(question)||question.length<24;
+ const priorPack=shortFollowUp?curatedKnowledgeResultById(context?.previous?.topic):null;
+ const sourced=heart||directPack||priorPack;
 
  if(sourced){
   return NextResponse.json({
