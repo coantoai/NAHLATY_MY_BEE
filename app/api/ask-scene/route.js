@@ -1,8 +1,11 @@
 import { createGemini, generateJson } from "../../lib/genai";
+import { requestLimit } from "../../lib/requestGuard";
 
 const cut=(v,n=500)=>String(v||"").slice(0,n);
 
 export async function POST(req){
+ const blocked=requestLimit(req,{scope:"ask-scene",limit:20,windowMs:60_000});
+ if(blocked)return blocked;
  try{
   const {question,title,nodes=[],edges=[],steps=[]}=await req.json();
   if(!cut(question).trim()) return Response.json({error:"اكتب سؤالك أولاً"},{status:400});
@@ -46,6 +49,7 @@ followUp: سؤال متابعة واحد اختياري يساعد المستخ�
    followUp:cut(data?.followUp,220)
   });
  }catch(e){
-  return Response.json({error:"تعذر سؤال المشهد",detail:String(e?.message||e)},{status:500});
+  console.error("[NAHLATY_ASK_SCENE_ERROR]",String(e?.message||e),e?.stack||"");
+  return Response.json({error:"تعذر سؤال المشهد",code:"ASK_SCENE_FAILED"},{status:500});
  }
 }
