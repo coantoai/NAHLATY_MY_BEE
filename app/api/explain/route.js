@@ -2,6 +2,7 @@ import { createGemini, generateJson, isTransientGenAIError } from "../../lib/gen
 import { getExperienceProfile } from "../../lib/experienceProfile";
 import { compileVisualSceneResult } from "../../lib/visualSceneCompiler";
 import { reconcilePreservedWorld } from "../../../lib/world-continuity";
+import { requestLimit } from "../../lib/requestGuard";
 
 const clamp=n=>Math.max(8,Math.min(92,Number(n)||50));
 function normalizeScene(data,audience="عام"){
@@ -109,6 +110,8 @@ function normalizeScene(data,audience="عام"){
 }
 
 export async function POST(req){
+ const blocked=requestLimit(req,{scope:"explain",limit:18,windowMs:60_000});
+ if(blocked)return blocked;
  try{
   const {content,audience="عام",preserve=null}=await req.json();
   if(!content) return Response.json({error:"المحتوى مطلوب"},{status:400});
@@ -139,6 +142,6 @@ export async function POST(req){
   const detail=String(e?.message||e);
   console.error("[NAHLATY_EXPLAIN_ERROR]", detail, e?.stack||"");
   if(isTransientGenAIError(e)) return Response.json({error:"مزود الذكاء الاصطناعي مشغول مؤقتاً. أعد المحاولة بعد قليل.",code:"AI_BUSY"},{status:503});
-  return Response.json({error:"تعذر إنشاء الشرح",detail},{status:500});
+  return Response.json({error:"تعذر إنشاء الشرح",code:"EXPLAIN_FAILED"},{status:500});
  }
 }
