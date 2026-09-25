@@ -244,7 +244,7 @@ export default function Home(){
     <button className="exactHotspot hInputFile" aria-label="ارفع ملفاً" onClick={()=>go("explain-input")}/>
     <button className="exactHotspot hInputVoice" aria-label="استخدم الصوت" onClick={()=>go("explain-input")}/>
     <button className="exactHotspot hInputText" aria-label="اكتب سؤالاً" onClick={()=>go("explain-input")}/>
-    <button className="exactHotspot hExHeart" aria-label="كيف يعمل القلب؟" onClick={()=>useExample(examples[5])}/>
+    <button className="exactHotspot hExHeart" aria-label="كيف يعمل القلب؟" onClick={()=>{window.location.href="/heart-cinematic"}}/>
     <button className="exactHotspot hExClimate" aria-label="ما هو الاحتباس الحراري؟" onClick={()=>useExample(examples[4])}/>
     <button className="exactHotspot hExPlant" aria-label="كيف تنمو النباتات؟" onClick={()=>useExample(examples[3])}/>
     <button className="exactHotspot hExBrain" aria-label="كيف يتعلم الدماغ؟" onClick={()=>useExample(examples[2])}/>
