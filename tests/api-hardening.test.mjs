@@ -54,3 +54,20 @@ test("API hardening contract hides provider details and marks internal explain c
  assert.match(explain,/EXPLAIN_FAILED/);
  assert.match(analyze,/ANALYZE_INPUT_FAILED/);
 });
+
+test("all interactive AI routes are rate guarded and redact provider errors",()=>{
+ const routes=[
+  ["ask-scene","ASK_SCENE_FAILED"],
+  ["check-invariance","CHECK_INVARIANCE_FAILED"],
+  ["check-understanding","CHECK_UNDERSTANDING_FAILED"],
+  ["remap-analogy","REMAP_ANALOGY_FAILED"],
+  ["transfer-test","TRANSFER_TEST_FAILED"]
+ ];
+ for(const [name,code] of routes){
+  const source=readFileSync(new URL("../app/api/"+name+"/route.js",import.meta.url),"utf8");
+  assert.match(source,/requestLimit\(req,\{scope:/,name+" missing request guard");
+  assert.match(source,new RegExp(code),name+" missing public error code");
+  assert.doesNotMatch(source,/Response\.json\(\{error:[^}]*detail:/,name+" leaks provider detail");
+  assert.match(source,/console\.error\(/,name+" missing server diagnostic log");
+ }
+});
