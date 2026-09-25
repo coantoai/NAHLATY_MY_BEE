@@ -96,7 +96,7 @@ export default function Page(){
  const [active,setActive]=useState(0);
  const [engineQuestion,setEngineQuestion]=useState("");
  const [lastQuestion,setLastQuestion]=useState("");
- const [engineResult,setEngineResult]=useState(null);
+ const [engineResult,setEngineResult]=useState(null);\n const [engineLoading,setEngineLoading]=useState(false);\n const [engineProvider,setEngineProvider]=useState("");
  const scene=scenes[active];
  const concepts=[
   {q:"ما وظيفة القلب؟",a:"مضخة تدفع الدم باستمرار عبر الجسم.",cue:"راقب القلب كمركز الحركة والدفع."},
@@ -112,27 +112,32 @@ export default function Page(){
  ];
  const concept=concepts[active];
  const visualPlan=visualPlans[active];
- function runEngine(e){
+ async function runEngine(e){
   e.preventDefault();
   const q=engineQuestion.trim();
   if(q.length<4){setEngineResult({error:"اكتب سؤالًا أوضح قليلًا حتى أستطيع فهم ما تريد رؤيته."});return;}
-  const routes=[
-   {i:3,re:/صمام|رجوع|يرجع|اتجاه واحد/,why:"السؤال يتعلق بمنع رجوع الدم واتجاه حركته."},
-   {i:2,re:/داخل|حجر|أذين|بطين/,why:"السؤال يتعلق ببنية القلب الداخلية وحجراته."},
-   {i:5,re:/رئة|أكسجين|ثاني أكسيد|تنفس/,why:"السؤال يتعلق بتبادل الغازات بين القلب والرئتين."},
-   {i:8,re:/كهرب|نبض|خفق|إشارة/,why:"السؤال يتعلق بالنظام الكهربائي الذي ينسق النبض."},
-   {i:7,re:/تاجي|يغذي القلب|عضلة القلب/,why:"السؤال يتعلق بتغذية عضلة القلب نفسها."},
-   {i:6,re:/جسم|شريان|أعضاء|توزيع/,why:"السؤال يتعلق بتوزيع الدم الغني بالأكسجين إلى الجسم."},
-   {i:4,re:/دم|مسار|رحلة|دورة|يدور/,why:"السؤال يتعلق بمسار الدم عبر الدورة الدموية."},
-   {i:1,re:/كيف يعمل القلب|كيف يشتغل القلب|بنية القلب|تشريح/,why:"السؤال يطلب فهم آلية القلب من الداخل."},
-   {i:0,re:/قلب|وظيفة|مضخة/,why:"السؤال عام عن وظيفة القلب."}
-  ];
-  const hit=routes.find(r=>r.re.test(q));
-  if(!hit){setLastQuestion(q);setEngineResult({error:"هذا الـProof متخصص بالقلب حاليًا. فهمت السؤال، لكن لا أملك بعد مشهدًا موثوقًا لهذا الموضوع."});return;}
-  const next=hit.i, answer=concepts[next];
-  setLastQuestion(q);setActive(next);
-  setEngineResult({answer:answer.a,reason:hit.why,plan:visualPlans[next]});
-  setEngineQuestion("");
+  setEngineLoading(true);
+  setEngineResult(null);
+  setEngineProvider("");
+  setLastQuestion(q);
+  try{
+   const response=await fetch("/api/engine",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({question:q,context:{scene:active,lastQuestion}})
+   });
+   const payload=await response.json();
+   if(!response.ok||!payload?.ok) throw new Error(payload?.error?.message||"تعذر تشغيل المحرك.");
+   const result=payload.result;
+   if(Number.isInteger(result?.scene)) setActive(Math.max(0,Math.min(9,result.scene)));
+   setEngineProvider(payload.provider||"engine");
+   setEngineResult(result);
+   setEngineQuestion("");
+  }catch(error){
+   setEngineResult({error:error?.message||"تعذر تشغيل المحرك الآن."});
+  }finally{
+   setEngineLoading(false);
+  }
  }
  return <main className="heartPlatform" dir="rtl">
   <section className="heartScreen" aria-label="رحلة القلب">
@@ -142,7 +147,7 @@ export default function Page(){
      <HeartScene kind={["overview","inside","chambers","valves","flow","lungs","body","coronary","electric","whole"][active]}/><VisualGuide index={active}/><div className="stageCaption"><b>{scene.title}</b><span>{scene.sub}</span></div>
    </div>
 
-   <form className="engineAsk" onSubmit={runEngine}><input value={engineQuestion} onChange={e=>setEngineQuestion(e.target.value)} placeholder="جرّب: لماذا لا يرجع الدم؟"/><button>نفّذ</button></form>{lastQuestion&&<div className="engineContext">Context: {lastQuestion}</div>}{engineResult&&<div className={"engineResult "+(engineResult.error?"isError":"")}><b>{engineResult.error?"لم أُنفّذ تخمينًا":"النتيجة"}</b><span>{engineResult.error||engineResult.answer}</span>{!engineResult.error&&<><small>{engineResult.reason}</small><em>{engineResult.plan.operations.join(" → ")}</em></>}</div>}
+   <form className="engineAsk" onSubmit={runEngine}><input value={engineQuestion} onChange={e=>setEngineQuestion(e.target.value)} placeholder="جرّب: لماذا لا يرجع الدم؟" disabled={engineLoading}/><button disabled={engineLoading}>{engineLoading?"أفهم…":"نفّذ"}</button></form>{lastQuestion&&<div className="engineContext">Context: {lastQuestion}</div>}{engineResult&&<div className={"engineResult "+(engineResult.error?"isError":"")}><b>{engineResult.error?"لم أُنفّذ تخمينًا":"النتيجة"}</b><span>{engineResult.error||engineResult.answer}</span>{!engineResult.error&&<><small>{engineResult.explanation}</small><em>{engineResult.visualPlan?.operations?.join(" → ")}</em><i>{engineResult.verification?.status||"unverified"} · {engineResult.confidence||"low"}{engineProvider?" · "+engineProvider:""}</i></>}</div>}
    <button className="hot brandHome" aria-label="نحلتي — العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    {cardLeft.map((left,i)=><div key={"thumb-"+i} className={"cardThumb miniScene m"+i} style={{left:(left+.38)+"%"}}><span>{scenes[i].n}</span><b>{scenes[i].title}</b></div>)}
@@ -156,7 +161,7 @@ export default function Page(){
    .heartScreen{position:relative;width:100%;max-width:1536px;aspect-ratio:3/2;background:#020812;overflow:hidden}
    .referenceUI{display:block;width:100%;height:100%;user-select:none}.fastShell{position:absolute;inset:0;background:radial-gradient(circle at 42% 30%,#102a3b 0,#06111d 42%,#020812 78%);border:1px solid #102536}.shellBrand{position:absolute;right:2.5%;top:2%;color:#e8b94f;font:800 clamp(10px,1.2vw,18px)/1 Arial;letter-spacing:2px}.shellSide{position:absolute;right:1.2%;top:10%;width:6.5%;height:84%;border-left:1px solid rgba(83,166,204,.18);background:rgba(3,13,23,.5)}.shellAsk{position:absolute;left:10%;top:65.7%;width:62.5%;height:5.8%;border:1px solid rgba(86,180,222,.18);border-radius:8px;background:rgba(3,15,25,.55)}.shellCards{position:absolute;left:1%;right:1%;top:74%;height:23%;border-top:1px solid rgba(83,166,204,.12)}
    .stageOverlay{position:absolute;left:9.5%;top:8.5%;width:63.55%;height:56.1%;overflow:hidden;z-index:3;background:#07111c;transition:transform .55s ease;transform-origin:center}
-   .engineProof{position:absolute;left:10.5%;top:9.5%;z-index:8;background:rgba(2,10,18,.84);border:1px solid rgba(90,196,244,.35);border-radius:9px;padding:7px 10px;display:flex;flex-direction:column;gap:2px;direction:rtl;pointer-events:none}.engineProof b{font-size:9px;color:#6bd0f6;letter-spacing:1px}.engineProof span{font-size:11px;color:#fff}.engineProof small{font-size:8px;color:#f4c95f;direction:ltr}.engineAsk{position:absolute;left:10%;top:65.7%;width:62.5%;height:5.8%;z-index:9;display:flex;gap:6px;direction:rtl}.engineAsk input{flex:1;min-width:0;border:1px solid rgba(86,180,222,.35);border-radius:8px;background:rgba(3,15,25,.92);color:#fff;padding:0 10px;font-size:clamp(8px,.8vw,13px)}.engineAsk button{border:0;border-radius:8px;background:#e8b94f;color:#111;font-weight:800;padding:0 14px;cursor:pointer}.engineContext{position:absolute;left:10.5%;top:62.4%;z-index:8;color:#8fd8f5;font-size:clamp(7px,.65vw,10px);direction:rtl}.engineResult{position:absolute;right:27.8%;top:10.5%;width:25%;z-index:8;display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:10px;background:rgba(2,10,18,.86);border:1px solid rgba(89,196,242,.3);color:#eaf7ff;pointer-events:none}.engineResult b{color:#f0c45d;font-size:clamp(8px,.8vw,12px)}.engineResult span{font-size:clamp(8px,.8vw,13px);line-height:1.5}.engineResult small{color:#9cc5dc;font-size:clamp(7px,.68vw,10px)}.engineResult em{font-style:normal;color:#6bd8ff;font-size:clamp(6px,.6vw,9px);direction:ltr}.engineResult.isError{border-color:rgba(240,196,93,.35)}
+   .engineProof{position:absolute;left:10.5%;top:9.5%;z-index:8;background:rgba(2,10,18,.84);border:1px solid rgba(90,196,244,.35);border-radius:9px;padding:7px 10px;display:flex;flex-direction:column;gap:2px;direction:rtl;pointer-events:none}.engineProof b{font-size:9px;color:#6bd0f6;letter-spacing:1px}.engineProof span{font-size:11px;color:#fff}.engineProof small{font-size:8px;color:#f4c95f;direction:ltr}.engineAsk{position:absolute;left:10%;top:65.7%;width:62.5%;height:5.8%;z-index:9;display:flex;gap:6px;direction:rtl}.engineAsk input{flex:1;min-width:0;border:1px solid rgba(86,180,222,.35);border-radius:8px;background:rgba(3,15,25,.92);color:#fff;padding:0 10px;font-size:clamp(8px,.8vw,13px)}.engineAsk button{border:0;border-radius:8px;background:#e8b94f;color:#111;font-weight:800;padding:0 14px;cursor:pointer}.engineAsk button:disabled,.engineAsk input:disabled{opacity:.65;cursor:wait}.engineContext{position:absolute;left:10.5%;top:62.4%;z-index:8;color:#8fd8f5;font-size:clamp(7px,.65vw,10px);direction:rtl}.engineResult{position:absolute;right:27.8%;top:10.5%;width:25%;z-index:8;display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:10px;background:rgba(2,10,18,.86);border:1px solid rgba(89,196,242,.3);color:#eaf7ff;pointer-events:none}.engineResult b{color:#f0c45d;font-size:clamp(8px,.8vw,12px)}.engineResult span{font-size:clamp(8px,.8vw,13px);line-height:1.5}.engineResult small{color:#9cc5dc;font-size:clamp(7px,.68vw,10px)}.engineResult em{font-style:normal;color:#6bd8ff;font-size:clamp(6px,.6vw,9px);direction:ltr}.engineResult i{font-style:normal;color:#7f9daf;font-size:clamp(6px,.56vw,8px);direction:ltr}.engineResult.isError{border-color:rgba(240,196,93,.35)}
    .cinematicScene{width:100%;height:100%;object-fit:cover;display:block}
    .embeddedMeaning{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
    .meaningPulse{position:absolute;left:47%;top:43%;width:12%;aspect-ratio:1;border:2px solid rgba(255,214,96,.82);border-radius:50%;box-shadow:0 0 18px rgba(255,205,72,.5),inset 0 0 14px rgba(255,205,72,.2)}
