@@ -39,12 +39,12 @@ export async function GET(request){
  const followUp=await probe("ليش؟",{previous:{topic:"solar-cell",title:"كيف تعمل الخلية الشمسية؟",summary:"تحول الخلية الشمسية طاقة الضوء إلى تيار كهربائي."}},"solar-cell");
  followUp.kind="context-follow-up";
  checks.push(followUp);
- if(deep){
-  const general=await probe("كيف تتكوّن أطوار القمر؟");
-  general.kind="open-domain";
-  checks.push(general);
- }
- const passed=checks.every(x=>x.ok&&x.renderPlan&&x.topicMatched&&(x.scene!==null||x.nodes>=3));
+ const general=await probe("كيف تتكوّن أطوار القمر؟");
+ general.kind="open-domain";
+ general.providerExpected="gemini-explain-engine";
+ general.providerMatched=general.provider==="gemini-explain-engine";
+ checks.push(general);
+ const passed=checks.every(x=>x.ok&&x.renderPlan&&x.topicMatched&&(x.scene!==null||x.nodes>=3)&&(x.kind!=="open-domain"||x.providerMatched));
  return Response.json({
   ok:passed,
   version:"engine-e2e/v2",
