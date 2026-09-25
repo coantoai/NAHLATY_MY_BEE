@@ -242,9 +242,30 @@ export default function Home(){
    let data;
    let initialStep=0;
    if(retargeting){
-    const x=await fetch("/api/explain",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content:sourceInput,audience:target,preserve})});
-    data=await x.json();
-    if(!x.ok||data?.error)throw new Error(data?.error||"تعذر إعادة تكييف الشرح");
+    if(r?.verification?.status==="source-grounded"||r?.engineMeta?.provider==="sourced-knowledge"){
+     const x=await fetch("/api/engine",{
+      method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({question:sourceInput.trim(),context:{audience:target,scene:active}})
+     });
+     const payload=await x.json();
+     if(!x.ok||!payload?.ok)throw new Error(payload?.error?.message||"تعذر إعادة تكييف الشرح");
+     const engineResult=payload.result||{};
+     const experience=engineResult.experience;
+     if(!experience)throw new Error("المحرك لم يُرجع تجربة بصرية قابلة للعرض.");
+     initialStep=Math.max(0,Math.min((experience.steps?.length||1)-1,active));
+     data={
+      ...experience,
+      audience:target,
+      verification:engineResult.verification,
+      engineMeta:{provider:payload.provider,model:payload.model||null,domain:engineResult.domain,topic:engineResult.topic,confidence:engineResult.confidence,needsVerification:engineResult.needsVerification},
+      sources:engineResult.verification?.sources||experience.sources||[]
+     };
+    }else{
+     const x=await fetch("/api/explain",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content:sourceInput,audience:target,preserve})});
+     data=await x.json();
+     if(!x.ok||data?.error)throw new Error(data?.error||"تعذر إعادة تكييف الشرح");
+    }
    }else{
     const input=sourceInput.trim();
     const looksLikeQuestion=input.length<=700&&(/^(كيف|لماذا|ليش|ما |ماذا|هل |شو |أين|متى|من |what |why |how |where |when |who )/i.test(input)||/[؟?]$/.test(input));
@@ -293,7 +314,7 @@ export default function Home(){
     body:JSON.stringify({
      question,
      context:{
-      scene:Number.isInteger(r?.initialStep)?r.initialStep:active,
+      scene:active,
       audience:a||r?.audience||"عام",
       previous:{
        title:r?.title||"",
