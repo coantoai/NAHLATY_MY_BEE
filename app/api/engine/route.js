@@ -46,6 +46,24 @@ async function callGemini(prompt) {
   }
 }
 
+export async function GET() {
+  const selfTest=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
+  return NextResponse.json({
+    ok:true,
+    engine:"nahlaty",
+    version:"engine-v1",
+    providerConfigured:Boolean(API_KEY),
+    provider:API_KEY ? "gemini" : "curated-local",
+    model:API_KEY ? MODEL : null,
+    localKnowledge:["heart"],
+    selfTest:{
+      passed:selfTest?.topic==="valves" && selfTest?.scene===3,
+      topic:selfTest?.topic||null,
+      scene:Number.isInteger(selfTest?.scene)?selfTest.scene:null
+    }
+  });
+}
+
 export async function POST(request) {
   let body;
   try { body=await request.json(); }
