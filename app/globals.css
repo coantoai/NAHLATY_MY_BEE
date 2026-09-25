@@ -588,3 +588,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @keyframes causalArrowPulse{50%{transform:translateX(-4px);opacity:.72}}
 @media(max-width:760px){.causalFocusStrip{grid-template-columns:1fr;gap:7px}.causalBridge{grid-template-columns:auto 1fr auto;place-items:center;text-align:right}.causalBridge i{transform:rotate(-90deg);animation:none}.libraryContinue{grid-template-columns:auto 1fr}.libraryContinue>button{grid-column:1/-1;width:100%}.threeKnowledgeLegend{inset:7px 7px auto auto}.threeKnowledgeLegend span{font-size:7px;padding:3px 5px}}
 @media(prefers-reduced-motion:reduce){.causalBridge i{animation:none!important}}
+
+
+/* Approved 25 Sep 2026 entry experience: reference homepage is the product entry. */
+.exactHomeFrame{display:block!important;width:100%;margin:0!important;padding:0!important}
+.exactHomeCanvas{display:block!important}
+.beeAppShell:not(.journeyActive) .brandHeader,
+.beeAppShell:not(.journeyActive) .beeHero,
+.beeAppShell:not(.journeyActive) .workspace,
+.beeAppShell:not(.journeyActive) .exampleGallery,
+.beeAppShell:not(.journeyActive) .trustStrip,
+.beeAppShell:not(.journeyActive) .valueProof{display:none!important}
+.beeAppShell:not(.journeyActive){grid-template-columns:1fr!important}
+.beeAppShell:not(.journeyActive) .beeRail{display:none!important}
+.beeAppShell:not(.journeyActive)>main{padding:0!important;width:100%!important;max-width:none!important}
