@@ -34,11 +34,18 @@ export async function GET(request){
  checks.push(await probe("كيف تعمل الخلية الشمسية؟"));
  checks.push(await probe("كيف يلقح النحل الأزهار؟"));
  checks.push(await probe("كيف يعمل محرك الاحتراق الداخلي؟"));
- if(deep)checks.push(await probe("كيف تتكوّن أطوار القمر؟"));
+ const followUp=await probe("ليش؟",{previous:{topic:"solar-cell",title:"كيف تعمل الخلية الشمسية؟",summary:"تحول الخلية الشمسية طاقة الضوء إلى تيار كهربائي."}});
+ followUp.kind="context-follow-up";
+ checks.push(followUp);
+ if(deep){
+  const general=await probe("كيف تتكوّن أطوار القمر؟");
+  general.kind="open-domain";
+  checks.push(general);
+ }
  const passed=checks.every(x=>x.ok&&x.renderPlan&&(x.scene!==null||x.nodes>=3));
  return Response.json({
   ok:passed,
-  version:"engine-e2e/v1",
+  version:"engine-e2e/v2",
   deep,
   passed,
   checks
