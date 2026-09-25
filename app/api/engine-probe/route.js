@@ -28,7 +28,10 @@ async function probe(question,context={},expectedTopic=null){
  };
 }
 
+function productionGuard(){return process.env.VERCEL_ENV==="production"?Response.json({error:"Not found"},{status:404}):null;}
+
 export async function GET(request){
+ const blocked=productionGuard(); if(blocked)return blocked;
  const deep=new URL(request.url).searchParams.get("deep")==="1";
  const checks=[];
  checks.push(await probe("كيف تمنع صمامات القلب رجوع الدم؟",{},"valves"));
