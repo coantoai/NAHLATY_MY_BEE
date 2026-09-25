@@ -27,3 +27,15 @@ jobs:
         run: npm install
       - name: Test and production build
         run: npm run build
+      - name: Production-server smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT=3010 npm start > /tmp/nahlaty-next.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3010/ >/dev/null; then break; fi
+            sleep 1
+          done
+          NAHLATY_SMOKE_BASE=http://127.0.0.1:3010 node scripts/smoke-prod.mjs
