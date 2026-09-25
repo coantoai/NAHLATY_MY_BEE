@@ -127,11 +127,12 @@ export async function POST(request){
  if(question.length<4)return jsonError("السؤال قصير جدًا. اكتب ما الذي تريد أن تفهمه بوضوح.",422,"QUESTION_TOO_SHORT");
  if(question.length>700)return jsonError("السؤال طويل جدًا لهذه النسخة التجريبية.",422,"QUESTION_TOO_LONG");
 
- const heart=localHeartResult(question)||contextualHeartResult(question,context);
  const directPack=curatedKnowledgeResult(question);
+ const directHeart=localHeartResult(question);
  const shortFollowUp=/^(ليش|لماذا|كيف|وضح|اشرح|وبعدين|ثم ماذا|شو يعني|ماذا يعني|what|why|how)/i.test(question)||question.length<24;
  const priorPack=shortFollowUp?curatedKnowledgeResultById(context?.previous?.topic):null;
- const sourced=heart||directPack||priorPack;
+ const heartContext=!priorPack?contextualHeartResult(question,context):null;
+ const sourced=directPack||directHeart||priorPack||heartContext;
 
  if(sourced){
   return NextResponse.json({
