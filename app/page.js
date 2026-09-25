@@ -227,6 +227,7 @@ export default function Home(){
  async function make(audienceOverride,contentOverride=null){
   const sourceInput=typeof contentOverride==="string"?contentOverride:c;
   if(!sourceInput.trim())return;
+  if(/القلب|heart/i.test(sourceInput.trim())){ window.location.href="/heart-cinematic"; return; }
   if(typeof contentOverride==="string")setC(sourceInput);
   const target=typeof audienceOverride==="string"?audienceOverride:(a||"عام");
   const retargeting=typeof audienceOverride==="string"&&!!r;
