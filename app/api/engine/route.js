@@ -4,6 +4,7 @@ import { contextualHeartResult, localHeartResult } from "../../../lib/nahlaty-en
 import { compileVisualPlan } from "../../../lib/visual-director";
 import { getExperienceProfile } from "../../lib/experienceProfile";
 import { curatedKnowledgeResult, curatedKnowledgeResultById, listCuratedKnowledgePacks } from "../../../lib/knowledge-packs";
+import { rateLimitInfo, requestLimit } from "../../lib/requestGuard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,7 +53,7 @@ async function runGeneralExplainEngine(question,context,sourceKind="question"){
  }:null;
  const request=new Request("http://nahlaty.local/api/explain",{
   method:"POST",
-  headers:{"content-type":"application/json"},
+  headers:{"content-type":"application/json","x-nahlaty-internal":"1"},
   body:JSON.stringify({content,audience,preserve})
  });
  const response=await explainPOST(request);
@@ -107,6 +108,7 @@ export async function GET(){
   provider:API_KEY?"gemini":"curated-only",
   model:API_KEY?MODEL:null,
   sourcedKnowledge:["heart",...packs.map(p=>p.id)],
+  requestProtection:rateLimitInfo(),
   selfTest:{
    passed:Boolean(
     heart?.topic==="valves"&&
@@ -127,6 +129,8 @@ export async function GET(){
 }
 
 export async function POST(request){
+ const blocked=requestLimit(request,{scope:"engine",limit:30,windowMs:60_000});
+ if(blocked)return blocked;
  let body;
  try{body=await request.json();}
  catch{return jsonError("Invalid JSON body.");}
