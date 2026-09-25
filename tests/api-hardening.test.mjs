@@ -71,3 +71,15 @@ test("all interactive AI routes are rate guarded and redact provider errors",()=
   assert.match(source,/console\.error\(/,name+" missing server diagnostic log");
  }
 });
+
+test("pilot security headers are configured without blocking same-origin media input",()=>{
+ const config=readFileSync(new URL("../next.config.mjs",import.meta.url),"utf8");
+ assert.match(config,/X-Content-Type-Options/);
+ assert.match(config,/nosniff/);
+ assert.match(config,/Referrer-Policy/);
+ assert.match(config,/X-Frame-Options/);
+ assert.match(config,/SAMEORIGIN/);
+ assert.match(config,/microphone=\(self\)/);
+ assert.match(config,/camera=\(self\)/);
+ assert.match(config,/geolocation=\(\)/);
+});
