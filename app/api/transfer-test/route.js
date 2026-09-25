@@ -1,9 +1,12 @@
 import { createGemini, generateJson } from "../../lib/genai";
 import { deriveTransferEdgeIds } from "../../lib/transferEvidence";
+import { requestLimit } from "../../lib/requestGuard";
 
 const cut=(v,n=500)=>String(v||"").slice(0,n);
 
 export async function POST(req){
+ const blocked=requestLimit(req,{scope:"transfer-test",limit:10,windowMs:60_000});
+ if(blocked)return blocked;
  try{
   const {title,nodes=[],edges=[]}=await req.json();
   const cleanNodes=(Array.isArray(nodes)?nodes:[]).slice(0,8).map(n=>({
@@ -78,6 +81,7 @@ explanation: بعد الإجابة، اشرح لماذا العنصر الصحي
    explanation:cut(data?.explanation,320)
   });
  }catch(e){
-  return Response.json({error:"تعذر بناء اختبار نقل الفهم",detail:String(e?.message||e)},{status:500});
+  console.error("[NAHLATY_TRANSFER_TEST_ERROR]",String(e?.message||e),e?.stack||"");
+  return Response.json({error:"تعذر بناء اختبار نقل الفهم",code:"TRANSFER_TEST_FAILED"},{status:500});
  }
 }
