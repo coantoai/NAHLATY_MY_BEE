@@ -97,7 +97,6 @@ export default function Page(){
  const [engineQuestion,setEngineQuestion]=useState("");
  const [lastQuestion,setLastQuestion]=useState("");
  const scene=scenes[active];
- useEffect(()=>{const neighbors=[active-1,active+1].filter(i=>i>=0&&i<scenes.length);neighbors.forEach(i=>{const img=new Image();img.src=scenes[i].image;});},[active]);
  const concepts=[
   {q:"ما وظيفة القلب؟",a:"مضخة تدفع الدم باستمرار عبر الجسم.",cue:"راقب القلب كمركز الحركة والدفع."},
   {q:"ماذا يوجد داخل القلب؟",a:"حجرات ومسارات تنظّم دخول الدم وخروجه.",cue:"انظر إلى الداخل بدل الشكل الخارجي فقط."},
@@ -115,16 +114,16 @@ export default function Page(){
  function runEngine(e){e.preventDefault();const q=engineQuestion.trim();if(!q)return;let next=active;if(/صمام|رجوع|يرجع/.test(q))next=3;else if(/داخل|حجر/.test(q))next=2;else if(/دم|مسار|رحلة/.test(q))next=4;else if(/رئة|أكسجين/.test(q))next=5;setLastQuestion(q);setActive(next);setEngineQuestion("");}
  return <main className="heartPlatform" dir="rtl">
   <section className="heartScreen" aria-label="رحلة القلب">
-   <img className="referenceUI" loading="eager" decoding="async" fetchPriority="high" src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/078beba2-aa73-4316-a80c-4a9b3146fc01.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDQ2M2JhNDg2Y2JmMzYyOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ2Mzk0NH0.6pzblTKmS7lOudEDHVacbwjtxoVrtUTU7qufyWrRNXY" alt="منصة نحلتي — رحلة القلب"/>
+   <div className="referenceUI fastShell" aria-hidden="true"><div className="shellBrand">MY BEE</div><div className="shellSide"/><div className="shellAsk"/><div className="shellCards"/></div>
 
    <div className="stageOverlay">
-     <img className="cinematicScene" loading="eager" decoding="async" fetchPriority="high" src={scene.image} alt={scene.title+" — "+scene.sub}/>
+     <HeartScene kind={["overview","inside","chambers","valves","flow","lungs","body","coronary","electric","whole"][active]}/><VisualGuide index={active}/><div className="stageCaption"><b>{scene.title}</b><span>{scene.sub}</span></div>
    </div>
 
    <form className="engineAsk" onSubmit={runEngine}><input value={engineQuestion} onChange={e=>setEngineQuestion(e.target.value)} placeholder="جرّب: لماذا لا يرجع الدم؟"/><button>نفّذ</button></form>{lastQuestion&&<div className="engineContext">Context: {lastQuestion}</div>}
    <button className="hot brandHome" aria-label="نحلتي — العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
-   {cardLeft.map((left,i)=><div key={"thumb-"+i} className="cardThumb" style={{left:(left+.38)+"%"}}><img loading={i===active?"eager":"lazy"} decoding="async" src={scenes[i].image} alt="" /></div>)}
+   {cardLeft.map((left,i)=><div key={"thumb-"+i} className={"cardThumb miniScene m"+i} style={{left:(left+.38)+"%"}}><span>{scenes[i].n}</span><b>{scenes[i].title}</b></div>)}
    {cardLeft.map((left,i)=><button key={i} className="hot cardHot" style={{left:left+"%"}} aria-label={scenes[i].title} aria-pressed={active===i} onClick={()=>setActive(i)}/>)}
    <div className="activeFrame" style={{left:cardLeft[active]+"%"}} aria-hidden="true"/>
   </section>
@@ -133,7 +132,7 @@ export default function Page(){
    *{box-sizing:border-box} html,body{margin:0;background:#020812} body{overflow-x:hidden}
    .heartPlatform{min-height:100vh;background:#020812;display:flex;justify-content:center;align-items:flex-start}
    .heartScreen{position:relative;width:100%;max-width:1536px;aspect-ratio:3/2;background:#020812;overflow:hidden}
-   .referenceUI{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+   .referenceUI{display:block;width:100%;height:100%;user-select:none}.fastShell{position:absolute;inset:0;background:radial-gradient(circle at 42% 30%,#102a3b 0,#06111d 42%,#020812 78%);border:1px solid #102536}.shellBrand{position:absolute;right:2.5%;top:2%;color:#e8b94f;font:800 clamp(10px,1.2vw,18px)/1 Arial;letter-spacing:2px}.shellSide{position:absolute;right:1.2%;top:10%;width:6.5%;height:84%;border-left:1px solid rgba(83,166,204,.18);background:rgba(3,13,23,.5)}.shellAsk{position:absolute;left:10%;top:65.7%;width:62.5%;height:5.8%;border:1px solid rgba(86,180,222,.18);border-radius:8px;background:rgba(3,15,25,.55)}.shellCards{position:absolute;left:1%;right:1%;top:74%;height:23%;border-top:1px solid rgba(83,166,204,.12)}
    .stageOverlay{position:absolute;left:9.5%;top:8.5%;width:63.55%;height:56.1%;overflow:hidden;z-index:3;background:#07111c;transition:transform .55s ease;transform-origin:center}
    .engineProof{position:absolute;left:10.5%;top:9.5%;z-index:8;background:rgba(2,10,18,.84);border:1px solid rgba(90,196,244,.35);border-radius:9px;padding:7px 10px;display:flex;flex-direction:column;gap:2px;direction:rtl;pointer-events:none}.engineProof b{font-size:9px;color:#6bd0f6;letter-spacing:1px}.engineProof span{font-size:11px;color:#fff}.engineProof small{font-size:8px;color:#f4c95f;direction:ltr}.engineAsk{position:absolute;left:10%;top:65.7%;width:62.5%;height:5.8%;z-index:9;display:flex;gap:6px;direction:rtl}.engineAsk input{flex:1;min-width:0;border:1px solid rgba(86,180,222,.35);border-radius:8px;background:rgba(3,15,25,.92);color:#fff;padding:0 10px;font-size:clamp(8px,.8vw,13px)}.engineAsk button{border:0;border-radius:8px;background:#e8b94f;color:#111;font-weight:800;padding:0 14px;cursor:pointer}.engineContext{position:absolute;left:10.5%;top:62.4%;z-index:8;color:#8fd8f5;font-size:clamp(7px,.65vw,10px);direction:rtl}
    .cinematicScene{width:100%;height:100%;object-fit:cover;display:block}
@@ -153,7 +152,7 @@ export default function Page(){
    .guidePoint{transform-box:fill-box;transform-origin:center;animation:guidePulse 2s ease-in-out infinite}
    @keyframes guidePulse{0%,100%{opacity:.58}50%{opacity:1}}
    .cardThumb{position:absolute;top:75.85%;width:8.45%;height:12.2%;z-index:5;overflow:hidden;border-radius:10px;pointer-events:none;background:#07111c}
-   .cardThumb img{width:100%;height:100%;object-fit:cover;display:block}
+   .cardThumb img{width:100%;height:100%;object-fit:cover;display:block}.miniScene{background:radial-gradient(circle at 50% 42%,#17364a,#07111c 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#dceef8;border:1px solid rgba(80,174,215,.14)}.miniScene span{color:#e8b94f;font-size:clamp(7px,.7vw,11px)}.miniScene b{margin-top:5px;font-size:clamp(7px,.68vw,10px);font-weight:600}
    .generatedScene{position:absolute;inset:0;background:radial-gradient(circle at 48% 48%,#132d3f 0,#091725 43%,#040a12 77%,#02060b 100%);overflow:hidden}
    .generatedScene:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(3,10,18,.78),transparent 18%,transparent 82%,rgba(3,10,18,.7));pointer-events:none}
    .halo{position:absolute;width:62%;height:80%;left:18%;top:7%;border-radius:50%;background:radial-gradient(ellipse,rgba(23,151,211,.23),rgba(15,64,91,.09) 48%,transparent 72%);filter:blur(9px)}
