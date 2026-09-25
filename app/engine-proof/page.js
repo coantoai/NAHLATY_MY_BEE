@@ -1,5 +1,5 @@
 "use client";
-import {useState} from "react";
+import {useEffect,useState} from "react";
 
 // VISUAL ENGINE PROOF V1: planner -> structured plan -> renderer -> context
 const visualPlans=[
@@ -97,6 +97,7 @@ export default function Page(){
  const [engineQuestion,setEngineQuestion]=useState("");
  const [lastQuestion,setLastQuestion]=useState("");
  const scene=scenes[active];
+ useEffect(()=>{const neighbors=[active-1,active+1].filter(i=>i>=0&&i<scenes.length);neighbors.forEach(i=>{const img=new Image();img.src=scenes[i].image;});},[active]);
  const concepts=[
   {q:"ما وظيفة القلب؟",a:"مضخة تدفع الدم باستمرار عبر الجسم.",cue:"راقب القلب كمركز الحركة والدفع."},
   {q:"ماذا يوجد داخل القلب؟",a:"حجرات ومسارات تنظّم دخول الدم وخروجه.",cue:"انظر إلى الداخل بدل الشكل الخارجي فقط."},
@@ -114,16 +115,16 @@ export default function Page(){
  function runEngine(e){e.preventDefault();const q=engineQuestion.trim();if(!q)return;let next=active;if(/صمام|رجوع|يرجع/.test(q))next=3;else if(/داخل|حجر/.test(q))next=2;else if(/دم|مسار|رحلة/.test(q))next=4;else if(/رئة|أكسجين/.test(q))next=5;setLastQuestion(q);setActive(next);setEngineQuestion("");}
  return <main className="heartPlatform" dir="rtl">
   <section className="heartScreen" aria-label="رحلة القلب">
-   <img className="referenceUI" src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/078beba2-aa73-4316-a80c-4a9b3146fc01.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDQ2M2JhNDg2Y2JmMzYyOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ2Mzk0NH0.6pzblTKmS7lOudEDHVacbwjtxoVrtUTU7qufyWrRNXY" alt="منصة نحلتي — رحلة القلب"/>
+   <img className="referenceUI" loading="eager" decoding="async" fetchPriority="high" src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/078beba2-aa73-4316-a80c-4a9b3146fc01.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDQ2M2JhNDg2Y2JmMzYyOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ2Mzk0NH0.6pzblTKmS7lOudEDHVacbwjtxoVrtUTU7qufyWrRNXY" alt="منصة نحلتي — رحلة القلب"/>
 
    <div className="stageOverlay">
-     <img className="cinematicScene" src={scene.image} alt={scene.title+" — "+scene.sub}/>
+     <img className="cinematicScene" loading="eager" decoding="async" fetchPriority="high" src={scene.image} alt={scene.title+" — "+scene.sub}/>
    </div>
 
    <form className="engineAsk" onSubmit={runEngine}><input value={engineQuestion} onChange={e=>setEngineQuestion(e.target.value)} placeholder="جرّب: لماذا لا يرجع الدم؟"/><button>نفّذ</button></form>{lastQuestion&&<div className="engineContext">Context: {lastQuestion}</div>}
    <button className="hot brandHome" aria-label="نحلتي — العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
-   {cardLeft.map((left,i)=><div key={"thumb-"+i} className="cardThumb" style={{left:(left+.38)+"%"}}><img src={scenes[i].image} alt="" /></div>)}
+   {cardLeft.map((left,i)=><div key={"thumb-"+i} className="cardThumb" style={{left:(left+.38)+"%"}}><img loading={i===active?"eager":"lazy"} decoding="async" src={scenes[i].image} alt="" /></div>)}
    {cardLeft.map((left,i)=><button key={i} className="hot cardHot" style={{left:left+"%"}} aria-label={scenes[i].title} aria-pressed={active===i} onClick={()=>setActive(i)}/>)}
    <div className="activeFrame" style={{left:cardLeft[active]+"%"}} aria-hidden="true"/>
   </section>
