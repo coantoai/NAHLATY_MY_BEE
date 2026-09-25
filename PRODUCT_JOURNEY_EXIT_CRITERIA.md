@@ -67,3 +67,12 @@ This milestone begins after `ENGINE BUILD COMPLETE`. It defines when the engine 
 Label this milestone **PRODUCT JOURNEY COMPLETE** only after all delivery checks above are verified on the exact handoff commit.
 
 This still does not authorize merging into `main` or claim commercial production readiness. Production launch hardening (durable auth/quotas/billing/telemetry/SLA and broad external grounding) remains a separate launch milestone.
+
+
+## Release-candidate checkpoint — 25 Sep 2026
+
+- CI hardening gate: 57/57 tests passing before this checkpoint.
+- Secure internal Engine → Explain bypass uses a process-local token helper, not a public static header.
+- Heart cinematic assets are permanent optimized WebP files; signed temporary asset URLs are removed from active heart paths.
+- GPU/LTX workflows remain manual-only.
+- This checkpoint intentionally triggers a fresh Git-linked Vercel preview for final runtime verification.
