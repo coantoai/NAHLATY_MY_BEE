@@ -45,7 +45,7 @@ test("API hardening contract hides provider details and marks internal explain c
  const engine=readFileSync(new URL("../app/api/engine/route.js",import.meta.url),"utf8");
  const explain=readFileSync(new URL("../app/api/explain/route.js",import.meta.url),"utf8");
  const analyze=readFileSync(new URL("../app/api/analyze-input/route.js",import.meta.url),"utf8");
- assert.match(engine,/x-nahlaty-internal/);
+ assert.match(engine,/internalRequestHeaders\(\)/);
  assert.match(engine,/requestLimit\(request,\{scope:"engine"/);
  assert.match(explain,/requestLimit\(req,\{scope:"explain"/);
  assert.match(analyze,/requestLimit\(req,\{scope:"analyze-input"/);
