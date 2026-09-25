@@ -105,7 +105,7 @@ export default function Page(){
 
    <button className="hot brandHome" aria-label="نحلتي — العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
-   {cardLeft.map((left,i)=><div key={"thumb-"+i} className="cardThumb" style={{left:(left+.38)+"%"}}><img src={scenes[i].image} alt="" /></div>)}
+   {cardLeft.map((left,i)=><div key={"thumb-"+i} className="cardThumb" style={{left:(left+.38)+"%"}}><img src={scenes[i].image.replace(".webp","-thumb.webp")} alt="" /></div>)}
    {cardLeft.map((left,i)=><button key={i} className="hot cardHot" style={{left:left+"%"}} aria-label={scenes[i].title} aria-pressed={active===i} onClick={()=>setActive(i)}/>)}
    <div className="activeFrame" style={{left:cardLeft[active]+"%"}} aria-hidden="true"/>
   </section>
