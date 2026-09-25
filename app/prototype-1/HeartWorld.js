@@ -144,11 +144,14 @@ export default function HeartWorld({ world, onSelectValve, onPhase }) {
         const box = new THREE.Box3().setFromObject(anatomicalShell);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-        anatomicalShell.position.sub(center);
         const maxExtent = Math.max(size.x, size.y, size.z) || 1;
         anatomicalShell.scale.setScalar(10.2 / maxExtent);
         anatomicalShell.rotation.set(-0.05, -0.55, -0.08);
-        anatomicalShell.position.set(0.2, -0.15, -1.4);
+        // Center after scale/rotation so the real shell stays framed on every screen.
+        const normalizedBox = new THREE.Box3().setFromObject(anatomicalShell);
+        const normalizedCenter = normalizedBox.getCenter(new THREE.Vector3());
+        anatomicalShell.position.sub(normalizedCenter);
+        anatomicalShell.position.add(new THREE.Vector3(0.2, -0.15, -1.4));
         anatomicalShell.traverse(object => {
           if (!object.isMesh) return;
           object.geometry?.computeVertexNormals?.();
