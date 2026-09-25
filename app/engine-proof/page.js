@@ -92,6 +92,26 @@ function VisualGuide({index}){
  </svg>
 }
 
+function DynamicScene({result}){
+ const plan=result?.renderPlan||{};
+ const focus=Array.isArray(plan.focus)?plan.focus:[];
+ const nodes=focus.length?focus:["الفكرة الأساسية"];
+ return <div className="dynamicScene" aria-label="شرح بصري دلالي">
+   <div className="dynamicAura"/>
+   <div className="dynamicTarget">{plan.target||result?.topic||"فهم الفكرة"}</div>
+   <div className="dynamicOrbit">
+    {nodes.slice(0,6).map((node,i)=><div key={i} className={"dynamicNode n"+i}><span>{String(node).replaceAll("-"," ")}</span></div>)}
+   </div>
+   <svg className="dynamicLinks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M50 50 C35 36 25 34 16 28"/>
+    <path d="M50 50 C65 35 75 34 84 28"/>
+    <path d="M50 50 C35 65 25 67 16 74"/>
+    <path d="M50 50 C65 65 75 67 84 74"/>
+   </svg>
+   <div className="dynamicOp">{plan.operations?.slice(0,4).join(" · ")}</div>
+ </div>
+}
+
 export default function Page(){
  const [active,setActive]=useState(0);
  const [engineQuestion,setEngineQuestion]=useState("");
@@ -100,6 +120,11 @@ export default function Page(){
  const [engineLoading,setEngineLoading]=useState(false);
  const [engineProvider,setEngineProvider]=useState("");
  const scene=scenes[active];
+ const renderPlan=engineResult?.renderPlan||null;
+ const dynamicMode=Boolean(engineResult&&!engineResult.error&&engineResult.scene==null);
+ const renderOps=new Set(renderPlan?.operations||[]);
+ const stageClass=["stageOverlay",renderPlan?"directorActive":"",renderOps.has("FLOW")?"hasFlow":"",renderOps.has("HIGHLIGHT")?"hasHighlight":"",dynamicMode?"dynamicMode":""].filter(Boolean).join(" ");
+ const stageStyle={"--directorZoom":String(renderPlan?.camera?.zoom||1)};
  const concepts=[
   {q:"ما وظيفة القلب؟",a:"مضخة تدفع الدم باستمرار عبر الجسم.",cue:"راقب القلب كمركز الحركة والدفع."},
   {q:"ماذا يوجد داخل القلب؟",a:"حجرات ومسارات تنظّم دخول الدم وخروجه.",cue:"انظر إلى الداخل بدل الشكل الخارجي فقط."},
@@ -145,8 +170,10 @@ export default function Page(){
   <section className="heartScreen" aria-label="رحلة القلب">
    <div className="referenceUI fastShell" aria-hidden="true"><div className="shellBrand">MY BEE</div><div className="shellSide"/><div className="shellAsk"/><div className="shellCards"/></div>
 
-   <div className="stageOverlay">
-     <HeartScene kind={["overview","inside","chambers","valves","flow","lungs","body","coronary","electric","whole"][active]}/><VisualGuide index={active}/><div className="stageCaption"><b>{scene.title}</b><span>{scene.sub}</span></div>
+   <div className={stageClass} style={stageStyle}>
+     {dynamicMode?<DynamicScene result={engineResult}/>:<HeartScene kind={["overview","inside","chambers","valves","flow","lungs","body","coronary","electric","whole"][active]}/>}
+     {!dynamicMode&&<VisualGuide index={active}/>}
+     <div className="stageCaption"><b>{dynamicMode?(engineResult?.topic||"شرح بصري"):scene.title}</b><span>{dynamicMode?(renderPlan?.target||engineResult?.explanation):scene.sub}</span></div>
    </div>
 
    <form className="engineAsk" onSubmit={runEngine}><input value={engineQuestion} onChange={e=>setEngineQuestion(e.target.value)} placeholder="جرّب: لماذا لا يرجع الدم؟" disabled={engineLoading}/><button disabled={engineLoading}>{engineLoading?"أفهم…":"نفّذ"}</button></form>{lastQuestion&&<div className="engineContext">Context: {lastQuestion}</div>}{engineResult&&<div className={"engineResult "+(engineResult.error?"isError":"")}><b>{engineResult.error?"لم أُنفّذ تخمينًا":"النتيجة"}</b><span>{engineResult.error||engineResult.answer}</span>{!engineResult.error&&<><small>{engineResult.explanation}</small><em>{engineResult.visualPlan?.operations?.join(" → ")}</em><i>{engineResult.verification?.status||"unverified"} · {engineResult.confidence||"low"}{engineProvider?" · "+engineProvider:""}</i></>}</div>}
@@ -163,6 +190,15 @@ export default function Page(){
    .heartScreen{position:relative;width:100%;max-width:1536px;aspect-ratio:3/2;background:#020812;overflow:hidden}
    .referenceUI{display:block;width:100%;height:100%;user-select:none}.fastShell{position:absolute;inset:0;background:radial-gradient(circle at 42% 30%,#102a3b 0,#06111d 42%,#020812 78%);border:1px solid #102536}.shellBrand{position:absolute;right:2.5%;top:2%;color:#e8b94f;font:800 clamp(10px,1.2vw,18px)/1 Arial;letter-spacing:2px}.shellSide{position:absolute;right:1.2%;top:10%;width:6.5%;height:84%;border-left:1px solid rgba(83,166,204,.18);background:rgba(3,13,23,.5)}.shellAsk{position:absolute;left:10%;top:65.7%;width:62.5%;height:5.8%;border:1px solid rgba(86,180,222,.18);border-radius:8px;background:rgba(3,15,25,.55)}.shellCards{position:absolute;left:1%;right:1%;top:74%;height:23%;border-top:1px solid rgba(83,166,204,.12)}
    .stageOverlay{position:absolute;left:9.5%;top:8.5%;width:63.55%;height:56.1%;overflow:hidden;z-index:3;background:#07111c;transition:transform .55s ease;transform-origin:center}
+   .directorActive .heartArt{transform:scale(var(--directorZoom));transform-origin:50% 50%;transition:transform .7s cubic-bezier(.2,.75,.2,1)}
+   .hasFlow .guidePath{animation:directorDash 1.2s linear infinite}.hasHighlight .guidePoint{filter:drop-shadow(0 0 5px #ffd76b)}
+   @keyframes directorDash{to{stroke-dashoffset:-7}}
+   .dynamicScene{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 50% 48%,#15334a 0,#081723 45%,#030913 78%);color:#eef8ff}
+   .dynamicAura{position:absolute;left:30%;top:17%;width:40%;height:65%;border-radius:50%;background:radial-gradient(circle,rgba(49,177,231,.2),rgba(49,177,231,.04) 48%,transparent 72%);filter:blur(10px)}
+   .dynamicTarget{position:absolute;left:34%;top:40%;width:32%;min-height:20%;display:flex;align-items:center;justify-content:center;text-align:center;padding:3%;border-radius:50%;border:1px solid rgba(105,211,255,.5);background:rgba(7,29,43,.82);box-shadow:0 0 35px rgba(55,184,238,.18);font-size:clamp(10px,1.15vw,18px);font-weight:700;z-index:3}
+   .dynamicOrbit{position:absolute;inset:0;z-index:3}.dynamicNode{position:absolute;min-width:15%;max-width:22%;padding:1.4% 2%;border-radius:999px;background:rgba(5,25,38,.85);border:1px solid rgba(95,194,235,.3);text-align:center;font-size:clamp(7px,.72vw,11px);box-shadow:0 0 16px rgba(45,166,216,.1)}.dynamicNode.n0{left:7%;top:19%}.dynamicNode.n1{right:7%;top:19%}.dynamicNode.n2{left:7%;bottom:17%}.dynamicNode.n3{right:7%;bottom:17%}.dynamicNode.n4{left:40%;top:8%}.dynamicNode.n5{left:40%;bottom:7%}
+   .dynamicLinks{position:absolute;inset:0;width:100%;height:100%;z-index:2}.dynamicLinks path{fill:none;stroke:#51c7f5;stroke-width:.45;stroke-dasharray:2 2;opacity:.6;animation:directorDash 1.4s linear infinite}
+   .dynamicOp{position:absolute;left:3%;bottom:3%;z-index:4;color:#75cdef;font-size:clamp(6px,.58vw,9px);letter-spacing:.5px;direction:ltr}
    .engineProof{position:absolute;left:10.5%;top:9.5%;z-index:8;background:rgba(2,10,18,.84);border:1px solid rgba(90,196,244,.35);border-radius:9px;padding:7px 10px;display:flex;flex-direction:column;gap:2px;direction:rtl;pointer-events:none}.engineProof b{font-size:9px;color:#6bd0f6;letter-spacing:1px}.engineProof span{font-size:11px;color:#fff}.engineProof small{font-size:8px;color:#f4c95f;direction:ltr}.engineAsk{position:absolute;left:10%;top:65.7%;width:62.5%;height:5.8%;z-index:9;display:flex;gap:6px;direction:rtl}.engineAsk input{flex:1;min-width:0;border:1px solid rgba(86,180,222,.35);border-radius:8px;background:rgba(3,15,25,.92);color:#fff;padding:0 10px;font-size:clamp(8px,.8vw,13px)}.engineAsk button{border:0;border-radius:8px;background:#e8b94f;color:#111;font-weight:800;padding:0 14px;cursor:pointer}.engineAsk button:disabled,.engineAsk input:disabled{opacity:.65;cursor:wait}.engineContext{position:absolute;left:10.5%;top:62.4%;z-index:8;color:#8fd8f5;font-size:clamp(7px,.65vw,10px);direction:rtl}.engineResult{position:absolute;right:27.8%;top:10.5%;width:25%;z-index:8;display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:10px;background:rgba(2,10,18,.86);border:1px solid rgba(89,196,242,.3);color:#eaf7ff;pointer-events:none}.engineResult b{color:#f0c45d;font-size:clamp(8px,.8vw,12px)}.engineResult span{font-size:clamp(8px,.8vw,13px);line-height:1.5}.engineResult small{color:#9cc5dc;font-size:clamp(7px,.68vw,10px)}.engineResult em{font-style:normal;color:#6bd8ff;font-size:clamp(6px,.6vw,9px);direction:ltr}.engineResult i{font-style:normal;color:#7f9daf;font-size:clamp(6px,.56vw,8px);direction:ltr}.engineResult.isError{border-color:rgba(240,196,93,.35)}
    .cinematicScene{width:100%;height:100%;object-fit:cover;display:block}
    .embeddedMeaning{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
