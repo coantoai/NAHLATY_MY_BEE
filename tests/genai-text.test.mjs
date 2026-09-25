@@ -1,15 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-
-async function importSource(relativePath){
- const url=new URL(relativePath,import.meta.url);
- const source=readFileSync(url,"utf8");
- const data="data:text/javascript;base64,"+Buffer.from(source).toString("base64");
- return import(data);
-}
-
-const {generateText}=await importSource("../app/lib/genai.js");
+import { generateText } from "../app/lib/genai.js";
 
 test("Gemini text helper retries transient errors before succeeding",async()=>{
  let calls=0;
