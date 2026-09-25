@@ -1,4 +1,5 @@
 import { createGemini, GEMINI_MODEL } from "../../lib/genai";
+import { requestLimit } from "../../lib/requestGuard";
 
 export const maxDuration = 120;
 
@@ -12,6 +13,8 @@ const allowed=new Set([
 const kindOf=mime=>mime==="application/pdf"?"pdf":mime.startsWith("image/")?"image":"text";
 
 export async function POST(req){
+ const blocked=requestLimit(req,{scope:"analyze-input",limit:8,windowMs:60_000});
+ if(blocked)return blocked;
  try{
   const form=await req.formData();
   const file=form.get("file");
@@ -48,6 +51,7 @@ export async function POST(req){
   if(!text) return Response.json({error:"لم أستطع استخراج مادة قابلة للشرح من الملف."},{status:422});
   return Response.json({content:text.slice(0,70000),sourceName:name,mimeType:mime,kind:fileKind});
  }catch(e){
-  return Response.json({error:"تعذر قراءة الملف",detail:String(e?.message||e)},{status:500});
+  console.error("[NAHLATY_ANALYZE_INPUT_ERROR]",String(e?.message||e),e?.stack||"");
+  return Response.json({error:"تعذر قراءة الملف",code:"ANALYZE_INPUT_FAILED"},{status:500});
  }
 }
