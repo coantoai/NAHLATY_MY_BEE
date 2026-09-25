@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { buildEnginePrompt, contextualHeartResult, localHeartResult, sanitizeEngineResult } from "../../../lib/nahlaty-engine";\nimport { compileVisualPlan } from "../../../lib/visual-director";
+import { buildEnginePrompt, contextualHeartResult, localHeartResult, sanitizeEngineResult } from "../../../lib/nahlaty-engine";
+import { compileVisualPlan } from "../../../lib/visual-director";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -89,12 +90,13 @@ export async function POST(request) {
 
   try {
     const raw=await callGemini(buildEnginePrompt({question,context,local}));
-    const result=sanitizeEngineResult(raw,local);\n    const renderPlan=compileVisualPlan(result);
+    const result=sanitizeEngineResult(raw,local);
+    const renderPlan=compileVisualPlan(result);
     return NextResponse.json({
       ok:true,
       provider:"gemini",
       model:MODEL,
-      result
+      result:{...result,renderPlan}
     });
   } catch(error) {
     if(local) {
