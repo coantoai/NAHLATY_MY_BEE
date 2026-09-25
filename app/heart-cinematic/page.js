@@ -54,6 +54,30 @@ function HeartScene({kind}){
  </div>
 }
 
+function VisualGuide({index}){
+ const guides=[
+  {points:[[50,48]],paths:[],tone:"#6bd8ff"},
+  {points:[[48,45],[57,55]],paths:[["M22 52 C35 35 48 32 61 45"]],tone:"#6bd8ff"},
+  {points:[[42,36],[57,36],[42,61],[58,61]],paths:[],tone:"#ffd76b"},
+  {points:[[50,51]],paths:[["M38 50 C45 43 55 43 62 50"],["M38 54 C45 61 55 61 62 54"]],tone:"#ffd76b"},
+  {points:[[35,35],[63,62]],paths:[["M28 30 C18 48 30 69 48 72"],["M52 72 C72 62 78 38 64 27"]],tone:"#67d9ff",second:"#ff665e"},
+  {points:[[31,45],[69,45],[50,55]],paths:[["M50 58 C38 55 30 49 24 39"],["M50 58 C62 55 70 49 76 39"]],tone:"#67d9ff",second:"#ff665e"},
+  {points:[[50,50],[69,28],[75,70]],paths:[["M52 47 C62 40 68 33 73 23"],["M54 54 C64 61 70 68 76 78"]],tone:"#ff665e"},
+  {points:[[48,42],[56,53],[42,61]],paths:[["M49 30 C43 40 42 53 35 68"],["M51 30 C58 41 59 53 66 68"]],tone:"#ffd76b"},
+  {points:[[44,31],[52,48],[47,67]],paths:[["M44 30 L39 43 L51 40 L45 53 L56 50 L48 66"]],tone:"#ffe66b"},
+  {points:[[50,49],[28,45],[72,45]],paths:[["M50 52 C38 50 32 47 25 41"],["M50 52 C62 50 68 47 75 41"],["M50 55 C50 66 50 73 50 80"]],tone:"#6bd8ff",second:"#ff665e"}
+ ];
+ const g=guides[index];
+ return <svg className="visualGuide" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+   <defs><filter id={"guideGlow"+index}><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+   {g.paths.map((p,i)=><path key={i} d={p[0]} className="guidePath" style={{stroke:i&&g.second?g.second:g.tone}} filter={"url(#guideGlow"+index+")"}/>)}
+   {g.points.map((p,i)=><g key={i} className="guidePoint" transform={"translate("+p[0]+" "+p[1]+")"} filter={"url(#guideGlow"+index+")"}>
+      <circle r="3.2" fill="none" stroke={i&&g.second?g.second:g.tone} strokeWidth=".7"/>
+      <circle r=".85" fill={i&&g.second?g.second:g.tone}/>
+    </g>)}
+ </svg>
+}
+
 export default function Page(){
  const [active,setActive]=useState(0);
  const scene=scenes[active];
@@ -63,9 +87,11 @@ export default function Page(){
 
    <div className="stageOverlay">
      <img className="cinematicScene" src={scene.image} alt={scene.title+" — "+scene.sub}/>
+     <VisualGuide index={active}/>
    </div>
 
    <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
+   {cardLeft.map((left,i)=><div key={"thumb-"+i} className="cardThumb" style={{left:(left+.38)+"%"}}><img src={scenes[i].image} alt="" /></div>)}
    {cardLeft.map((left,i)=><button key={i} className="hot cardHot" style={{left:left+"%"}} aria-label={scenes[i].title} aria-pressed={active===i} onClick={()=>setActive(i)}/>)}
    <div className="activeFrame" style={{left:cardLeft[active]+"%"}} aria-hidden="true"/>
   </section>
@@ -77,6 +103,12 @@ export default function Page(){
    .referenceUI{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
    .stageOverlay{position:absolute;left:9.5%;top:8.5%;width:63.55%;height:56.1%;overflow:hidden;z-index:3;background:#07111c}
    .cinematicScene{width:100%;height:100%;object-fit:cover;display:block}
+   .visualGuide{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none}
+   .guidePath{fill:none;stroke-width:.75;stroke-linecap:round;stroke-dasharray:2.2 1.5;opacity:.92}
+   .guidePoint{transform-box:fill-box;transform-origin:center;animation:guidePulse 2s ease-in-out infinite}
+   @keyframes guidePulse{0%,100%{opacity:.58}50%{opacity:1}}
+   .cardThumb{position:absolute;top:75.85%;width:8.45%;height:12.2%;z-index:5;overflow:hidden;border-radius:10px;pointer-events:none;background:#07111c}
+   .cardThumb img{width:100%;height:100%;object-fit:cover;display:block}
    .generatedScene{position:absolute;inset:0;background:radial-gradient(circle at 48% 48%,#132d3f 0,#091725 43%,#040a12 77%,#02060b 100%);overflow:hidden}
    .generatedScene:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(3,10,18,.78),transparent 18%,transparent 82%,rgba(3,10,18,.7));pointer-events:none}
    .halo{position:absolute;width:62%;height:80%;left:18%;top:7%;border-radius:50%;background:radial-gradient(ellipse,rgba(23,151,211,.23),rgba(15,64,91,.09) 48%,transparent 72%);filter:blur(9px)}
