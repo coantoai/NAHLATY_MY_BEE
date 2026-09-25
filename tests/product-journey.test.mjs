@@ -19,6 +19,8 @@ test("heart product journey is exactly ten visual steps with a valid initial car
  assert.equal(r.experience.steps.length,10);
  assert.equal(r.experience.initialStep,3);
  assert.equal(r.experience.steps[3].title,"الصمامات");
+ assert.match(r.experience.steps[3].image,/heart-04\.webp$/);
+ assert.match(r.experience.steps[3].thumbnail,/heart-04-thumb\.webp$/);
  assert.equal(r.verification.status,"source-grounded");
  assert.ok(r.verification.sources.length>=2);
 });
@@ -29,6 +31,8 @@ test("product page contract keeps homepage ask, engine gateway, living ask, cont
  assert.match(page,/homeAskLive/);
  assert.match(page,/fetch\("\/api\/engine"/);
  assert.match(page,/livingAskBar/);
+ assert.match(page,/scene:active/);
+ assert.match(page,/verification\?\.status==="source-grounded"/);
  assert.match(page,/truthAnchors:engineResult\.experience\?\.truthAnchors|truthAnchors:r\?\.truthAnchors/);
  assert.match(page,/sceneGraph:\{nodes:/);
  assert.match(page,/r\.sources\.slice/);
