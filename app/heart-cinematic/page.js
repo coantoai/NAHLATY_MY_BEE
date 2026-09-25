@@ -81,6 +81,19 @@ function VisualGuide({index}){
 export default function Page(){
  const [active,setActive]=useState(0);
  const scene=scenes[active];
+ const concepts=[
+  {q:"ما وظيفة القلب؟",a:"مضخة تدفع الدم باستمرار عبر الجسم.",cue:"راقب القلب كمركز الحركة والدفع."},
+  {q:"ماذا يوجد داخل القلب؟",a:"حجرات ومسارات تنظّم دخول الدم وخروجه.",cue:"انظر إلى الداخل بدل الشكل الخارجي فقط."},
+  {q:"لماذا أربع حجرات؟",a:"لفصل الدم القادم من الجسم عن الدم العائد من الرئتين.",cue:"لاحظ جانبي القلب ومساري الدم المختلفين."},
+  {q:"كيف لا يرجع الدم للخلف؟",a:"الصمامات تفتح باتجاه واحد ثم تُغلق.",cue:"تخيّلها أبوابًا أحادية الاتجاه."},
+  {q:"ما رحلة الدم الكاملة؟",a:"الجسم ← القلب ← الرئتان ← القلب ← الجسم.",cue:"اتبع المسار كحلقة مستمرة، لا كخط منفصل."},
+  {q:"لماذا يذهب الدم للرئتين؟",a:"ليتخلّص من ثاني أكسيد الكربون ويحمل الأكسجين.",cue:"الأزرق يذهب للرئتين، والأحمر يعود للقلب."},
+  {q:"كيف يصل الأكسجين للجسم؟",a:"القلب يدفع الدم الغني بالأكسجين عبر الشرايين.",cue:"اتبع الدم الأحمر الخارج من القلب."},
+  {q:"من يغذّي القلب نفسه؟",a:"الشرايين التاجية توصل الدم إلى عضلة القلب.",cue:"راقب شبكة الأوعية الملتفة على سطح القلب."},
+  {q:"من ينظّم النبض؟",a:"إشارة كهربائية تبدأ النبضة وتنسّق الانقباض.",cue:"اتبع مسار الإشارة عبر عضلة القلب."},
+  {q:"كيف تعمل المنظومة كلها؟",a:"النبض والصمامات والرئتان والأوعية تعمل كدورة واحدة.",cue:"اربط كل المشاهد السابقة في حلقة واحدة."}
+ ];
+ const concept=concepts[active];
  return <main className="heartPlatform" dir="rtl">
   <section className="heartScreen" aria-label="رحلة القلب">
    <img className="referenceUI" src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/078beba2-aa73-4316-a80c-4a9b3146fc01.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDQ2M2JhNDg2Y2JmMzYyOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ2Mzk0NH0.6pzblTKmS7lOudEDHVacbwjtxoVrtUTU7qufyWrRNXY" alt="منصة نحلتي — رحلة القلب"/>
@@ -103,6 +116,17 @@ export default function Page(){
    .referenceUI{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
    .stageOverlay{position:absolute;left:9.5%;top:8.5%;width:63.55%;height:56.1%;overflow:hidden;z-index:3;background:#07111c}
    .cinematicScene{width:100%;height:100%;object-fit:cover;display:block}
+   .embeddedMeaning{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
+   .meaningPulse{position:absolute;left:47%;top:43%;width:12%;aspect-ratio:1;border:2px solid rgba(255,214,96,.82);border-radius:50%;box-shadow:0 0 18px rgba(255,205,72,.5),inset 0 0 14px rgba(255,205,72,.2)}
+   .meaningFlow{position:absolute;left:57%;top:48%;font:700 clamp(18px,2.2vw,34px)/1 Arial;color:rgba(255,224,120,.88);text-shadow:0 0 12px rgba(255,193,56,.85)}
+   .m4,.m5,.m6{border-color:rgba(93,205,255,.88);box-shadow:0 0 18px rgba(70,190,255,.55)}
+   .m7,.m8{border-color:rgba(255,214,96,.9)}
+   .conceptPanel{position:absolute;right:1.1%;top:14.2%;width:24.1%;height:43%;z-index:5;padding:2.2% 1.65%;display:flex;flex-direction:column;align-items:flex-start;text-align:right;color:#eef8ff;background:linear-gradient(180deg,rgba(4,17,29,.94),rgba(4,13,23,.91));border:1px solid rgba(73,169,216,.16);border-radius:12px}
+   .conceptPanel small{color:#70c9ef;font-size:clamp(8px,.72vw,12px)}
+   .conceptPanel h2{margin:8% 0 4%;font-size:clamp(13px,1.35vw,21px);line-height:1.45}
+   .conceptPanel p{margin:0;color:#d3e4ee;font-size:clamp(9px,.9vw,14px);line-height:1.7}
+   .lookCue{margin-top:auto;width:100%;padding:7% 8%;border-radius:10px;background:rgba(15,68,94,.35);border:1px solid rgba(87,198,246,.18);display:flex;flex-direction:column;gap:5px}
+   .lookCue b{color:#ffd46b;font-size:clamp(8px,.78vw,12px)} .lookCue span{color:#b8d5e5;font-size:clamp(8px,.78vw,12px);line-height:1.55}
    .visualGuide{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none}
    .guidePath{fill:none;stroke-width:.75;stroke-linecap:round;stroke-dasharray:2.2 1.5;opacity:.92}
    .guidePoint{transform-box:fill-box;transform-origin:center;animation:guidePulse 2s ease-in-out infinite}
