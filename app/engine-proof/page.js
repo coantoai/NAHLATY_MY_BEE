@@ -96,7 +96,9 @@ export default function Page(){
  const [active,setActive]=useState(0);
  const [engineQuestion,setEngineQuestion]=useState("");
  const [lastQuestion,setLastQuestion]=useState("");
- const [engineResult,setEngineResult]=useState(null);\n const [engineLoading,setEngineLoading]=useState(false);\n const [engineProvider,setEngineProvider]=useState("");
+ const [engineResult,setEngineResult]=useState(null);
+ const [engineLoading,setEngineLoading]=useState(false);
+ const [engineProvider,setEngineProvider]=useState("");
  const scene=scenes[active];
  const concepts=[
   {q:"ما وظيفة القلب؟",a:"مضخة تدفع الدم باستمرار عبر الجسم.",cue:"راقب القلب كمركز الحركة والدفع."},
