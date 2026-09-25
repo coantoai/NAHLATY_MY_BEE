@@ -38,7 +38,7 @@ function planFromExperience(experience){
  };
 }
 
-async function runGeneralExplainEngine(question,context){
+async function runGeneralExplainEngine(question,context,sourceKind="question"){
  const audience=String(context?.audience||"عام").slice(0,80);
  const prior=context?.previous && typeof context.previous==="object" ? context.previous : null;
  const content=prior?.title && prior?.summary
@@ -60,7 +60,7 @@ async function runGeneralExplainEngine(question,context){
  return data;
 }
 
-function adaptGeneralExperience(experience){
+function adaptGeneralExperience(experience,sourceKind="question"){
  const visualPlan=planFromExperience(experience);
  const result={
   domain:String(experience?.sceneGraph?.world?.theme||"general"),
@@ -72,10 +72,12 @@ function adaptGeneralExperience(experience){
   needsVerification:true,
   visualPlan,
   verification:{
-   status:"model-generated",
-   source:"NAHLATY general explain engine",
+   status:sourceKind==="content"?"input-derived":"model-generated",
+   source:sourceKind==="content"?"User-provided content + NAHLATY explain engine":"NAHLATY general explain engine",
    sources:[],
-   note:"This open-domain answer is model-generated. Its scene knowledge labels describe internal support, not external factual verification."
+   note:sourceKind==="content"
+    ?"This explanation is derived from user-provided content and has not been externally fact-checked."
+    :"This open-domain answer is model-generated. Its scene knowledge labels describe internal support, not external factual verification."
   },
   experience
  };
@@ -127,16 +129,21 @@ export async function POST(request){
  catch{return jsonError("Invalid JSON body.");}
 
  const question=String(body?.question||"").trim();
+ const content=String(body?.content||"").trim();
+ const sourceKind=content&&!question?"content":"question";
+ const input=question||content;
  const context=body?.context&&typeof body.context==="object"?body.context:{};
 
- if(question.length<4)return jsonError("السؤال قصير جدًا. اكتب ما الذي تريد أن تفهمه بوضوح.",422,"QUESTION_TOO_SHORT");
- if(question.length>700)return jsonError("السؤال طويل جدًا لهذه النسخة التجريبية.",422,"QUESTION_TOO_LONG");
+ if(!input)return jsonError("أدخل سؤالًا أو محتوى تريد فهمه.",422,"INPUT_REQUIRED");
+ if(sourceKind==="question"&&input.length<4)return jsonError("السؤال قصير جدًا. اكتب ما الذي تريد أن تفهمه بوضوح.",422,"QUESTION_TOO_SHORT");
+ if(sourceKind==="question"&&input.length>700)return jsonError("السؤال طويل جدًا. أرسله كمحتوى للشرح بدل السؤال.",422,"QUESTION_TOO_LONG");
+ if(sourceKind==="content"&&input.length>70000)return jsonError("المحتوى طويل جدًا لهذه النسخة.",422,"CONTENT_TOO_LONG");
 
- const directPack=curatedKnowledgeResult(question);
- const directHeart=localHeartResult(question);
- const shortFollowUp=/^(ليش|لماذا|كيف|وضح|اشرح|وبعدين|ثم ماذا|شو يعني|ماذا يعني|what|why|how)/i.test(question)||question.length<24;
+ const directPack=sourceKind==="question"?curatedKnowledgeResult(input):null;
+ const directHeart=sourceKind==="question"?localHeartResult(input):null;
+ const shortFollowUp=sourceKind==="question"&&(/^(ليش|لماذا|كيف|وضح|اشرح|وبعدين|ثم ماذا|شو يعني|ماذا يعني|what|why|how)/i.test(input)||input.length<24);
  const priorPack=shortFollowUp?curatedKnowledgeResultById(context?.previous?.topic):null;
- const heartContext=!priorPack?contextualHeartResult(question,context):null;
+ const heartContext=sourceKind==="question"&&!priorPack?contextualHeartResult(input,context):null;
  const sourced=directPack||directHeart||priorPack||heartContext;
 
  if(sourced){
@@ -151,12 +158,12 @@ export async function POST(request){
  if(!API_KEY)return jsonError("لا توجد طبقة نموذج مفعّلة لهذا السؤال خارج المعرفة الموثقة.",503,"MODEL_PROVIDER_NOT_CONFIGURED");
 
  try{
-  const experience=await runGeneralExplainEngine(question,context);
+  const experience=await runGeneralExplainEngine(input,context,sourceKind);
   return NextResponse.json({
    ok:true,
    provider:"gemini-explain-engine",
    model:MODEL,
-   result:adaptGeneralExperience(experience)
+   result:adaptGeneralExperience(experience,sourceKind)
   });
  }catch(error){
   return jsonError(
