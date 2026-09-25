@@ -16,12 +16,13 @@ const {
 }=await importSource("../lib/nahlaty-engine.js");
 
 const { compileVisualPlan }=await importSource("../lib/visual-director.js");
+const { curatedKnowledgeResult, listCuratedKnowledgePacks }=await importSource("../lib/knowledge-packs.js");
 
 test("valve question maps to curated valve scene",()=>{
   const r=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
   assert.equal(r.topic,"valves");
   assert.equal(r.scene,3);
-  assert.equal(r.verification.status,"curated");
+  assert.equal(r.verification.status,"source-grounded");
 });
 
 test("blood circulation question maps to flow scene",()=>{
@@ -51,7 +52,7 @@ test("curated facts override model prose when verification is curated",()=>{
   },local);
   assert.equal(out.answer,local.answer);
   assert.equal(out.explanation,local.explanation);
-  assert.equal(out.verification.status,"curated");
+  assert.equal(out.verification.status,"source-grounded");
   assert.equal(out.needsVerification,false);
 });
 
@@ -76,4 +77,21 @@ test("visual director compiles semantic operations into executable motion",()=>{
   assert.equal(plan.sceneId,"heart:valves");
   assert.ok(plan.motion.some(step=>step.type==="flow"));
   assert.equal(plan.guardrails.animateMeaning,true);
+});
+
+test("priority knowledge packs are sourced and routable",()=>{
+  const cases=[
+    ["كيف تنمو النباتات؟","plant-growth"],
+    ["كيف تعمل الخلية الشمسية؟","solar-cell"],
+    ["كيف يلقح النحل الأزهار؟","bee-pollination"],
+    ["كيف يعمل محرك الاحتراق الداخلي؟","combustion-engine"]
+  ];
+  for(const [q,id] of cases){
+    const r=curatedKnowledgeResult(q);
+    assert.equal(r.topic,id);
+    assert.equal(r.verification.status,"source-grounded");
+    assert.ok(r.verification.sources.length>=1);
+    assert.ok(r.experience.sceneGraph.nodes.length>=4);
+  }
+  assert.equal(listCuratedKnowledgePacks().length,4);
 });
