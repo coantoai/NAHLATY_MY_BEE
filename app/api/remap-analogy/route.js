@@ -1,8 +1,11 @@
 import { createGemini, generateJson } from "../../lib/genai";
+import { requestLimit } from "../../lib/requestGuard";
 
 const cut=(v,n=500)=>String(v||"").slice(0,n);
 
 export async function POST(req){
+ const blocked=requestLimit(req,{scope:"remap-analogy",limit:10,windowMs:60_000});
+ if(blocked)return blocked;
  try{
   const {target,title,nodes=[],edges=[]}=await req.json();
   if(!cut(target).trim()) return Response.json({error:"اكتب الشيء المألوف الذي تريد التشبيه به"},{status:400});
@@ -53,6 +56,7 @@ breaks: حتى 4 عناصر، كل واحد nodeId,text
    breaks:(Array.isArray(data?.breaks)?data.breaks:[]).slice(0,4).map(x=>({nodeId:ids.has(String(x?.nodeId))?String(x.nodeId):"",text:cut(x?.text,180)})).filter(x=>x.text)
   });
  }catch(e){
-  return Response.json({error:"تعذر بناء التشبيه المخصص",detail:String(e?.message||e)},{status:500});
+  console.error("[NAHLATY_REMAP_ANALOGY_ERROR]",String(e?.message||e),e?.stack||"");
+  return Response.json({error:"تعذر بناء التشبيه المخصص",code:"REMAP_ANALOGY_FAILED"},{status:500});
  }
 }
