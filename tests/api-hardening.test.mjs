@@ -9,7 +9,7 @@ async function importSource(relativePath){
  return import(data);
 }
 
-const {requestLimit,rateLimitInfo}=await importSource("../app/lib/requestGuard.js");
+const {internalRequestHeaders,requestLimit,rateLimitInfo}=await importSource("../app/lib/requestGuard.js");
 
 function req(id,extra={}){
  return new Request("http://nahlaty.local/api/test",{
@@ -33,7 +33,7 @@ test("request guard allows requests inside the window and then returns 429",asyn
 });
 
 test("internal engine calls bypass request guard",()=>{
- const internal=req("42",{"x-nahlaty-internal":"1"});
+ const internal=req("42",internalRequestHeaders());
  for(let i=0;i<5;i++)assert.equal(requestLimit(internal,{scope:"test-internal",limit:1,windowMs:60000}),null);
 });
 
