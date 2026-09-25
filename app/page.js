@@ -209,7 +209,59 @@ export default function Home(){
  useEffect(()=>{if(!load){setBuildStage(0);return}setBuildStage(0);const started=Date.now();const timer=setInterval(()=>{const elapsed=Date.now()-started;setBuildStage(elapsed>3300?3:elapsed>2200?2:elapsed>1050?1:0)},220);return()=>clearInterval(timer)},[load]);
  useEffect(()=>{if(!playing||!r?.steps?.length)return;const id=setInterval(()=>setActive(v=>{if(v>=r.steps.length-1){setPlaying(false);return v}return v+1}),speed*1000);return()=>clearInterval(id)},[playing,r,speed]);
  useEffect(()=>{if(!librarySourceId||!r?.steps?.length)return;updateLibraryProgress(librarySourceId,{active,total:r.steps.length})},[active,librarySourceId,r?.steps?.length,updateLibraryProgress]);
- async function make(audienceOverride){if(!c.trim())return;const target=typeof audienceOverride==="string"?audienceOverride:(a||"عام");const retargeting=typeof audienceOverride==="string"&&!!r;if(typeof audienceOverride==="string")setA(target);const nodeMap=new Map((r?.sceneGraph?.nodes||[]).map(n=>[n.id,n]));const preserve=retargeting?{truthAnchors:r?.truthAnchors||[],causalRelations:(r?.sceneGraph?.edges||[]).filter(e=>e.causal).slice(0,8).map(e=>({from:nodeMap.get(e.from)?.label||e.from,to:nodeMap.get(e.to)?.label||e.to,relation:e.relation||"cause",label:e.label||""}))}:null;setLoad(true);setMakeError("");setSessionRestored(false);setLibrarySourceId(null);setPlaying(false);try{const x=await fetch("/api/explain",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content:c,audience:target,preserve})});const data=await x.json();if(!x.ok||data?.error)throw new Error(data?.error||"تعذر بناء الشرح");setActive(0);setR(data);if(data?.presentation?.paceSec)setSpeed(data.presentation.paceSec);const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches||false;if(!reduced)setPlaying(true);requestAnimationFrame(()=>{if(window.innerWidth<820)document.getElementById("explanation-result")?.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"})})}catch(err){setMakeError(String(err?.message||err))}finally{setLoad(false)}}
+ async function make(audienceOverride){
+  if(!c.trim())return;
+  const target=typeof audienceOverride==="string"?audienceOverride:(a||"عام");
+  const retargeting=typeof audienceOverride==="string"&&!!r;
+  if(typeof audienceOverride==="string")setA(target);
+  const nodeMap=new Map((r?.sceneGraph?.nodes||[]).map(n=>[n.id,n]));
+  const preserve=retargeting?{
+   truthAnchors:r?.truthAnchors||[],
+   causalRelations:(r?.sceneGraph?.edges||[]).filter(e=>e.causal).slice(0,8).map(e=>({from:nodeMap.get(e.from)?.label||e.from,to:nodeMap.get(e.to)?.label||e.to,relation:e.relation||"cause",label:e.label||""})),
+   sceneGraph:{nodes:(r?.sceneGraph?.nodes||[]).slice(0,8).map(n=>({id:n.id,label:n.label}))}
+  }:null;
+  setLoad(true);setMakeError("");setSessionRestored(false);setLibrarySourceId(null);setPlaying(false);
+  try{
+   let data;
+   let initialStep=0;
+   if(retargeting){
+    const x=await fetch("/api/explain",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({content:c,audience:target,preserve})});
+    data=await x.json();
+    if(!x.ok||data?.error)throw new Error(data?.error||"تعذر إعادة تكييف الشرح");
+   }else{
+    const input=c.trim();
+    const looksLikeQuestion=input.length<=700&&(/^(كيف|لماذا|ليش|ما |ماذا|هل |شو |أين|متى|من |what |why |how |where |when |who )/i.test(input)||/[؟?]$/.test(input));
+    const x=await fetch("/api/engine",{
+     method:"POST",
+     headers:{"content-type":"application/json"},
+     body:JSON.stringify({
+      ...(looksLikeQuestion?{question:input}:{content:input}),
+      context:{audience:target}
+     })
+    });
+    const payload=await x.json();
+    if(!x.ok||!payload?.ok)throw new Error(payload?.error?.message||"تعذر بناء الشرح");
+    const engineResult=payload.result||{};
+    const experience=engineResult.experience;
+    if(!experience)throw new Error("المحرك لم يُرجع تجربة بصرية قابلة للعرض.");
+    initialStep=Number.isInteger(experience.initialStep)?experience.initialStep:0;
+    data={
+     ...experience,
+     audience:target,
+     verification:engineResult.verification,
+     engineMeta:{provider:payload.provider,model:payload.model||null,domain:engineResult.domain,topic:engineResult.topic,confidence:engineResult.confidence,needsVerification:engineResult.needsVerification},
+     sources:engineResult.verification?.sources||experience.sources||[]
+    };
+   }
+   setActive(Math.max(0,Math.min((data?.steps?.length||1)-1,initialStep)));
+   setR(data);
+   if(data?.presentation?.paceSec)setSpeed(data.presentation.paceSec);
+   const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches||false;
+   if(!reduced)setPlaying(true);
+   requestAnimationFrame(()=>{if(window.innerWidth<820)document.getElementById("explanation-result")?.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"})});
+  }catch(err){setMakeError(String(err?.message||err))}
+  finally{setLoad(false)}
+ }
  return <div className={`beeAppShell platformProfile-${shellExperience.id||"general"} platformTheme-${contentTheme} service-${serviceState}`} dir="rtl">
  <aside className="beeRail">
   <button className="railBrand" onClick={()=>go("home")}><span className="beeMark" aria-hidden="true"><i/><i/></span><span><b>{BRAND.ar}</b><small>{BRAND.en}</small></span></button>
