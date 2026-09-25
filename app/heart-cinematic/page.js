@@ -4,16 +4,16 @@ import {useState} from "react";
 const cardLeft=[1.45,11.05,20.75,30.45,40.15,49.85,59.55,69.25,78.95,88.65];
 
 const scenes=[
- {n:"01",title:"البداية",sub:"نظرة عامة على القلب",kind:"overview"},
- {n:"02",title:"داخل القلب",sub:"رحلة إلى الداخل",kind:"inside"},
- {n:"03",title:"الحجرات",sub:"الأربع حجرات",kind:"chambers"},
- {n:"04",title:"الصمامات",sub:"تعمل كأبواب",kind:"valves"},
- {n:"05",title:"رحلة الدم",sub:"المسار الكامل",kind:"flow"},
- {n:"06",title:"إلى الرئتين",sub:"لأخذ الأكسجين",kind:"lungs"},
- {n:"07",title:"إلى الجسم",sub:"توزيع الأكسجين",kind:"body"},
- {n:"08",title:"الشرايين التاجية",sub:"تغذية القلب",kind:"coronary"},
- {n:"09",title:"النظام الكهربائي",sub:"تنظيم الخفقان",kind:"electric"},
- {n:"10",title:"الصورة الكاملة",sub:"القلب والجسم",kind:"whole"}
+ {n:"01",title:"البداية",sub:"نظرة عامة على القلب",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/5fe9ea29-8f8d-4c7d-aefd-fd65d28fbe1b/4a954350-cb6d-421d-bd87-7162686ce8fe/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMDIzYTA0ZGU5NGQ0ZmFiYSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQxMjc2Nn0.8qnJQThjFfE-hAeR8v9ywwivohfmn2DiSpX8BvrRCT4"},
+ {n:"02",title:"داخل القلب",sub:"رحلة إلى الداخل",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/d4966826-70f6-4b4e-aa24-301080443674/cd6c927c-ca7f-42b0-b32e-41baf675c76d/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMjUzNDFhMDZkZGFkNjI5ZCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ4NTEyNn0.KtFB8fDQlHu9LJRbhWqKrwfmOBjJ5Avf5j-NZiI69jc"},
+ {n:"03",title:"الحجرات",sub:"الأربع حجرات",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/80d4a605-df12-4c0b-8808-c5ca4e582d9b/6d7d155f-aec0-4128-bc32-e97e7b247b34/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYTdlZWQwM2ZhODBmNTUzNCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQwOTE1MX0.ccTh31j-aLnhWZ4XdahmJ87jorvj4XDF66QDKz5XQcc"},
+ {n:"04",title:"الصمامات",sub:"تعمل كأبواب",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/9dbef5d4-97f8-457c-a2d7-56a91a0059f9/685b0588-06b0-402e-9d7e-68d7f1fbf298/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZWZmYjE1OTU4ZWE3NTI3ZCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQzNjg4NX0.Tz-FH_T1yB2nft9YInPv2OxJZDtq82-OBXfZd1l7zSA"},
+ {n:"05",title:"رحلة الدم",sub:"المسار الكامل",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/762e0b81-782e-4c49-8c10-2aa2e813cace/94bdd1c1-10f0-4810-bdd3-75857d742d93/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDI3ZjBkYTEyNjJjZjdkNSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQwOTEyMX0.cyAFKCphw5nXVo1NPeSGDSYAM9NMy6rB2_gNRNd-Ofc"},
+ {n:"06",title:"إلى الرئتين",sub:"لأخذ الأكسجين",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/9fd6d252-8c55-4b27-9c2e-40c58dad5a6e/2ce1661d-bf3a-479b-a4d9-ed2110ee49b3/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMjhkNWIyNTIxNmQxZWUxYSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQwODY1OH0.kyomkWx78oNNa8BOxX7rVUWRrTQttc4YXwil1VB975c"},
+ {n:"07",title:"إلى الجسم",sub:"توزيع الأكسجين",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/3371ff8d-3ee8-47bc-9441-089813f66727/d4796b9e-c5fc-4647-9e86-3348b41b1992/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiODFiMjNjOWJmMjExYmNiMyIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQyNDk4N30.PJq5gc3i0l80dxYqKXQ5nlXefwri0-PGj2N4WZF7nw0"},
+ {n:"08",title:"الشرايين التاجية",sub:"تغذية القلب",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/311b968b-8181-41f9-b388-d553c92ee248/08eafd1e-d365-46d6-9148-858c97696596/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZjI3MmVhMjdiNTMyMjFkMiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ1ODkxOX0.QdN_hl70_xHKdnHdcE2bKfee7dZT6zwEiu2uVOIMDbY"},
+ {n:"09",title:"النظام الكهربائي",sub:"تنظيم الخفقان",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/30112d47-5011-402c-8e52-0dab0880a97c/edb5b30a-84e6-4d8b-950d-0844f8d41a81/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMDU4NWQyZWE5ZjBiMDdmYyIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQxNjM2Mn0.aIt5SbMaugOgxhXxQpTgWUfFxbH3_xV2nXJDDzpvue0"},
+ {n:"10",title:"الصورة الكاملة",sub:"القلب والجسم",image:"https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/7aa9da5a-65c1-457f-87a4-d13fd608aae2/da238478-d99b-4885-8580-e771341caa66/Match_the_exact_cinematic_medical_visual_language_of__refere.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZmQyMTQ0NjU5MDYzY2Q4OSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ2Mzg0NX0.QkwxeEKx5auQyXeTcUCZUnEBa2OChTnfLkJE7Isik8Q"}
 ];
 
 function HeartScene({kind}){
@@ -61,10 +61,9 @@ export default function Page(){
   <section className="heartScreen" aria-label="رحلة القلب">
    <img className="referenceUI" src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/078beba2-aa73-4316-a80c-4a9b3146fc01.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDQ2M2JhNDg2Y2JmMzYyOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MDQ2Mzk0NH0.6pzblTKmS7lOudEDHVacbwjtxoVrtUTU7qufyWrRNXY" alt="منصة نحلتي — رحلة القلب"/>
 
-   {active>0&&<div className="stageOverlay">
-     <HeartScene kind={scene.kind}/>
-     <div className="stageCaption"><b>{scene.title}</b><span>{scene.sub}</span></div>
-   </div>}
+   <div className="stageOverlay">
+     <img className="cinematicScene" src={scene.image} alt={scene.title+" — "+scene.sub}/>
+   </div>
 
    <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    {cardLeft.map((left,i)=><button key={i} className="hot cardHot" style={{left:left+"%"}} aria-label={scenes[i].title} aria-pressed={active===i} onClick={()=>setActive(i)}/>)}
@@ -77,6 +76,7 @@ export default function Page(){
    .heartScreen{position:relative;width:100%;max-width:1536px;aspect-ratio:3/2;background:#020812;overflow:hidden}
    .referenceUI{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
    .stageOverlay{position:absolute;left:9.5%;top:8.5%;width:63.55%;height:56.1%;overflow:hidden;z-index:3;background:#07111c}
+   .cinematicScene{width:100%;height:100%;object-fit:cover;display:block}
    .generatedScene{position:absolute;inset:0;background:radial-gradient(circle at 48% 48%,#132d3f 0,#091725 43%,#040a12 77%,#02060b 100%);overflow:hidden}
    .generatedScene:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(3,10,18,.78),transparent 18%,transparent 82%,rgba(3,10,18,.7));pointer-events:none}
    .halo{position:absolute;width:62%;height:80%;left:18%;top:7%;border-radius:50%;background:radial-gradient(ellipse,rgba(23,151,211,.23),rgba(15,64,91,.09) 48%,transparent 72%);filter:blur(9px)}
