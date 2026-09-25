@@ -94,21 +94,28 @@ function VisualGuide({index}){
 
 function DynamicScene({result}){
  const plan=result?.renderPlan||{};
- const focus=Array.isArray(plan.focus)?plan.focus:[];
- const nodes=focus.length?focus:["الفكرة الأساسية"];
- return <div className="dynamicScene" aria-label="شرح بصري دلالي">
+ const graph=result?.experience?.sceneGraph||{};
+ const graphNodes=Array.isArray(graph?.nodes)?graph.nodes.slice(0,7):[];
+ const graphEdges=Array.isArray(graph?.edges)?graph.edges.slice(0,10):[];
+ const step=result?.experience?.steps?.[0]||{};
+ const focusIds=new Set(step?.runtime?.focusNodeIds||step?.focusNodeIds||plan.focus||[]);
+ const activeEdgeIds=new Set(step?.runtime?.activeEdgeIds||step?.activeEdgeIds||[]);
+ const fallback=(Array.isArray(plan.focus)&&plan.focus.length?plan.focus:["الفكرة الأساسية"]).slice(0,6).map((label,i)=>({id:"fallback-"+i,label:String(label).replaceAll("-"," "),glyph:"✦",x:[18,82,18,82,50,50][i]||50,y:[26,26,74,74,15,85][i]||50,detail:""}));
+ const nodes=graphNodes.length?graphNodes:fallback;
+ const byId=new Map(nodes.map(n=>[String(n.id),n]));
+ const clamp=v=>Math.max(7,Math.min(93,Number(v)||50));
+ return <div className={"dynamicScene theme-"+(graph?.world?.theme||result?.domain||"general")} aria-label="شرح بصري دلالي">
    <div className="dynamicAura"/>
-   <div className="dynamicTarget">{plan.target||result?.topic||"فهم الفكرة"}</div>
-   <div className="dynamicOrbit">
-    {nodes.slice(0,6).map((node,i)=><div key={i} className={"dynamicNode n"+i}><span>{String(node).replaceAll("-"," ")}</span></div>)}
-   </div>
+   <div className="dynamicTarget graphTitle">{graph?.world?.label||plan.target||result?.topic||"فهم الفكرة"}</div>
    <svg className="dynamicLinks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M50 50 C35 36 25 34 16 28"/>
-    <path d="M50 50 C65 35 75 34 84 28"/>
-    <path d="M50 50 C35 65 25 67 16 74"/>
-    <path d="M50 50 C65 65 75 67 84 74"/>
+    <defs><marker id="sceneArrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="#5ed4ff"/></marker></defs>
+    {graphEdges.map((edge,i)=>{const a=byId.get(String(edge.from)),b=byId.get(String(edge.to));if(!a||!b)return null;const x1=clamp(a.x),y1=clamp(a.y),x2=clamp(b.x),y2=clamp(b.y),mx=(x1+x2)/2,my=Math.min(y1,y2)-Math.max(3,Math.abs(x2-x1)*.08);return <g key={edge.id||i} className={activeEdgeIds.has(String(edge.id))?"active":""}><path d={"M"+x1+" "+y1+" Q"+mx+" "+my+" "+x2+" "+y2} markerEnd="url(#sceneArrow)"/>{edge.label&&<text x={(x1+x2)/2} y={(y1+y2)/2-2}>{edge.label}</text>}</g>})}
    </svg>
-   <div className="dynamicOp">{plan.operations?.slice(0,4).join(" · ")}</div>
+   <div className="dynamicOrbit">
+    {nodes.map((node,i)=><div key={node.id||i} className={"dynamicNode "+(focusIds.has(String(node.id))?"focus":"")} style={{left:clamp(node.x)+"%",top:clamp(node.y)+"%"}}><i>{node.glyph||"●"}</i><span>{node.label||node.id}</span>{node.detail&&<small>{node.detail}</small>}</div>)}
+   </div>
+   <div className="dynamicOp">{plan.operations?.slice(0,5).join(" · ")}</div>
+   <div className={"verificationBadge "+(result?.verification?.status==="source-grounded"?"grounded":"modelOnly")}>{result?.verification?.status==="source-grounded"?"موثّق بالمصادر":"يحتاج تحققًا خارجيًا"}{result?.verification?.sources?.length?" · "+result.verification.sources.length+" مصادر":""}</div>
  </div>
 }
 
@@ -151,7 +158,7 @@ export default function Page(){
    const response=await fetch("/api/engine",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({question:q,context:{scene:active,lastQuestion}})
+    body:JSON.stringify({question:q,context:{scene:active,lastQuestion,audience:"عام",previous:engineResult&&!engineResult.error?{title:engineResult.topic,summary:engineResult.answer,domain:engineResult.domain,topic:engineResult.topic}:null}})
    });
    const payload=await response.json();
    if(!response.ok||!payload?.ok) throw new Error(payload?.error?.message||"تعذر تشغيل المحرك.");
@@ -176,7 +183,7 @@ export default function Page(){
      <div className="stageCaption"><b>{dynamicMode?(engineResult?.topic||"شرح بصري"):scene.title}</b><span>{dynamicMode?(renderPlan?.target||engineResult?.explanation):scene.sub}</span></div>
    </div>
 
-   <form className="engineAsk" onSubmit={runEngine}><input value={engineQuestion} onChange={e=>setEngineQuestion(e.target.value)} placeholder="جرّب: لماذا لا يرجع الدم؟" disabled={engineLoading}/><button disabled={engineLoading}>{engineLoading?"أفهم…":"نفّذ"}</button></form>{lastQuestion&&<div className="engineContext">Context: {lastQuestion}</div>}{engineResult&&<div className={"engineResult "+(engineResult.error?"isError":"")}><b>{engineResult.error?"لم أُنفّذ تخمينًا":"النتيجة"}</b><span>{engineResult.error||engineResult.answer}</span>{!engineResult.error&&<><small>{engineResult.explanation}</small><em>{engineResult.visualPlan?.operations?.join(" → ")}</em><i>{engineResult.verification?.status||"unverified"} · {engineResult.confidence||"low"}{engineProvider?" · "+engineProvider:""}</i></>}</div>}
+   <form className="engineAsk" onSubmit={runEngine}><input value={engineQuestion} onChange={e=>setEngineQuestion(e.target.value)} placeholder="جرّب: لماذا لا يرجع الدم؟" disabled={engineLoading}/><button disabled={engineLoading}>{engineLoading?"أفهم…":"نفّذ"}</button></form>{lastQuestion&&<div className="engineContext">Context: {lastQuestion}</div>}{engineResult&&<div className={"engineResult "+(engineResult.error?"isError":"")}><b>{engineResult.error?"لم أُنفّذ تخمينًا":"النتيجة"}</b><span>{engineResult.error||engineResult.answer}</span>{!engineResult.error&&<><small>{engineResult.explanation}</small><em>{engineResult.visualPlan?.operations?.join(" → ")}</em><i>{engineResult.verification?.status||"unverified"} · {engineResult.confidence||"low"}{engineProvider?" · "+engineProvider:""}{engineResult.verification?.sources?.length?" · sources "+engineResult.verification.sources.length:""}</i></>}</div>}
    <button className="hot brandHome" aria-label="نحلتي — العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    <button className="hot homeNav" aria-label="العودة للرئيسية" onClick={()=>{window.location.href="/"}}/>
    {cardLeft.map((left,i)=><div key={"thumb-"+i} className={"cardThumb miniScene m"+i} style={{left:(left+.38)+"%"}}><span>{scenes[i].n}</span><b>{scenes[i].title}</b></div>)}
@@ -195,10 +202,10 @@ export default function Page(){
    @keyframes directorDash{to{stroke-dashoffset:-7}}
    .dynamicScene{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 50% 48%,#15334a 0,#081723 45%,#030913 78%);color:#eef8ff}
    .dynamicAura{position:absolute;left:30%;top:17%;width:40%;height:65%;border-radius:50%;background:radial-gradient(circle,rgba(49,177,231,.2),rgba(49,177,231,.04) 48%,transparent 72%);filter:blur(10px)}
-   .dynamicTarget{position:absolute;left:34%;top:40%;width:32%;min-height:20%;display:flex;align-items:center;justify-content:center;text-align:center;padding:3%;border-radius:50%;border:1px solid rgba(105,211,255,.5);background:rgba(7,29,43,.82);box-shadow:0 0 35px rgba(55,184,238,.18);font-size:clamp(10px,1.15vw,18px);font-weight:700;z-index:3}
-   .dynamicOrbit{position:absolute;inset:0;z-index:3}.dynamicNode{position:absolute;min-width:15%;max-width:22%;padding:1.4% 2%;border-radius:999px;background:rgba(5,25,38,.85);border:1px solid rgba(95,194,235,.3);text-align:center;font-size:clamp(7px,.72vw,11px);box-shadow:0 0 16px rgba(45,166,216,.1)}.dynamicNode.n0{left:7%;top:19%}.dynamicNode.n1{right:7%;top:19%}.dynamicNode.n2{left:7%;bottom:17%}.dynamicNode.n3{right:7%;bottom:17%}.dynamicNode.n4{left:40%;top:8%}.dynamicNode.n5{left:40%;bottom:7%}
-   .dynamicLinks{position:absolute;inset:0;width:100%;height:100%;z-index:2}.dynamicLinks path{fill:none;stroke:#51c7f5;stroke-width:.45;stroke-dasharray:2 2;opacity:.6;animation:directorDash 1.4s linear infinite}
-   .dynamicOp{position:absolute;left:3%;bottom:3%;z-index:4;color:#75cdef;font-size:clamp(6px,.58vw,9px);letter-spacing:.5px;direction:ltr}
+   .dynamicTarget.graphTitle{position:absolute;left:24%;top:3.5%;width:52%;min-height:auto;display:flex;align-items:center;justify-content:center;text-align:center;padding:1.2% 2%;border-radius:999px;border:1px solid rgba(105,211,255,.3);background:rgba(7,29,43,.78);box-shadow:0 0 30px rgba(55,184,238,.12);font-size:clamp(9px,1vw,16px);font-weight:700;z-index:5}
+   .dynamicOrbit{position:absolute;inset:0;z-index:3}.dynamicNode{position:absolute;transform:translate(-50%,-50%);width:18%;min-height:13%;padding:1.1% 1.2%;border-radius:14px;background:rgba(5,25,38,.88);border:1px solid rgba(95,194,235,.28);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-shadow:0 0 16px rgba(45,166,216,.1);transition:.35s ease}.dynamicNode.focus{border-color:rgba(255,211,91,.75);box-shadow:0 0 24px rgba(255,197,54,.22);transform:translate(-50%,-50%) scale(1.06)}.dynamicNode i{font-style:normal;font-size:clamp(12px,1.45vw,23px);color:#f0c45d}.dynamicNode span{font-size:clamp(7px,.76vw,12px);font-weight:800}.dynamicNode small{font-size:clamp(6px,.58vw,9px);line-height:1.25;color:#9fc1d4;max-width:95%}
+   .dynamicLinks{position:absolute;inset:0;width:100%;height:100%;z-index:2}.dynamicLinks path{fill:none;stroke:#51c7f5;stroke-width:.38;stroke-dasharray:1.8 1.8;opacity:.42}.dynamicLinks g.active path{stroke:#ffd25b;stroke-width:.62;opacity:.95;animation:directorDash 1.15s linear infinite}.dynamicLinks text{fill:#8dcfe8;font-size:2.25px;text-anchor:middle}.dynamicLinks g.active text{fill:#ffdf78}
+   .dynamicOp{position:absolute;left:3%;bottom:3%;z-index:4;color:#75cdef;font-size:clamp(6px,.58vw,9px);letter-spacing:.5px;direction:ltr}.verificationBadge{position:absolute;right:3%;bottom:3%;z-index:4;padding:6px 9px;border-radius:999px;background:rgba(3,16,25,.8);font-size:clamp(6px,.58vw,9px);border:1px solid rgba(255,204,82,.25);color:#b8c9d3}.verificationBadge.grounded{color:#f1cd69;border-color:rgba(241,205,105,.45)}.verificationBadge.modelOnly{color:#9bb4c3}
    .engineProof{position:absolute;left:10.5%;top:9.5%;z-index:8;background:rgba(2,10,18,.84);border:1px solid rgba(90,196,244,.35);border-radius:9px;padding:7px 10px;display:flex;flex-direction:column;gap:2px;direction:rtl;pointer-events:none}.engineProof b{font-size:9px;color:#6bd0f6;letter-spacing:1px}.engineProof span{font-size:11px;color:#fff}.engineProof small{font-size:8px;color:#f4c95f;direction:ltr}.engineAsk{position:absolute;left:10%;top:65.7%;width:62.5%;height:5.8%;z-index:9;display:flex;gap:6px;direction:rtl}.engineAsk input{flex:1;min-width:0;border:1px solid rgba(86,180,222,.35);border-radius:8px;background:rgba(3,15,25,.92);color:#fff;padding:0 10px;font-size:clamp(8px,.8vw,13px)}.engineAsk button{border:0;border-radius:8px;background:#e8b94f;color:#111;font-weight:800;padding:0 14px;cursor:pointer}.engineAsk button:disabled,.engineAsk input:disabled{opacity:.65;cursor:wait}.engineContext{position:absolute;left:10.5%;top:62.4%;z-index:8;color:#8fd8f5;font-size:clamp(7px,.65vw,10px);direction:rtl}.engineResult{position:absolute;right:27.8%;top:10.5%;width:25%;z-index:8;display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:10px;background:rgba(2,10,18,.86);border:1px solid rgba(89,196,242,.3);color:#eaf7ff;pointer-events:none}.engineResult b{color:#f0c45d;font-size:clamp(8px,.8vw,12px)}.engineResult span{font-size:clamp(8px,.8vw,13px);line-height:1.5}.engineResult small{color:#9cc5dc;font-size:clamp(7px,.68vw,10px)}.engineResult em{font-style:normal;color:#6bd8ff;font-size:clamp(6px,.6vw,9px);direction:ltr}.engineResult i{font-style:normal;color:#7f9daf;font-size:clamp(6px,.56vw,8px);direction:ltr}.engineResult.isError{border-color:rgba(240,196,93,.35)}
    .cinematicScene{width:100%;height:100%;object-fit:cover;display:block}
    .embeddedMeaning{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
