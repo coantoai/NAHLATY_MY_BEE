@@ -38,6 +38,23 @@ export async function GET(){
    return NextResponse.json({ok:false,stage:"first-engine",status:first.response.status,error:first.body?.error||"engine failed"},{status:502});
   }
 
+  const suiteQuestions=[
+   "كيف يتكوّن البرق؟",
+   "كيف تعمل الثلاجة؟",
+   "كيف تنتقل البيانات عبر الإنترنت؟",
+   "لماذا تتغير الفصول؟",
+   "كيف ترتفع الطائرة في الهواء؟"
+  ];
+  const genericSuite=[];
+  for(const question of suiteQuestions){
+   const check=await callEngine(headers,question);
+   const experience=check.body?.result?.experience;
+   if(!check.response.ok||!check.body?.ok||!experience){
+    return NextResponse.json({ok:false,stage:"generic-suite",question,status:check.response.status,error:check.body?.error||"generic engine failed"},{status:502});
+   }
+   genericSuite.push({question,provider:check.body.provider||null,title:experience.title||null,domain:check.body?.result?.domain||null});
+  }
+
   const firstVisual=await callVisual(headers,"كيف تعمل الرئتان؟",{
    previousTitle:firstExperience.title||"",
    previousSummary:firstExperience.summary||""
@@ -86,6 +103,7 @@ export async function GET(){
     continuity:followVisual.body.continuity===true,
     imagePayloadLength:String(followVisual.body.image).length
    },
+   genericSuite,
    elapsedMs:Date.now()-started
   },{headers:{"cache-control":"no-store"}});
  }catch(error){
