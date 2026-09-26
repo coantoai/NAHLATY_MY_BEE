@@ -6,7 +6,7 @@ function SemanticFallback({experience}){
  const nodes=(experience?.sceneGraph?.nodes||[]).slice(0,7);
  const edges=(experience?.sceneGraph?.edges||[]).slice(0,10);
  const byId=new Map(nodes.map(n=>[n.id,n]));
- if(!nodes.length)return <div style={{height:"min(66vh,620px)",minHeight:460,display:"grid",placeItems:"center",padding:30,textAlign:"center"}}><div><div style={{fontSize:58,color:"#e8b84c"}}>✦</div><h2>{experience?.title||"شرح بصري"}</h2><p style={{maxWidth:640,opacity:.72,lineHeight:1.8}}>{experience?.summary||""}</p></div></div>;
+ if(!nodes.length)return <div style={{height:"min(66vh,620px)",minHeight:460,display:"grid",placeItems:"center",padding:30,textAlign:"center",background:"radial-gradient(circle at 50% 45%,#172235 0%,#090d16 68%)"}}><div><div style={{fontSize:64,color:"#e8b84c"}}>✦</div><div style={{opacity:.55,fontSize:14}}>VISUAL UNDERSTANDING</div></div></div>;
  return <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-label={experience?.title||"مشهد بصري"} style={{width:"100%",height:"min(66vh,620px)",minHeight:460,display:"block",background:"radial-gradient(circle at 50% 45%,#172235 0%,#090d16 68%)"}}>
   <defs>
    <marker id="bee-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#e8b84c"/></marker>
@@ -15,12 +15,12 @@ function SemanticFallback({experience}){
   {edges.map((edge,i)=>{
    const a=byId.get(edge.from),b=byId.get(edge.to);
    if(!a||!b)return null;
-   return <g key={edge.id||i}><line x1={Number(a.x)||50} y1={Number(a.y)||50} x2={Number(b.x)||50} y2={Number(b.y)||50} stroke={edge.causal?"#e8b84c":"#7e8ca6"} strokeWidth={edge.causal?1.05:.55} opacity={edge.causal ? .9 : .5} markerEnd="url(#bee-arrow)"/>{edge.label&&<text x={((Number(a.x)||50)+(Number(b.x)||50))/2} y={((Number(a.y)||50)+(Number(b.y)||50))/2-1.5} fill="#d6d9df" fontSize="2.6" textAnchor="middle">{String(edge.label).slice(0,22)}</text>}</g>;
+   return <g key={edge.id||i}><line x1={Number(a.x)||50} y1={Number(a.y)||50} x2={Number(b.x)||50} y2={Number(b.y)||50} stroke={edge.causal?"#e8b84c":"#7e8ca6"} strokeWidth={edge.causal?1.05:.55} opacity={edge.causal ? .9 : .5} markerEnd="url(#bee-arrow)"/>{edge.causal&&edge.label&&<text x={((Number(a.x)||50)+(Number(b.x)||50))/2} y={((Number(a.y)||50)+(Number(b.y)||50))/2-1.5} fill="#d6d9df" fontSize="2.4" textAnchor="middle">{String(edge.label).split(/\s+/).slice(0,3).join(" ")}</text>}</g>;
   })}
   {nodes.map((node,i)=><g key={node.id||i} transform={`translate(${Number(node.x)||50} ${Number(node.y)||50})`} filter={node.knowledge==="fact"?"url(#bee-glow)":undefined}>
    <circle r={node.spatial?7.2:6.2} fill="#111827" stroke={node.knowledge==="fact"?"#e8b84c":"#8a96aa"} strokeWidth={node.knowledge==="fact" ? .9 : .55}/>
    <text y="-1" fill="#f6e7bd" fontSize="4.2" textAnchor="middle">{String(node.glyph||"●").slice(0,3)}</text>
-   <text y="10" fill="#f7f2e7" fontSize="3.1" textAnchor="middle">{String(node.label||"").slice(0,18)}</text>
+   <text y="10" fill="#f7f2e7" fontSize="2.9" textAnchor="middle">{String(node.label||"").split(/\s+/).slice(0,3).join(" ")}</text>
   </g>)}
  </svg>;
 }
@@ -137,11 +137,6 @@ export default function LivingEngine(){
 
     {loading&&<div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",background:"#050811bb",backdropFilter:"blur(8px)",zIndex:3}}><div style={{textAlign:"center"}}><div style={{fontSize:52,color:"#e8b84c"}}>✦</div><b style={{fontSize:20}}>{followUp?"أطوّر نفس البحث…":"أبني العالم البصري…"}</b><p style={{opacity:.65}}>فهم السؤال ← بناء المعنى ← توليد المشهد</p></div></div>}
 
-    {result&&<div style={{position:"absolute",right:20,left:20,bottom:18,padding:"16px 18px",borderRadius:18,background:"#05070bd9",backdropFilter:"blur(14px)",border:"1px solid #ffffff1c"}}>
-     <small style={{color:"#e8b84c"}}>{history.length>1?"متابعة داخل البحث":"العالم الحالي"}</small>
-     <h2 style={{margin:"5px 0",fontSize:"clamp(20px,3vw,30px)"}}>{result.title}</h2>
-     <p style={{margin:0,opacity:.78,lineHeight:1.7}}>{result.summary}</p>
-    </div>}
    </section>
 
    <form onSubmit={run} style={{display:"flex",gap:10,margin:"16px 0",flexWrap:"wrap"}}>
