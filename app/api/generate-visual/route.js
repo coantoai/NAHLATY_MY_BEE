@@ -7,7 +7,10 @@ export const dynamic="force-dynamic";
 export const maxDuration=180;
 
 const API_KEY=process.env.GEMINI_API_KEY||process.env.GOOGLE_API_KEY||process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-const IMAGE_MODELS=[...new Set([process.env.GEMINI_IMAGE_MODEL,"gemini-3.1-flash-image","gemini-2.5-flash-image"].filter(Boolean))];
+const DASHSCOPE_API_KEY=process.env.DASHSCOPE_API_KEY;
+const QWEN_IMAGE_MODEL=process.env.QWEN_IMAGE_MODEL||"qwen-image-3.0";
+const DASHSCOPE_BASE_URL=(process.env.DASHSCOPE_BASE_URL||"https://dashscope-intl.aliyuncs.com").replace(/\\\/$/,"");
+const QWEN_ENDPOINT=`${DASHSCOPE_BASE_URL}/api/v1/services/aigc/multimodal-generation/generation`;
 const GROUNDING_MODEL=process.env.GEMINI_GROUNDING_MODEL||"gemini-2.5-flash";
 const VERIFY_MODEL=process.env.GEMINI_VERIFY_MODEL||GROUNDING_MODEL;
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -105,28 +108,51 @@ Check only factual/semantic contradictions that are visible: wrong anatomy/struc
  return verdict;
 }
 
-async function generateWithRetry(ai,model,contents){
+async function generateWithRetry(prompt,imageAnchor=null){
  let lastError=null;
  for(let attempt=1;attempt<=2;attempt++){
   try{
-   const response=await ai.models.generateContent({model,contents,config:{responseModalities:["IMAGE"]}});
-   const out=extractImage(response);
-   if(out.image)return out;
-   lastError=new Error("Image model returned no image");
+   const content=[];
+   if(imageAnchor)content.push({image:imageAnchor});
+   content.push({text:prompt});
+   const response=await fetch(QWEN_ENDPOINT,{
+    method:"POST",
+    headers:{"content-type":"application/json","authorization":`Bearer ${DASHSCOPE_API_KEY}`},
+    body:JSON.stringify({
+     model:QWEN_IMAGE_MODEL,
+     input:{messages:[{role:"user",content}]},
+     parameters:{
+      prompt_extend:false,
+      n:1,
+      size:"1536*1024",
+      negative_prompt:"dashboard, UI cards, poster, title card, paragraph text, decorative typography, watermark, logo, inaccurate anatomy, reversed arrows, invented labels"
+     }
+    })
+   });
+   const payload=await response.json().catch(()=>({}));
+   if(!response.ok||payload?.code)throw Object.assign(new Error(payload?.message||`Qwen image request failed (${response.status})`),{status:response.status,code:payload?.code});
+   const url=payload?.output?.choices?.[0]?.message?.content?.find?.(x=>x?.image)?.image;
+   if(!url)throw new Error("Qwen Image returned no image URL");
+   const imageResponse=await fetch(url);
+   if(!imageResponse.ok)throw new Error(`Qwen image download failed (${imageResponse.status})`);
+   const mime=imageResponse.headers.get("content-type")||"image/png";
+   const bytes=Buffer.from(await imageResponse.arrayBuffer());
+   return {image:bytes.toString("base64"),mime,caption:"",usage:payload?.usage||null,requestId:payload?.request_id||null};
   }catch(error){
    lastError=error;
    if(!retryable(error)||attempt===2)break;
-   await sleep(500*attempt);
+   await sleep(650*attempt);
   }
  }
- throw lastError||new Error("Visual generation failed");
+ throw lastError||new Error("Qwen visual generation failed");
 }
 
 export async function POST(req){
  const blocked=requestLimit(req,{scope:"visual-generation",limit:6,windowMs:60000});
  if(blocked)return blocked;
  try{
-  if(!API_KEY)return NextResponse.json({ok:false,error:"GEMINI_API_KEY is not configured"},{status:503});
+  if(!API_KEY)return NextResponse.json({ok:false,error:"GEMINI_API_KEY is not configured for Evidence/Visual Truth gates"},{status:503});
+  if(!DASHSCOPE_API_KEY)return NextResponse.json({ok:false,error:"DASHSCOPE_API_KEY is not configured for Qwen Image"},{status:503});
   const body=await req.json();
   const question=String(body?.question||"").trim().slice(0,1200);
   const context=body?.context||{};
@@ -149,19 +175,18 @@ ${lockedTruth}
 ${imageAnchor?"The attached image is the current scene. Keep it as the same visual world and evolve it for the new question. Preserve subject identity, spatial relationships, palette and lighting unless the verified truth requires zoom, cutaway, transparency or another viewpoint.":"Create a coherent first visual world that can be evolved by later questions."}
 The visual itself is the explanation. Do not rely on a caption, paragraph, text panel, title card, or written summary. Explain through composition, spatial relationships, arrows, flow, highlighted parts, cutaway, zoom, layers, before/after states, scale, and cause-and-effect. Prefer ZERO rendered text. Only when a word is indispensable for understanding, use at most 4 tiny labels total, each 1 to 3 words, in the user's language. Never render sentences or paragraphs. One dominant focal subject, meaningful depth, uncluttered composition. Never invent anatomy, mechanisms, chronology, labels, quantities, arrows, or causal relationships not licensed by the locked truth specification. If the truth spec marks a detail uncertain, omit it rather than guessing. Deep navy cinematic environment with restrained warm honey-gold guidance accents. No dashboard, UI cards, logo, poster typography, decorative text, or irrelevant objects.`;
 
-  const anchoredContents=imageAnchor?[{role:"user",parts:[imageAnchor,{text:prompt}]}]:null;
   const plans=imageAnchor
-   ?[{contents:anchoredContents,continuity:true},{contents:prompt,continuity:false}]
-   :[{contents:prompt,continuity:false}];
+   ?[{imageAnchor,continuity:true},{imageAnchor:null,continuity:false}]
+   :[{imageAnchor:null,continuity:false}];
 
   let lastError=null;
   let rejectedVisuals=0;
   for(const plan of plans){
-   for(const model of IMAGE_MODELS){
+   {
     try{
      // A generated image is not trusted until the final visual gate passes it.
      for(let visualAttempt=1;visualAttempt<=2;visualAttempt++){
-      const out=await generateWithRetry(ai,model,plan.contents);
+      const out=await generateWithRetry(prompt,plan.imageAnchor);
       const verdict=await verifyRenderedVisual(ai,out.image,out.mime,grounding.spec);
       if(!verdict.pass){
        rejectedVisuals++;
@@ -172,7 +197,10 @@ The visual itself is the explanation. Do not rely on a caption, paragraph, text 
        ok:true,
        image:`data:${out.mime};base64,${out.image}`,
        caption:out.caption,
-       model,
+       model:QWEN_IMAGE_MODEL,
+       provider:"qwen",
+       generationUsage:out.usage,
+       generationRequestId:out.requestId,
        continuity:plan.continuity,
        continuityFallback:Boolean(imageAnchor&&!plan.continuity),
        evidenceGate:{status:grounding.spec.status,topic:grounding.spec.topic,claims:grounding.spec.claims,sources:grounding.sources,quality:grounding.quality},
