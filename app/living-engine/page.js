@@ -25,12 +25,33 @@ function SemanticFallback({experience}){
  </svg>;
 }
 
+async function compactReference(source){
+ if(!String(source||"").startsWith("data:image/"))return "";
+ return new Promise(resolve=>{
+  const img=new Image();
+  img.onload=()=>{
+   try{
+    const width=Math.min(1000,img.naturalWidth||1000);
+    const height=Math.max(1,Math.round((img.naturalHeight||width)*width/(img.naturalWidth||width)));
+    const canvas=document.createElement("canvas");
+    canvas.width=width;canvas.height=height;
+    canvas.getContext("2d").drawImage(img,0,0,width,height);
+    const data=canvas.toDataURL("image/jpeg",0.76);
+    resolve(data.length<2000000?data:"");
+   }catch{resolve("");}
+  };
+  img.onerror=()=>resolve("");
+  img.src=source;
+ });
+}
+
 export default function LivingEngine(){
  const [q,setQ]=useState("كيف تعمل الرئتان؟");
  const [result,setResult]=useState(null);
  const [image,setImage]=useState("");
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState("");
+ const [visualNotice,setVisualNotice]=useState("");
  const [history,setHistory]=useState([]);
 
  function resetWorld(){
@@ -38,6 +59,7 @@ export default function LivingEngine(){
   setImage("");
   setHistory([]);
   setError("");
+  setVisualNotice("");
   setQ("");
  }
 
@@ -47,6 +69,7 @@ export default function LivingEngine(){
   if(!question||loading)return;
   setLoading(true);
   setError("");
+  setVisualNotice("");
   try{
    const previous=result?{
     title:result.title||"",
@@ -86,7 +109,9 @@ export default function LivingEngine(){
 
    let visualImage="";
    let visualModel="semantic-fallback";
+   let imageFailed=false;
    try{
+    const reference=await compactReference(image);
     const im=await fetch("/api/generate-visual",{
      method:"POST",
      headers:{"content-type":"application/json"},
@@ -95,7 +120,7 @@ export default function LivingEngine(){
       context:{
        previousTitle:previous?.title||next.title,
        previousSummary:previous?.summary||next.summary,
-       previousImage:image||""
+       previousImage:reference
       }
      })
     });
@@ -103,8 +128,9 @@ export default function LivingEngine(){
     if(im.ok&&ip?.ok&&String(ip.image||"").startsWith("data:image/")){
      visualImage=ip.image;
      visualModel=ip.model||"generated-image";
-    }
-   }catch{}
+    }else imageFailed=true;
+   }catch{imageFailed=true;}
+   if(imageFailed)setVisualNotice("تعذّر توليد الصورة في هذه المحاولة. يظهر مخطط بديل ويمكنك متابعة الشرح.");
    setResult(next);
    setImage(visualImage);
    setHistory(h=>[...h,{question,title:next.title,image:visualImage,result:next,model:visualModel}].slice(-8));
@@ -146,6 +172,7 @@ export default function LivingEngine(){
 
    {followUp&&<div style={{fontSize:13,opacity:.6,margin:"-6px 4px 12px"}}>السؤال التالي يحتفظ بموضوع البحث وسياقه. استخدم «بحث جديد» عندما تريد الانتقال إلى موضوع آخر.</div>}
    {error&&<div style={{padding:14,border:"1px solid #ff6b6b55",borderRadius:14,color:"#ffb3b3",marginBottom:12}}>{error}</div>}
+   {visualNotice&&<div role="status" style={{fontSize:12,opacity:.8,marginBottom:12}}>{visualNotice}</div>}
 
    {history.length>1&&<div style={{display:"flex",gap:10,overflowX:"auto",padding:"8px 0 20px"}}>
     {history.map((h,i)=><button key={i} onClick={()=>{setImage(h.image);setResult(h.result);setQ("")}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
