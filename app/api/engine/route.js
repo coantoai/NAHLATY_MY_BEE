@@ -175,6 +175,7 @@ export async function POST(request){
    result:adaptGeneralExperience(experience,sourceKind)
   });
  }catch(error){
+  console.error("[NAHLATY_GENERAL_ENGINE_ERROR]",String(error?.message||error));
   return jsonError(
    "تعذر بناء الشرح العام لهذا السؤال الآن.",
    502,

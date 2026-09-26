@@ -44,8 +44,8 @@ export async function GET(request){
  checks.push(followUp);
  const general=await probe("كيف تتكوّن أطوار القمر؟");
  general.kind="open-domain";
- general.providerExpected="gemini-explain-engine";
- general.providerMatched=general.provider==="gemini-explain-engine";
+ general.providerExpected="qwen-explain-engine";
+ general.providerMatched=general.provider==="qwen-explain-engine";
  checks.push(general);
  const passed=checks.every(x=>x.ok&&x.renderPlan&&x.topicMatched&&(x.scene!==null||x.nodes>=3)&&(x.kind!=="open-domain"||x.providerMatched));
  return Response.json({

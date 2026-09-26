@@ -41,13 +41,13 @@ export async function GET(){
  const anchorsPreserved=firstAnchors.length===0||firstAnchors.every(a=>nextAnchors.includes(a));
  const initialPassed=Boolean(
   first.response.ok&&first.payload?.ok&&
-  first.payload?.provider==="gemini-explain-engine"&&
+  first.payload?.provider==="qwen-explain-engine"&&
   firstResult?.verification?.status==="model-generated"&&
   firstResult?.renderPlan&&nodes.length>=3&&edges.length>=1&&steps.length>=1
  );
  const followPassed=Boolean(
   follow.response.ok&&follow.payload?.ok&&
-  follow.payload?.provider==="gemini-explain-engine"&&
+  follow.payload?.provider==="qwen-explain-engine"&&
   followResult?.renderPlan&&
   (followResult?.experience?.sceneGraph?.nodes?.length||0)>=3&&
   anchorsPreserved&&
