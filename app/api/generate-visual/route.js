@@ -1,28 +1,54 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { requestLimit } from "../../lib/requestGuard";
+
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
-export const maxDuration=120;
+export const maxDuration=180;
+
 const API_KEY=process.env.GEMINI_API_KEY||process.env.GOOGLE_API_KEY||process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-const IMAGE_MODEL=process.env.GEMINI_IMAGE_MODEL||"gemini-2.5-flash-image";
+const IMAGE_MODELS=[...new Set([process.env.GEMINI_IMAGE_MODEL,"gemini-3.1-flash-image","gemini-2.5-flash-image"].filter(Boolean))];
+
 export async function POST(req){
+ const blocked=requestLimit(req,{scope:"visual-generation",limit:6,windowMs:60000});
+ if(blocked)return blocked;
  try{
   if(!API_KEY)return NextResponse.json({ok:false,error:"GEMINI_API_KEY is not configured"},{status:503});
   const body=await req.json();
   const question=String(body?.question||"").trim().slice(0,1200);
   const context=body?.context||{};
   if(!question)return NextResponse.json({ok:false,error:"question required"},{status:400});
-  const ai=new GoogleGenAI({apiKey:API_KEY});
+
   const previous=String(context?.previousTitle||"").slice(0,180);
-  const summary=String(context?.previousSummary||"").slice(0,700);
-  const prompt=`Create one premium cinematic educational visual for an interactive visual-understanding engine called My Bee. User question: ${question}. Existing world/topic: ${previous}. Existing explanation: ${summary}. Preserve continuity with the existing world when this is a follow-up. Show the mechanism spatially and clearly, not a poster or dashboard. One dominant focal subject, meaningful depth, clean composition, dark navy cinematic environment with restrained warm honey-gold guidance accents. Anatomical/scientific accuracy where relevant. No UI, no cards, no logos, no decorative text, no watermark. If labels are essential, keep them minimal and in the user's language. The image must help answer the question visually.`;
-  const response=await ai.models.generateContent({model:IMAGE_MODEL,contents:prompt,config:{responseModalities:["TEXT","IMAGE"]}});
-  let image=null,mime="image/png",caption="";
-  for(const part of response?.candidates?.[0]?.content?.parts||[]){
-   if(part?.inlineData?.data){image=part.inlineData.data;mime=part.inlineData.mimeType||mime}
-   else if(part?.text)caption+=part.text;
+  const summary=String(context?.previousSummary||"").slice(0,900);
+  const prompt=`Create exactly one premium cinematic educational visual for an interactive visual-understanding engine called My Bee.
+User question: ${question}
+Existing world/topic: ${previous}
+Existing explanation: ${summary}
+Preserve continuity with the existing world when this is a follow-up. The visual must answer the question spatially. Show mechanism, cause-and-effect, flow, layers, scale, cutaway, or focus only when they improve understanding. One dominant focal subject, meaningful depth, uncluttered composition, scientifically and anatomically accurate where relevant. Deep navy cinematic environment with restrained warm honey-gold guidance accents. No dashboard, UI cards, logo, decorative poster text, or irrelevant objects. Avoid labels unless indispensable; if indispensable keep them very short and in the user's language.`;
+
+  const ai=new GoogleGenAI({apiKey:API_KEY});
+  let lastError=null;
+
+  for(const model of IMAGE_MODELS){
+   try{
+    const response=await ai.models.generateContent({
+     model,
+     contents:prompt,
+     config:{responseModalities:["IMAGE"]}
+    });
+    let image=null,mime="image/png",caption="";
+    for(const part of response?.candidates?.[0]?.content?.parts||[]){
+     if(part?.inlineData?.data){image=part.inlineData.data;mime=part.inlineData.mimeType||mime}
+     else if(part?.text)caption+=part.text;
+    }
+    if(image)return NextResponse.json({ok:true,image:`data:${mime};base64,${image}`,caption:caption.trim(),model});
+    lastError=new Error("Image model returned no image");
+   }catch(error){lastError=error}
   }
-  if(!image)return NextResponse.json({ok:false,error:"Image model returned no image",caption},{status:502});
-  return NextResponse.json({ok:true,image:`data:${mime};base64,${image}`,caption:caption.trim(),model:IMAGE_MODEL});
- }catch(error){return NextResponse.json({ok:false,error:String(error?.message||error)},{status:500})}
+
+  throw lastError||new Error("Visual generation failed");
+ }catch(error){
+  return NextResponse.json({ok:false,error:String(error?.message||error)},{status:500});
+ }
 }
