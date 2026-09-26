@@ -180,8 +180,10 @@ export default function LivingEngine(){
    let visualImage="";
    let visualModel="semantic-fallback";
    let imageFailed=false;
+   let imageError="";
    try{
     const reference=await compactReference(image);
+    if(image&&!reference)throw new Error("تعذر إرسال الصورة السابقة للتعديل.");
     const im=await fetch("/api/generate-visual",{
      method:"POST",
      headers:{"content-type":"application/json"},
@@ -198,15 +200,28 @@ export default function LivingEngine(){
     if(im.ok&&ip?.ok&&String(ip.image||"").startsWith("data:image/")){
      visualImage=ip.image;
      visualModel=ip.model||"generated-image";
-    }else imageFailed=true;
-   }catch{imageFailed=true;}
-   if(imageFailed)setVisualNotice("تعذّر توليد الصورة في هذه المحاولة. يظهر مخطط بديل ويمكنك متابعة الشرح.");
-   setResult(next);
-   setImage(visualImage);
-   setHistory(h=>[...h,{question,title:next.title,image:visualImage,result:next,model:visualModel}].slice(-8));
+    }else{
+     imageFailed=true;
+     imageError=ip?.error||"لم يؤكد فحص الصورة تنفيذ التغيير.";
+    }
+   }catch(e){imageFailed=true;imageError=String(e?.message||e);}
+   if(imageFailed){
+    setVisualNotice("لم يتم تنفيذ التغيير البصري؛ أُبقيت الصورة السابقة دون ادعاء أنها الإجابة الجديدة.");
+   }else{
+    setResult(next);
+    setImage(visualImage);
+   }
+   const done={...pending,title:next.title,image:visualImage,result:next,model:visualModel,
+    status:imageFailed?"visual-failed":"complete",error:imageFailed?imageError:"",updatedAt:Date.now()};
+   setHistory(h=>h.map(t=>t.id===pending.id?done:t));
+   await persist(world,done);
    setQ("");
   }catch(err){
-   setError(String(err?.message||err));
+   const message=String(err?.message||err);
+   const failed={...pending,status:"failed",error:message,updatedAt:Date.now()};
+   setHistory(h=>h.map(t=>t.id===pending.id?failed:t));
+   await persist(world,failed);
+   setError(message);
   }finally{
    setLoading(false);
   }
@@ -217,13 +232,21 @@ export default function LivingEngine(){
  return <main dir="rtl" style={{minHeight:"100vh",background:"radial-gradient(circle at 60% 10%,#182033,#060912 55%)",color:"#f8f3e8",padding:"clamp(14px,3vw,28px)",fontFamily:"system-ui"}}>
   <div style={{maxWidth:1180,margin:"0 auto"}}>
    <header style={{display:"flex",gap:12,justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap"}}>
-    <div><b style={{color:"#e8b84c",fontSize:22}}>نحلتي · MY BEE</b><div style={{opacity:.6,fontSize:12}}>LIVING VISUAL ENGINE · PROOF</div></div>
+    <div><b style={{color:"#e8b84c",fontSize:22}}>نحلتي · MY BEE</b><div style={{opacity:.6,fontSize:12}}>LIVING VISUAL ENGINE · {saving==="saved"?"محفوظ محليًا":saving==="saving"?"جارٍ الحفظ…":saving==="loading"?"تحميل السجل…":"الحفظ غير متاح"}</div></div>
     <div style={{display:"flex",gap:8}}>
-     {followUp&&<button onClick={resetWorld} style={{border:"1px solid #ffffff25",background:"#0d1320",color:"white",padding:"10px 14px",borderRadius:12}}>＋ بحث جديد</button>}
+     {(followUp||selectedId)&&<button onClick={resetWorld} disabled={loading} style={{border:"1px solid #ffffff25",background:"#0d1320",color:"white",padding:"10px 14px",borderRadius:12}}>＋ بحث جديد</button>}
      <a href="/" style={{color:"#e8b84c",padding:"10px 0"}}>النسخة الثابتة ←</a>
     </div>
    </header>
 
+   {worlds.length>0&&<nav aria-label="الرحلات المحفوظة" style={{display:"flex",gap:9,overflowX:"auto",padding:"1px 0 14px",alignItems:"center"}}>
+    <span style={{flexShrink:0,color:"#e8b84c",fontSize:12}}>رحلات محفوظة</span>
+    {worlds.map(w=><button key={w.id} disabled={loading} onClick={()=>restoreWorld(w)}
+     style={{flexShrink:0,maxWidth:240,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",textAlign:"right",
+      padding:"9px 12px",borderRadius:11,border:w.id===selectedId?"1px solid #e8b84c":"1px solid #ffffff30",
+      background:w.id===selectedId?"#302816":"#101725",color:"#f8f3e8",cursor:"pointer"}}>{w.title}</button>)}
+   </nav>}
+   {archiveError&&<div role="alert" style={{padding:"10px 13px",border:"1px solid #e8b84c55",borderRadius:11,marginBottom:12,fontSize:12}}>{archiveError}</div>}
    <section style={{position:"relative",minHeight:"min(66vh,620px)",border:"1px solid #ffffff18",borderRadius:28,overflow:"hidden",background:"#090d16",boxShadow:"0 30px 80px #0008"}}>
     {image
      ?<img src={image} alt={result?.title||"مشهد مولد"} style={{width:"100%",height:"min(66vh,620px)",minHeight:460,objectFit:"cover",display:"block"}}/>
@@ -237,17 +260,17 @@ export default function LivingEngine(){
 
    <form onSubmit={run} style={{display:"flex",gap:10,margin:"16px 0",flexWrap:"wrap"}}>
     <input autoFocus value={q} onChange={e=>setQ(e.target.value)} placeholder={followUp?"اسأل عن أي شيء تراه الآن…":"ما الذي تريد أن تفهمه؟"} style={{flex:"1 1 520px",padding:"18px 20px",borderRadius:18,border:"1px solid #ffffff22",background:"#0d1320",color:"white",fontSize:18,outline:"none"}}/>
-    <button disabled={loading||!q.trim()} style={{padding:"0 26px",minHeight:58,borderRadius:18,border:0,background:"#e8b84c",color:"#111",fontWeight:800,fontSize:16,opacity:loading?.65:1}}>{loading?"يعمل…":followUp?"تعمّق داخل البحث":"ابدأ الفهم"}</button>
+    <button disabled={!ready||loading||!q.trim()} style={{padding:"0 26px",minHeight:58,borderRadius:18,border:0,background:"#e8b84c",color:"#111",fontWeight:800,fontSize:16,opacity:loading?.65:1}}>{loading?"يعمل…":followUp?"تعمّق داخل البحث":"ابدأ الفهم"}</button>
    </form>
 
    {followUp&&<div style={{fontSize:13,opacity:.6,margin:"-6px 4px 12px"}}>السؤال التالي يحتفظ بموضوع البحث وسياقه. استخدم «بحث جديد» عندما تريد الانتقال إلى موضوع آخر.</div>}
    {error&&<div style={{padding:14,border:"1px solid #ff6b6b55",borderRadius:14,color:"#ffb3b3",marginBottom:12}}>{error}</div>}
    {visualNotice&&<div role="status" style={{fontSize:12,opacity:.8,marginBottom:12}}>{visualNotice}</div>}
 
-   {history.length>1&&<div style={{display:"flex",gap:10,overflowX:"auto",padding:"8px 0 20px"}}>
-    {history.map((h,i)=><button key={i} onClick={()=>{setImage(h.image);setResult(h.result);setQ("")}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
+   {history.length>0&&<div style={{display:"flex",gap:10,overflowX:"auto",padding:"8px 0 20px"}}>
+    {history.map((h,i)=><button key={h.id||i} disabled={loading} onClick={()=>{if(h.status==="complete"&&h.result){setImage(h.image);setResult(h.result);setQ("");setVisualNotice("");}}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
      {h.image?<img src={h.image} alt="" style={{width:"100%",height:90,objectFit:"cover",borderRadius:9}}/>:<div style={{width:"100%",height:90,borderRadius:9,display:"grid",placeItems:"center",background:"radial-gradient(circle,#25324b,#0a0f19)",color:"#e8b84c",fontSize:28}}>✦</div>}
-     <small style={{display:"block",marginTop:8,lineHeight:1.4}}>{h.question}</small>
+     <small style={{display:"block",marginTop:8,lineHeight:1.4}}>{h.question}</small><small style={{display:"block",opacity:.55,marginTop:4}}>{h.status==="complete"?"صورة محفوظة":h.status==="processing"?"لم يكتمل":h.status==="visual-failed"?"لم يتغير المشهد":"تعذر التنفيذ"}</small>
     </button>)}
    </div>}
   </div>
