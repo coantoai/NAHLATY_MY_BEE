@@ -92,14 +92,6 @@ function finalizeCurated(result,audience="عام"){
  return {...result,experience,renderPlan:compileVisualPlan(result)};
 }
 
-let previewSmokePromise=null;
-async function previewSmoke(){
- if(!previewSmokePromise)previewSmokePromise=runGeneralExplainEngine("كيف يتكوّن قوس قزح؟",{},"question").then(x=>({
-  ok:true,title:String(x?.title||"").slice(0,100),nodes:x?.sceneGraph?.nodes?.length||0,steps:x?.steps?.length||0
- })).catch(e=>({ok:false,error:String(e?.message||e).slice(0,250)}));
- return previewSmokePromise;
-}
-
 export async function GET(){
  const heart=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
  const solar=curatedKnowledgeResult("كيف تعمل الخلية الشمسية؟");
@@ -117,7 +109,6 @@ export async function GET(){
   model:API_KEY?MODEL:null,
   sourcedKnowledge:["heart",...packs.map(p=>p.id)],
   requestProtection:rateLimitInfo(),
-  previewQwenSmoke:process.env.VERCEL_ENV==="preview"?await previewSmoke():null,
   selfTest:{
    passed:Boolean(
     heart?.topic==="valves"&&
