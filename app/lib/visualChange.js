@@ -1,5 +1,5 @@
 // An editing request must not be interpreted as a request to reproduce the old frame.
-const replacement=/حو[ّ]?ل|تحويل|استبدل|بد[ّ]?ل|غي[ّ]?ر|استبدال|تحو[ّ]?ل|replace|transform|convert|swap|turn (?:it|this) into|change (?:it|this) to/i;
+const replacement=/حوّل|حوِّل|تحويل|استبدل|بد[ّ]?ل|غي[ّ]?ر|استبدال|تحو[ّ]?ل|replace|transform|convert|swap|turn (?:it|this) into|change (?:it|this) to/i;
 const inspection=/داخل|افتح|تكبير|قر[ّ]?ب|اكشف|قطع|مقطع|تفاصيل|محرك|zoom|cutaway|inside|open|explode|x-ray/i;
 const fan=/مروح|fan/i;
 const pedestal=/عمود|عامود|واقف|أرضي|قاعدة|standing|pedestal|tower fan/i;
