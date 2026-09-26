@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { POST as enginePOST } from "../engine/route";
 import { POST as visualPOST } from "../generate-visual/route";
-import { internalRequestHeaders } from "../../lib/requestGuard";
+import { internalRequestHeaders, requestLimit } from "../../lib/requestGuard";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -27,7 +27,9 @@ async function callVisual(headers,question,context){
  return {response,body:await response.json()};
 }
 
-export async function GET(){
+export async function GET(request){
+ const blocked=requestLimit(request,{scope:"living-self-test",limit:2,windowMs:60000});
+ if(blocked)return blocked;
  const started=Date.now();
  try{
   const headers={"content-type":"application/json",...internalRequestHeaders()};
