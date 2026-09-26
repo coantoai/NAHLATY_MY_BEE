@@ -1,0 +1,51 @@
+name: AI Team Coordination Intake
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Existing GitHub issue to coordinate (for example 6)'
+        required: true
+        type: string
+      task:
+        description: 'Instructions for the assigned coding agent'
+        required: true
+        type: string
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  intake:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'ai-team-ready'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record task and limits on the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_INPUT: ${{ inputs.issue_number }}
+          TASK_INPUT: ${{ inputs.task }}
+          EVENT_ISSUE: ${{ github.event.issue.number }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            ISSUE="$ISSUE_INPUT"
+            TASK="$TASK_INPUT"
+          else
+            ISSUE="$EVENT_ISSUE"
+            TASK="Review the issue and its acceptance criteria."
+          fi
+          case "$ISSUE" in *[!0-9]*|'') echo 'Invalid issue number' >&2; exit 1;; esac
+          {
+            echo 'AI-team coordination intake recorded.'
+            echo
+            echo "Task: $TASK"
+            echo
+            echo 'Safety: do not merge, do not modify main, and do not deploy production without explicit owner approval.'
+            echo 'Execution status: queued for a coding agent; this workflow does NOT start Codex or ChatGPT Work.'
+          } > /tmp/ai-team-intake.md
+          gh issue comment "$ISSUE" --repo "$REPO" --body-file /tmp/ai-team-intake.md
