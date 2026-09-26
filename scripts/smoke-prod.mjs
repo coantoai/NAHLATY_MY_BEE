@@ -17,6 +17,10 @@ const root=await text("/");
 assert.equal(root.response.status,200);
 assert.match(root.body,/نحلتي|My Bee|__next/i);
 
+const living=await text("/living-engine");
+assert.equal(living.response.status,200);
+assert.match(living.body,/LIVING VISUAL ENGINE|اسأل عن أي شيء|__next/i);
+
 const health=await json("/api/engine");
 assert.equal(health.response.status,200);
 assert.equal(health.body?.ok,true);
@@ -81,6 +85,7 @@ console.log(JSON.stringify({
  ok:true,
  checks:{
   root:root.response.status,
+  living:living.response.status,
   health:health.body?.version,
   heartSteps:heart.body?.result?.experience?.steps?.length,
   heartAssets:20,
