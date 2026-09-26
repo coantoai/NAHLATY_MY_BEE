@@ -15,10 +15,10 @@ function SemanticFallback({experience}){
   {edges.map((edge,i)=>{
    const a=byId.get(edge.from),b=byId.get(edge.to);
    if(!a||!b)return null;
-   return <g key={edge.id||i}><line x1={Number(a.x)||50} y1={Number(a.y)||50} x2={Number(b.x)||50} y2={Number(b.y)||50} stroke={edge.causal?"#e8b84c":"#7e8ca6"} strokeWidth={edge.causal?1.05:.55} opacity={edge.causal?.9:.5} markerEnd="url(#bee-arrow)"/>{edge.label&&<text x={((Number(a.x)||50)+(Number(b.x)||50))/2} y={((Number(a.y)||50)+(Number(b.y)||50))/2-1.5} fill="#d6d9df" fontSize="2.6" textAnchor="middle">{String(edge.label).slice(0,22)}</text>}</g>;
+   return <g key={edge.id||i}><line x1={Number(a.x)||50} y1={Number(a.y)||50} x2={Number(b.x)||50} y2={Number(b.y)||50} stroke={edge.causal?"#e8b84c":"#7e8ca6"} strokeWidth={edge.causal?1.05:.55} opacity={edge.causal ? .9 : .5} markerEnd="url(#bee-arrow)"/>{edge.label&&<text x={((Number(a.x)||50)+(Number(b.x)||50))/2} y={((Number(a.y)||50)+(Number(b.y)||50))/2-1.5} fill="#d6d9df" fontSize="2.6" textAnchor="middle">{String(edge.label).slice(0,22)}</text>}</g>;
   })}
   {nodes.map((node,i)=><g key={node.id||i} transform={`translate(${Number(node.x)||50} ${Number(node.y)||50})`} filter={node.knowledge==="fact"?"url(#bee-glow)":undefined}>
-   <circle r={node.spatial?7.2:6.2} fill="#111827" stroke={node.knowledge==="fact"?"#e8b84c":"#8a96aa"} strokeWidth={node.knowledge==="fact"?.9:.55}/>
+   <circle r={node.spatial?7.2:6.2} fill="#111827" stroke={node.knowledge==="fact"?"#e8b84c":"#8a96aa"} strokeWidth={node.knowledge==="fact" ? .9 : .55}/>
    <text y="-1" fill="#f6e7bd" fontSize="4.2" textAnchor="middle">{String(node.glyph||"●").slice(0,3)}</text>
    <text y="10" fill="#f7f2e7" fontSize="3.1" textAnchor="middle">{String(node.label||"").slice(0,18)}</text>
   </g>)}
