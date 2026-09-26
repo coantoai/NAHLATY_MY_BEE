@@ -28,7 +28,7 @@ async function probe(question,context={},expectedTopic=null){
  };
 }
 
-function productionGuard(){return process.env.VERCEL_ENV==="production"?Response.json({error:"Not found"},{status:404}):null;}
+function productionGuard(){return process.env.VERCEL_ENV==="production"||process.env.NAHLATY_ENABLE_PAID_PROBES!=="true"?Response.json({error:"Not found"},{status:404}):null;}
 
 export async function GET(request){
  const blocked=productionGuard(); if(blocked)return blocked;

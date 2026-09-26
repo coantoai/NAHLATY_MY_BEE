@@ -28,6 +28,7 @@ async function callVisual(headers,question,context){
 }
 
 export async function GET(request){
+ if(process.env.VERCEL_ENV==="production"||process.env.NAHLATY_ENABLE_PAID_PROBES!=="true")return NextResponse.json({error:"Not found"},{status:404});
  const blocked=requestLimit(request,{scope:"living-self-test",limit:2,windowMs:60000});
  if(blocked)return blocked;
  const started=Date.now();
