@@ -88,14 +88,19 @@ async function generateImage(prompt,anchor){
  const bytes=Buffer.from(await ir.arrayBuffer());
  return {data:`data:${mime};base64,${bytes.toString("base64")}`,usage:p?.usage||null,requestId:p?.request_id||null};
 }
-async function verifyVisual(dataUrl,spec){
- const prompt=`Inspect this educational image against this locked truth specification: ${JSON.stringify(spec)}
-Reject visible factual contradictions: wrong anatomy, reversed flow/arrows, impossible sequence, false labels, unsupported invented detail, or mustNotShow violations.
-Return ONLY JSON {"pass":true|false,"criticalErrors":["..."],"reason":"..."}.`;
- const out=await qwenText([{role:"user",content:[{type:"image_url",image_url:{url:dataUrl}},{type:"text",text:prompt}]}],450);
+async function verifyVisual(dataUrl,spec,anchor=null){
+ const prompt=`Inspect the educational result against this truth specification: ${JSON.stringify(spec)}
+${anchor?"There are TWO images: first = previous world, second = newly generated result. Confirm the original subject/world remains recognizable while the camera or explanatory detail evolves. A different animal, different anatomy, or unrelated visual world fails continuity.":"There is one newly generated image."}
+Reject factual contradictions: wrong anatomy, reversed flow/arrows, impossible sequence, false labels, unsupported invented detail, and mustNotShow violations.
+Return ONLY JSON {"pass":true|false,"continuityPreserved":true|false,"criticalErrors":["..."],"reason":"..."}.
+If only one image is supplied, set continuityPreserved to false; that is not a failure.
+If two images are supplied, set continuityPreserved true only if the underlying world and subject remain coherent.`;
+ const images=anchor?[{type:"image_url",image_url:{url:anchor}},{type:"image_url",image_url:{url:dataUrl}}]:[{type:"image_url",image_url:{url:dataUrl}}];
+ const out=await qwenText([{role:"user",content:[...images,{type:"text",text:prompt}]}],550);
  const verdict=parseJson(out.text);
- if(!verdict||typeof verdict.pass!=="boolean")return {pass:false,criticalErrors:["Invalid verification verdict"],reason:"invalid-verdict",usage:out.usage};
- return {...verdict,usage:out.usage};
+ if(!verdict||typeof verdict.pass!=="boolean")return {pass:false,criticalErrors:["Invalid verification verdict"],reason:"invalid-verdict",continuityPreserved:false,usage:out.usage};
+ if(anchor&&verdict.continuityPreserved!==true)return {pass:false,criticalErrors:[...(Array.isArray(verdict.criticalErrors)?verdict.criticalErrors:[]),"Continuity was not confirmed"],reason:verdict.reason||"continuity-unverified",continuityPreserved:false,usage:out.usage};
+ return {...verdict,continuityPreserved:anchor?verdict.continuityPreserved===true:false,usage:out.usage};
 }
 
 export async function POST(req){
@@ -120,9 +125,9 @@ ${anchor?"Use the reference image as the SAME visual world. Preserve subject ide
 The image itself must explain the idea. Prefer ZERO text. Use composition, cutaway, zoom, transparency, layers, flow, arrows and cause/effect only when licensed by LOCKED TRUTH. Omit uncertain details. Deep navy cinematic environment with restrained honey-gold guidance accents. No dashboard, cards, paragraphs, poster typography or irrelevant objects.`;
   // Cost guard: one image generation per user request. No automatic paid regeneration.
   const out=await generateImage(prompt,anchor);
-  const verdict=await verifyVisual(out.data,truth.spec);
+  const verdict=await verifyVisual(out.data,truth.spec,anchor);
   if(!verdict.pass)return NextResponse.json({ok:false,error:"Visual Truth Gate rejected generated image",visualTruthGate:verdict,provider:"qwen-only"},{status:422});
-  return NextResponse.json({ok:true,image:out.data,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor),generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.sourceEvidence.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
+  return NextResponse.json({ok:true,image:out.data,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.sourceEvidence.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
  }catch(error){
   console.error("[NAHLATY_QWEN_ERROR]",String(error?.message||error));
   return NextResponse.json({ok:false,error:String(error?.message||error)},{status:500});
