@@ -76,11 +76,11 @@ test("all active AI routes use the Qwen client without Gemini imports",()=>{
  const names=["analyze-input","ask-scene","check-invariance","check-understanding","remap-analogy","transfer-test","explain"];
  for(const name of names){
   const code=readFileSync(new URL("../app/api/"+name+"/route.js",import.meta.url),"utf8");
-  assert.doesNotMatch(code,/createGemini|GEMINI_API_KEY|@google\\/genai/);
+  assert.doesNotMatch(code,/createGemini|GEMINI_API_KEY|@google[/]genai/);
   assert.match(code,/DASHSCOPE_API_KEY/);
  }
  const packageJson=readFileSync(new URL("../package.json",import.meta.url),"utf8");
- assert.doesNotMatch(packageJson,/@google\\/genai/);
+ assert.doesNotMatch(packageJson,/@google[/]genai/);
 });
 
 test("pilot security headers are configured without blocking same-origin media input",()=>{
