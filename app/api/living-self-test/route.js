@@ -11,7 +11,7 @@ async function callEngine(headers,question,previous=null){
  const request=new Request("http://internal/api/engine",{
   method:"POST",
   headers,
-  body:JSON.stringify({question,context:{audience:"عام",scene:0,previous}})
+  body:JSON.stringify({question,context:{audience:"عام",...(previous?{previous}:{})}})
  });
  const response=await enginePOST(request);
  return {response,body:await response.json()};
