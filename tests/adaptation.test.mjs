@@ -416,30 +416,33 @@ test("visual scene compiler uses semantic actions for focused objects",()=>{
 });
 
 
-test("Gemini transient capacity errors are retried before failing the explanation", async()=>{
+test("Qwen transient capacity errors are retried before failing the explanation",async()=>{
+ const original=globalThis.fetch;
  let calls=0;
- const ai={models:{generateContent:async()=>{
+ globalThis.fetch=async()=>{
   calls++;
-  if(calls===1){const e=new Error("503 high demand");e.status=503;throw e;}
-  return {text:'{"ok":true}'};
- }}};
- const data=await generateJson(ai,"test",{maxAttempts:2,retryBaseMs:0});
- assert.equal(data.ok,true);
- assert.equal(calls,2);
+  return calls===1
+   ?{ok:false,status:503,json:async()=>({error:{message:"capacity"}})}
+   :{ok:true,status:200,json:async()=>({choices:[{message:{content:'{"ok":true}'}}]})};
+ };
+ try{
+  const data=await generateJson({apiKey:"test"},"test",{maxAttempts:2,retryBaseMs:0});
+  assert.equal(data.ok,true);
+  assert.equal(calls,2);
+ }finally{globalThis.fetch=original;}
 });
 
-test("Gemini permanent errors are not retried", async()=>{
+test("Qwen permanent errors are not retried",async()=>{
+ const original=globalThis.fetch;
  let calls=0;
- const ai={models:{generateContent:async()=>{
-  calls++;
-  const e=new Error("400 bad request");e.status=400;throw e;
- }}};
- await assert.rejects(()=>generateJson(ai,"test",{maxAttempts:3,retryBaseMs:0}));
- assert.equal(calls,1);
- assert.equal(isTransientGenAIError({status:503}),true);
- assert.equal(isTransientGenAIError({status:400}),false);
+ globalThis.fetch=async()=>{calls++;return {ok:false,status:400,json:async()=>({error:{message:"bad request"}})};};
+ try{
+  await assert.rejects(()=>generateJson({apiKey:"test"},"test",{maxAttempts:3,retryBaseMs:0}));
+  assert.equal(calls,1);
+  assert.equal(isTransientGenAIError({status:503}),true);
+  assert.equal(isTransientGenAIError({status:400}),false);
+ }finally{globalThis.fetch=original;}
 });
-
 
 test("plant water path keeps water flowing while the plant grows",()=>{
  const result={
