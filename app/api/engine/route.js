@@ -147,7 +147,8 @@ export async function POST(request){
  if(sourceKind==="content"&&input.length>70000)return jsonError("المحتوى طويل جدًا لهذه النسخة.",422,"CONTENT_TOO_LONG");
 
  const directPack=sourceKind==="question"?curatedKnowledgeResult(input):null;
- const directHeart=sourceKind==="question"?localHeartResult(input):null;
+ const explicitHeartQuestion=/(قلب|heart|صمام|صمامات|أذين|اذين|بطين|تاجي|coronary)/i.test(input);
+ const directHeart=sourceKind==="question"&&explicitHeartQuestion?localHeartResult(input):null;
  const shortFollowUp=sourceKind==="question"&&(/^(ليش|لماذا|كيف|وضح|اشرح|وبعدين|ثم ماذا|شو يعني|ماذا يعني|what|why|how)/i.test(input)||input.length<24);
  const priorPack=shortFollowUp?curatedKnowledgeResultById(context?.previous?.topic):null;
  const hasPriorContext=Boolean(context?.previous&&typeof context.previous==="object");
