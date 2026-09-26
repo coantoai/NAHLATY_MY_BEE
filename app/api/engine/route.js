@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { POST as explainPOST } from "../explain/route";
-import { POST as visualPOST } from "../generate-visual/route";
 import { contextualHeartResult, localHeartResult } from "../../../lib/nahlaty-engine";
 import { compileVisualPlan } from "../../../lib/visual-director";
 import { getExperienceProfile } from "../../lib/experienceProfile";
@@ -9,7 +8,7 @@ import { internalRequestHeaders, rateLimitInfo, requestLimit } from "../../lib/r
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 180;
+export const maxDuration = 120;
 
 const MODEL = process.env.QWEN_TEXT_MODEL || process.env.QWEN_VISION_MODEL || "qwen3-vl-flash";
 const API_KEY = process.env.DASHSCOPE_API_KEY;
@@ -93,23 +92,6 @@ function finalizeCurated(result,audience="عام"){
  return {...result,experience,renderPlan:compileVisualPlan(result)};
 }
 
-let whalePreviewPromise=null;
-async function whalePreviewSmoke(){
- if(!whalePreviewPromise)whalePreviewPromise=(async()=>{
-  const req=new Request("http://nahlaty.local/api/generate-visual",{
-   method:"POST",headers:{"content-type":"application/json",...internalRequestHeaders()},
-   body:JSON.stringify({question:"كيف ترضع أنثى الحوت صغيرها تحت الماء؟",context:{}})
-  });
-  const res=await visualPOST(req);
-  const value=await res.json();
-  return {ok:Boolean(res.ok&&value?.ok),status:res.status,model:value?.model||null,imageBytes:String(value?.image||"").length,
-   evidence:value?.truthGate?.sourceEvidence||null,reviewLevel:value?.truthGate?.reviewLevel||null,
-   visualPassed:value?.visualTruthGate?.pass===true,visualErrors:value?.visualTruthGate?.criticalErrors||null,
-   error:String(value?.error||"").slice(0,280)};
- })().catch(e=>({ok:false,error:String(e?.message||e).slice(0,280)}));
- return whalePreviewPromise;
-}
-
 export async function GET(){
  const heart=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
  const solar=curatedKnowledgeResult("كيف تعمل الخلية الشمسية؟");
@@ -127,7 +109,6 @@ export async function GET(){
   model:API_KEY?MODEL:null,
   sourcedKnowledge:["heart",...packs.map(p=>p.id)],
   requestProtection:rateLimitInfo(),
-  whalePreviewSmoke:process.env.VERCEL_ENV==="preview"?await whalePreviewSmoke():null,
   selfTest:{
    passed:Boolean(
     heart?.topic==="valves"&&
