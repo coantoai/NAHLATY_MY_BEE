@@ -38,7 +38,7 @@ export default function LivingEngine(){
    const ex=await fetch("/api/engine",{
     method:"POST",
     headers:{"content-type":"application/json"},
-    body:JSON.stringify({question,context:{audience:"عام",...(previous?{previous}:{})...(Number.isInteger(previous?.scene)?{scene:previous.scene}:{})}})
+    body:JSON.stringify({question,context:{audience:"عام",...(previous?{previous}:{}),...(Number.isInteger(previous?.scene)?{scene:previous.scene}:{})}})
    });
    const ep=await ex.json();
    if(!ex.ok||!ep?.ok)throw new Error(ep?.error?.message||"تعذر فهم السؤال");
