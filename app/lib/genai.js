@@ -2,7 +2,7 @@ export const QWEN_MODEL=process.env.QWEN_TEXT_MODEL||process.env.QWEN_VISION_MOD
 const BASE=(process.env.DASHSCOPE_BASE_URL||"https://dashscope-intl.aliyuncs.com").replace(/\/$/,"");
 const ENDPOINT=`${BASE}/compatible-mode/v1/chat/completions`;
 
-export function createGemini(apiKey=process.env.DASHSCOPE_API_KEY){
+export function createQwen(apiKey=process.env.DASHSCOPE_API_KEY){
  if(!apiKey)return null;
  return {apiKey,provider:"qwen"};
 }
