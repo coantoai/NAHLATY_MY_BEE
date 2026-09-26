@@ -554,3 +554,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @keyframes causalArrowPulse{50%{transform:translateX(-4px);opacity:.72}}
 @media(max-width:760px){.causalFocusStrip{grid-template-columns:1fr;gap:7px}.causalBridge{grid-template-columns:auto 1fr auto;place-items:center;text-align:right}.causalBridge i{transform:rotate(-90deg);animation:none}.libraryContinue{grid-template-columns:auto 1fr}.libraryContinue>button{grid-column:1/-1;width:100%}.threeKnowledgeLegend{inset:7px 7px auto auto}.threeKnowledgeLegend span{font-size:7px;padding:3px 5px}}
 @media(prefers-reduced-motion:reduce){.causalBridge i{animation:none!important}}
+
+/* Small, non-interactive deployment marker for the Issue #6 E2E smoke test. */
+.e2eSmokeBadge{position:fixed;z-index:9999;bottom:14px;left:14px;display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid rgba(127,211,168,.32);border-radius:999px;background:rgba(8,13,18,.9);box-shadow:0 8px 24px rgba(0,0,0,.28);color:#b9c4c0;font:700 10px/1 system-ui,sans-serif;letter-spacing:.04em;backdrop-filter:blur(10px);pointer-events:none}.e2eSmokeBadge span{display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:rgba(127,211,168,.14);color:#7fd3a8;font-size:10px}
+@media(max-width:780px){.e2eSmokeBadge{bottom:76px;left:10px;padding:6px 8px}}
