@@ -10,8 +10,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
-const API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const MODEL = process.env.QWEN_TEXT_MODEL || process.env.QWEN_VISION_MODEL || "qwen3-vl-flash";
+const API_KEY = process.env.DASHSCOPE_API_KEY;
 
 function jsonError(message,status=400,code="BAD_REQUEST"){
  return NextResponse.json({ok:false,error:{code,message}},{status});
@@ -105,7 +105,7 @@ export async function GET(){
   version:"engine-v2",
   architecture:"question-context-knowledge-verification-visual-director-scene",
   providerConfigured:Boolean(API_KEY),
-  provider:API_KEY?"gemini":"curated-only",
+  provider:API_KEY?"qwen":"curated-only",
   model:API_KEY?MODEL:null,
   sourcedKnowledge:["heart",...packs.map(p=>p.id)],
   requestProtection:rateLimitInfo(),
@@ -170,7 +170,7 @@ export async function POST(request){
   const experience=await runGeneralExplainEngine(input,context,sourceKind);
   return NextResponse.json({
    ok:true,
-   provider:"gemini-explain-engine",
+   provider:"qwen-explain-engine",
    model:MODEL,
    result:adaptGeneralExperience(experience,sourceKind)
   });
