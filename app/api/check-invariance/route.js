@@ -1,4 +1,4 @@
-import { createGemini, generateJson } from "../../lib/genai";
+import { createQwen, generateJson } from "../../lib/genai";
 import { requestLimit } from "../../lib/requestGuard";
 
 const cut=(v,n=500)=>String(v||"").slice(0,n);
@@ -13,7 +13,7 @@ export async function POST(req){
   const anchors=(Array.isArray(truthAnchors)?truthAnchors:[]).slice(0,6).map(x=>cut(x,220)).filter(Boolean);
   const focus=node?{id:cut(node?.id,40),label:cut(node?.label,80),detail:cut(node?.detail,220)}:null;
 
-  const key=process.env.GEMINI_API_KEY;
+  const key=process.env.DASHSCOPE_API_KEY;
   if(!key){
    const words=new Set(answer.toLowerCase().split(/\s+/).filter(x=>x.length>3));
    const hits=anchors.filter(a=>a.toLowerCase().split(/\s+/).some(w=>w.length>3&&words.has(w))).length;
@@ -26,7 +26,7 @@ export async function POST(req){
    });
   }
 
-  const ai=createGemini(key);
+  const ai=createQwen(key);
   const prompt=`أنت تقيّم فهم "الثابت عبر التمثيلات"، لا جودة الكتابة.
 الموضوع: ${cut(title,140)}
 العنصر الذي سبّب الالتباس إن وجد: ${JSON.stringify(focus)}

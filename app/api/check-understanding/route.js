@@ -1,4 +1,4 @@
-import { createGemini, generateJson } from "../../lib/genai";
+import { createQwen, generateJson } from "../../lib/genai";
 import { requestLimit } from "../../lib/requestGuard";
 
 const safeText=(v,n=500)=>String(v||"").slice(0,n);
@@ -12,7 +12,7 @@ export async function POST(req){
   const cleanNodes=(Array.isArray(nodes)?nodes:[]).slice(0,8).map(n=>({id:safeText(n?.id,40),label:safeText(n?.label,80),detail:safeText(n?.detail,180)}));
   const ids=new Set(cleanNodes.map(n=>n.id));
   const cleanEdges=(Array.isArray(edges)?edges:[]).slice(0,12).map(e=>({from:safeText(e?.from,40),to:safeText(e?.to,40),label:safeText(e?.label,80)})).filter(e=>ids.has(e.from)&&ids.has(e.to));
-  const key=process.env.GEMINI_API_KEY;
+  const key=process.env.DASHSCOPE_API_KEY;
 
   if(!key){
    const lower=safeText(response,1200).toLowerCase();
@@ -21,14 +21,14 @@ export async function POST(req){
    return Response.json({
     mode:"demo",
     status:coveredNodeIds.length>=Math.max(1,Math.ceil(cleanNodes.length*.6))?"partial":"needs_work",
-    feedback:"تم فحص المصطلحات الأساسية محلياً. أضف GEMINI_API_KEY للحصول على تقييم دلالي أعمق.",
+    feedback:"تم فحص المصطلحات الأساسية محلياً. أضف DASHSCOPE_API_KEY للحصول على تقييم دلالي أعمق.",
     coveredNodeIds,missingNodeIds,
     nextHint:missingNodeIds.length?"حاول ربط العناصر ببعضها وشرح لماذا ينتقل الأثر من عنصر للذي يليه.":"حاول الآن شرح السبب والنتيجة بدون الرجوع للمشهد.",
     remedyMode:experience?.id==="child"?"concrete":experience?.id==="senior"?"direct":experience?.id==="educator"?"teachback":experience?.id==="expert"?"causal":"visual"
    });
   }
 
-  const ai=createGemini(key);
+  const ai=createQwen(key);
   const prompt=`أنت مقيّم فهم، لا مقيّم أسلوب كتابة. عنوان الشرح: ${safeText(title,160)}.\nسياسة تجربة المتعلم: ${JSON.stringify(experience||{})}.
 هذه عناصر المشهد: ${JSON.stringify(cleanNodes)}
 وهذه العلاقات: ${JSON.stringify(cleanEdges)}

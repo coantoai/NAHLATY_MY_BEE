@@ -1,4 +1,4 @@
-import { createGemini, generateJson } from "../../lib/genai";
+import { createQwen, generateJson } from "../../lib/genai";
 import { requestLimit } from "../../lib/requestGuard";
 
 const cut=(v,n=500)=>String(v||"").slice(0,n);
@@ -13,7 +13,7 @@ export async function POST(req){
   const ids=new Set(cleanNodes.map(n=>n.id));
   const cleanEdges=(Array.isArray(edges)?edges:[]).slice(0,12).map(e=>({id:cut(e?.id,40),from:cut(e?.from,40),to:cut(e?.to,40),label:cut(e?.label,80)})).filter(e=>ids.has(e.from)&&ids.has(e.to));
   const edgeIds=new Set(cleanEdges.map(e=>e.id));
-  const key=process.env.GEMINI_API_KEY;
+  const key=process.env.DASHSCOPE_API_KEY;
 
   if(!key){
    return Response.json({
@@ -21,11 +21,11 @@ export async function POST(req){
     label:`تشبيه بـ ${cut(target,40)}`,
     nodes:cleanNodes.map(n=>({id:n.id,label:`${cut(target,18)}: ${n.label}`,glyph:"✦",detail:n.detail,limit:"هذا تشبيه تجريبي فقط ولا يطابق كل خصائص العنصر."})),
     edges:cleanEdges.map(e=>({id:e.id,label:e.label})),
-    breaks:[{nodeId:cleanNodes[0]?.id||"",text:"النسخة التجريبية لا تقيم حدود التشبيه دلالياً بدون GEMINI_API_KEY."}]
+    breaks:[{nodeId:cleanNodes[0]?.id||"",text:"النسخة التجريبية لا تقيم حدود التشبيه دلالياً بدون DASHSCOPE_API_KEY."}]
    });
   }
 
-  const ai=createGemini(key);
+  const ai=createQwen(key);
   const prompt=`أنت تبني جسراً معرفياً بين مفهوم جديد وشيء مألوف للمستخدم.
 الموضوع الأصلي: ${cut(title,160)}
 العالم المألوف المطلوب: ${cut(target,160)}

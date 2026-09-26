@@ -1,4 +1,4 @@
-import { createGemini, generateJson } from "../../lib/genai";
+import { createQwen, generateJson } from "../../lib/genai";
 import { deriveTransferEdgeIds } from "../../lib/transferEvidence";
 import { requestLimit } from "../../lib/requestGuard";
 
@@ -19,7 +19,7 @@ export async function POST(req){
   })).filter(e=>ids.has(e.from)&&ids.has(e.to));
   if(cleanNodes.length<2) return Response.json({error:"المشهد يحتاج عنصرين على الأقل"},{status:400});
 
-  const key=process.env.GEMINI_API_KEY;
+  const key=process.env.DASHSCOPE_API_KEY;
   if(!key){
    const answer=cleanNodes[Math.min(1,cleanNodes.length-1)];
    return Response.json({
@@ -32,11 +32,11 @@ export async function POST(req){
     choiceNodeIds:cleanNodes.map(n=>n.id).slice(0,4),
     answerNodeId:answer.id,
     testedEdgeIds:deriveTransferEdgeIds(cleanEdges,[],answer.id),
-    explanation:"النسخة التجريبية تحفظ الهوية البنيوية فقط. فعّل GEMINI_API_KEY لبناء سياق نقل دلالي كامل."
+    explanation:"النسخة التجريبية تحفظ الهوية البنيوية فقط. فعّل DASHSCOPE_API_KEY لبناء سياق نقل دلالي كامل."
    });
   }
 
-  const ai=createGemini(key);
+  const ai=createQwen(key);
   const prompt=`أنت تبني اختبار "نقل فهم" لاختبار ما إذا كان المستخدم فهم البنية والسببية، لا الكلمات.
 الموضوع الأصلي: ${cut(title,160)}
 العناصر الأصلية: ${JSON.stringify(cleanNodes)}

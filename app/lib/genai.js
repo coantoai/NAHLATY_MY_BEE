@@ -30,7 +30,7 @@ export async function generateJson(ai,prompt,{maxAttempts=3,retryBaseMs=400}={})
 }
 export async function generateText(ai,contents,{maxAttempts=3,retryBaseMs=400}={}){
  let last;
- const content=typeof contents==="string"?contents:JSON.stringify(contents);
+ const content=typeof contents==="string"?contents:Array.isArray(contents)?contents.map(part=>part?.inlineData&&String(part.inlineData.mimeType||"").startsWith("image/")?{type:"image_url",image_url:{url:`data:${part.inlineData.mimeType};base64,${part.inlineData.data}`}}:part?.text?{type:"text",text:String(part.text)}:{type:"text",text:JSON.stringify(part)}):JSON.stringify(contents);
  for(let n=1;n<=Math.max(1,maxAttempts);n++)try{return await call(ai,content,{maxTokens:1800});}catch(e){last=e;if(!isTransientGenAIError(e)||n>=maxAttempts)throw e;await sleep(retryBaseMs*n);}
  throw last;
 }

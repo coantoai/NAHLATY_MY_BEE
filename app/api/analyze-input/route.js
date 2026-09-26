@@ -1,4 +1,4 @@
-import { createGemini, generateText } from "../../lib/genai";
+import { createQwen, generateText } from "../../lib/genai";
 import { requestLimit } from "../../lib/requestGuard";
 
 export const maxDuration = 120;
@@ -29,11 +29,12 @@ export async function POST(req){
    return Response.json({content:text,sourceName:name,mimeType:mime,kind:"text"});
   }
 
-  const key=process.env.GEMINI_API_KEY;
-  if(!key) return Response.json({error:"تحليل الصور وPDF يحتاج GEMINI_API_KEY في هذه النسخة."},{status:503});
+  const key=process.env.DASHSCOPE_API_KEY;
+  if(!key) return Response.json({error:"تحليل الصور وPDF يحتاج DASHSCOPE_API_KEY في هذه النسخة."},{status:503});
 
+  if(mime==="application/pdf")return Response.json({error:"قراءة PDF غير مفعّلة بعد في مسار Qwen. استخدم صورة PNG/JPG أو ملفًا نصيًا.",code:"PDF_QWEN_UNAVAILABLE"},{status:422});
   const bytes=Buffer.from(await file.arrayBuffer()).toString("base64");
-  const ai=createGemini(key);
+  const ai=createQwen(key);
   const fileKind=kindOf(mime);
   const instruction=fileKind==="pdf"
    ?`اقرأ هذا الـPDF كوثيقة بصرية كاملة، لا كاستخراج نص فقط. حوّله إلى مادة دقيقة جاهزة لمحرك شرح بصري تفاعلي. حافظ على: العنوان والموضوع، المفاهيم الرئيسية، التعريفات، التسلسل، السبب والنتيجة، المقارنات، الأرقام المهمة، وما توضحه الجداول والرسومات والصور. لا تخترع شيئاً غير موجود. إذا كان شيء غير واضح اذكر أنه غير واضح. اكتب بالعربية نصاً منظماً ومكثفاً، لكن لا تختصر لدرجة تفقد العلاقات المهمة. عندما تستطيع تحديد الصفحة بثقة، ضع مرجعاً بالشكل [صفحة N] بجانب المعلومة المرتبطة بها. لا تخمّن رقم الصفحة.`
