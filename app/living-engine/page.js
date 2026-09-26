@@ -1,5 +1,6 @@
 "use client";
-import {useState} from "react";
+import {useEffect,useRef,useState} from "react";
+import {listTurns,listWorlds,makeId,storeTurn} from "../lib/livingHistory";
 
 
 function SemanticFallback({experience}){
@@ -53,11 +54,73 @@ export default function LivingEngine(){
  const [error,setError]=useState("");
  const [visualNotice,setVisualNotice]=useState("");
  const [history,setHistory]=useState([]);
+ const [worlds,setWorlds]=useState([]);
+ const [selectedId,setSelectedId]=useState("");
+ const [ready,setReady]=useState(false);
+ const [saving,setSaving]=useState("loading");
+ const [archiveError,setArchiveError]=useState("");
+ const worldRef=useRef(null);
+
+ useEffect(()=>{
+  let active=true;
+  (async()=>{
+   try{
+    const saved=await listWorlds();
+    if(!active)return;
+    setWorlds(saved);
+    if(saved.length){
+     const turns=await listTurns(saved[0].id);
+     if(!active)return;
+     worldRef.current=saved[0];
+     setSelectedId(saved[0].id);
+     setHistory(turns);
+     const last=[...turns].reverse().find(t=>t.status==="complete"&&t.result);
+     if(last){setResult(last.result);setImage(last.image||"");}
+    }
+    setSaving("saved");
+   }catch(error){
+    if(active){setSaving("unavailable");setArchiveError("التخزين المحلي غير متاح في هذا المتصفح. لا تغلق الصفحة إذا أردت الاحتفاظ بالتجربة الحالية.");}
+   }finally{if(active)setReady(true);}
+  })();
+  return ()=>{active=false;};
+ },[]);
+
+ async function persist(world,turn){
+  try{
+   setSaving("saving");
+   await storeTurn(world,turn);
+   setSaving("saved");
+   setArchiveError("");
+   setWorlds(await listWorlds());
+  }catch(error){
+   setSaving("unavailable");
+   setArchiveError("لم ينجح حفظ هذه التجربة على الجهاز. تحقق من مساحة التخزين أو إعدادات المتصفح.");
+  }
+ }
+
+ async function restoreWorld(world){
+  if(loading)return;
+  try{
+   const turns=await listTurns(world.id);
+   worldRef.current=world;
+   setSelectedId(world.id);
+   setHistory(turns);
+   const last=[...turns].reverse().find(t=>t.status==="complete"&&t.result);
+   setResult(last?.result||null);
+   setImage(last?.image||"");
+   setQ("");
+   setError("");
+   setVisualNotice("");
+  }catch(error){setArchiveError("تعذرت استعادة الرحلة المحفوظة.");}
+ }
+
 
  function resetWorld(){
   setResult(null);
   setImage("");
   setHistory([]);
+  worldRef.current=null;
+  setSelectedId("");
   setError("");
   setVisualNotice("");
   setQ("");
@@ -66,10 +129,17 @@ export default function LivingEngine(){
  async function run(e){
   e?.preventDefault?.();
   const question=q.trim();
-  if(!question||loading)return;
+  if(!question||loading||!ready)return;
   setLoading(true);
   setError("");
   setVisualNotice("");
+  const createdAt=Date.now();
+  const world=worldRef.current||{id:makeId(),title:question.slice(0,110),createdAt,updatedAt:createdAt};
+  worldRef.current=world;
+  setSelectedId(world.id);
+  const pending={id:makeId(),worldId:world.id,createdAt,question,title:question,status:"processing",image:"",result:null,model:""};
+  setHistory(h=>[...h,pending]);
+  await persist(world,pending);
   try{
    const previous=result?{
     title:result.title||"",
