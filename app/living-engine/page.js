@@ -65,7 +65,8 @@ export default function LivingEngine(){
      question,
      context:{
       previousTitle:previous?.title||next.title,
-      previousSummary:previous?.summary||next.summary
+      previousSummary:previous?.summary||next.summary,
+      previousImage:image||""
      }
     })
    });
