@@ -12,6 +12,29 @@ const BASE=(process.env.DASHSCOPE_BASE_URL||"https://dashscope-intl.aliyuncs.com
 const IMAGE_ENDPOINT=`${BASE}/api/v1/services/aigc/multimodal-generation/generation`;
 const CHAT_ENDPOINT=`${BASE}/compatible-mode/v1/chat/completions`;
 
+function curatedVisualEvidence(question,previous){
+ const subject=`${question} ${previous}`;
+ if(/(حوت|حيتان|whale)/i.test(subject)&&/(رضع|رضاعة|حليب|لبن|nurs|milk)/i.test(subject))return {
+  topic:"whale-nursing",
+  source:"https://sanctuaries.noaa.gov/news/mar20/new-research-humpback-whale-nursing-behavior.html",
+  facts:["A humpback calf nurses underwater with its mouth at the mother's mammary slit on the underside of her body.","The mother and calf align during feeding. A calf must surface separately to breathe air."],
+  forbid:["Milk from a blowhole or mouth","A humanlike external breast on the whale","The calf nursing from the mother's head"]
+ };
+ if(/(قلب|صمام|بطين|أذين|heart|ventric|valve)/i.test(subject))return {
+  topic:"heart-flow",
+  source:"https://www.nhlbi.nih.gov/health/heart/blood-flow",
+  facts:["Oxygen-poor blood moves from the body through the right heart to the lungs.","Oxygen-rich blood returns from the lungs through the left heart and exits via the aorta.","Heart valves prevent backward flow."],
+  forbid:["Reversing the physiological direction of blood flow","Exchanging the roles of the right and left heart","A valve that pumps instead of regulating one-way flow"]
+ };
+ if(/(رئة|رئتان|الرئتين|حويصل|تنفس|lung|alveol)/i.test(subject))return {
+  topic:"lung-gas-exchange",
+  source:"https://www.nhlbi.nih.gov/health/lungs/breathing-benefits",
+  facts:["Inhaled air travels through the trachea and branching airways to alveoli.","Oxygen diffuses from alveoli into surrounding capillary blood; carbon dioxide diffuses from blood into alveoli.","Contraction of the diaphragm during inhalation expands the chest cavity."],
+  forbid:["Oxygen arrows from blood into alveolar air as the main uptake pathway","Carbon dioxide arrows from inhaled air into blood as the main elimination pathway","Treating alveoli as blood vessels"]
+ };
+ return null;
+}
+
 function imageAnchor(value){
  const raw=String(value||"");
  return raw.startsWith("data:image/")&&raw.includes(";base64,")&&raw.length<=10000000?raw:null;
@@ -30,10 +53,12 @@ async function qwenText(messages,max_tokens=900){
  return {text:p?.choices?.[0]?.message?.content||"",usage:p?.usage||null};
 }
 async function buildTruthSpec(question,previous,summary){
+ const reference=curatedVisualEvidence(question,previous);
  const prompt=`You are NAHLATY's scientific truth gate. Build a conservative visual truth specification for an educational image. Do not invent uncertain facts.
 Question: ${question}
 Previous topic: ${previous}
 Previous context: ${summary}
+${reference?`CURATED SOURCE CONSTRAINTS: ${JSON.stringify(reference)}. Follow these reference-backed constraints. Do not imply all other claims are externally verified.`:"No curated source for this topic: do not imply external verification."}
 Return ONLY JSON:
 {"status":"VERIFIED|PARTIAL|UNKNOWN","topic":"...","claims":[{"claim":"...","status":"VERIFIED|UNCERTAIN","importance":"critical|supporting"}],"mustShow":["..."],"mustNotShow":["..."],"uncertainties":["..."]}
 Use established scientific knowledge. If a critical detail is uncertain, mark it uncertain and prohibit depicting it.`;
@@ -42,7 +67,7 @@ Use established scientific knowledge. If a critical detail is uncertain, mark it
  if(!spec||!Array.isArray(spec.claims))throw new Error("Qwen Truth Gate returned invalid specification");
  if(spec.status==="UNKNOWN")throw new Error("Qwen Truth Gate blocked generation: truth unresolved");
  if(!spec.claims.some(c=>c?.importance==="critical"&&c?.status==="VERIFIED"))throw new Error("Qwen Truth Gate blocked generation: no verified critical claim");
- return {spec,usage:out.usage};
+ return {spec:{...spec,sourceEvidence:reference},usage:out.usage};
 }
 async function generateImage(prompt,anchor){
  const content=[];
@@ -97,7 +122,7 @@ The image itself must explain the idea. Prefer ZERO text. Use composition, cutaw
   const out=await generateImage(prompt,anchor);
   const verdict=await verifyVisual(out.data,truth.spec);
   if(!verdict.pass)return NextResponse.json({ok:false,error:"Visual Truth Gate rejected generated image",visualTruthGate:verdict,provider:"qwen-only"},{status:422});
-  return NextResponse.json({ok:true,image:out.data,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor),generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
+  return NextResponse.json({ok:true,image:out.data,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor),generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.sourceEvidence.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
  }catch(error){
   console.error("[NAHLATY_QWEN_ERROR]",String(error?.message||error));
   return NextResponse.json({ok:false,error:String(error?.message||error)},{status:500});
