@@ -29,6 +29,7 @@ export default function LivingEngine(){
     summary:result.summary||"",
     domain:result.engineMeta?.domain||"",
     topic:result.engineMeta?.topic||"",
+    scene:Number.isInteger(result.engineMeta?.scene)?result.engineMeta.scene:null,
     truthAnchors:result.truthAnchors||[],
     causalRelations:(result.sceneGraph?.edges||[]).filter(x=>x.causal).slice(0,8),
     sceneGraph:{nodes:(result.sceneGraph?.nodes||[]).slice(0,10).map(n=>({id:n.id,label:n.label}))}
@@ -37,7 +38,7 @@ export default function LivingEngine(){
    const ex=await fetch("/api/engine",{
     method:"POST",
     headers:{"content-type":"application/json"},
-    body:JSON.stringify({question,context:{audience:"عام",...(previous?{previous}:{})}})
+    body:JSON.stringify({question,context:{audience:"عام",...(previous?{previous}:{})...(Number.isInteger(previous?.scene)?{scene:previous.scene}:{})}})
    });
    const ep=await ex.json();
    if(!ex.ok||!ep?.ok)throw new Error(ep?.error?.message||"تعذر فهم السؤال");
@@ -53,6 +54,7 @@ export default function LivingEngine(){
      model:ep.model,
      domain:engine.domain,
      topic:engine.topic,
+     scene:Number.isInteger(engine.scene)?engine.scene:null,
      confidence:engine.confidence
     },
     verification:engine.verification
