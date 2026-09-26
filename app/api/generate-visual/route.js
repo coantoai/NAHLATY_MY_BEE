@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requestLimit } from "../../lib/requestGuard";
+import { visualChangePlan } from "../../lib/visualChange";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -52,12 +53,13 @@ async function qwenText(messages,max_tokens=900){
  if(!r.ok)throw new Error(p?.error?.message||p?.message||`Qwen verification failed (${r.status})`);
  return {text:p?.choices?.[0]?.message?.content||"",usage:p?.usage||null};
 }
-async function buildTruthSpec(question,previous,summary){
+async function buildTruthSpec(question,previous,summary,changePlan){
  const reference=curatedVisualEvidence(question,previous);
  const prompt=`You are NAHLATY's scientific truth gate. Build a conservative visual truth specification for an educational image. Do not invent uncertain facts.
 Question: ${question}
 Previous topic: ${previous}
 Previous context: ${summary}
+Visual change contract: ${JSON.stringify(changePlan)}
 ${reference?`CURATED SOURCE CONSTRAINTS: ${JSON.stringify(reference)}. Follow these reference-backed constraints. Do not imply all other claims are externally verified.`:"No curated source for this topic: do not imply external verification."}
 Return ONLY JSON:
 {"status":"VERIFIED|PARTIAL|UNKNOWN","topic":"...","claims":[{"claim":"...","status":"VERIFIED|UNCERTAIN","importance":"critical|supporting"}],"mustShow":["..."],"mustNotShow":["..."],"uncertainties":["..."]}
@@ -88,18 +90,22 @@ async function generateImage(prompt,anchor){
  const bytes=Buffer.from(await ir.arrayBuffer());
  return {data:`data:${mime};base64,${bytes.toString("base64")}`,usage:p?.usage||null,requestId:p?.request_id||null};
 }
-async function verifyVisual(dataUrl,spec,anchor=null){
+async function verifyVisual(dataUrl,spec,anchor=null,changePlan={}){
  const prompt=`Inspect the educational result against this truth specification: ${JSON.stringify(spec)}
-${anchor?"There are TWO images: first = previous world, second = newly generated result. Confirm the original subject/world remains recognizable while the camera or explanatory detail evolves. A different animal, different anatomy, or unrelated visual world fails continuity.":"There is one newly generated image."}
+The user-requested visual change contract is: ${JSON.stringify(changePlan)}
+Make a direct before/after comparison. A scene with the old subject unchanged must FAIL, even if it is otherwise beautiful and scientifically plausible. For example, a request to change a ceiling fan into a freestanding pedestal fan FAILS if the result still has a ceiling fan. Do not confuse preserving palette with preserving the old object.
+${anchor?"There are TWO images: first = previous world, second = newly generated result. Confirm the original subject/world remains recognizable while the camera or explanatory detail evolves. A different animal, different anatomy, or unrelated visual world fails continuity except when a subject replacement is explicitly requested; in that case preserve only the unaffected visual setting and style.":"There is one newly generated image."}
 Reject factual contradictions: wrong anatomy, reversed flow/arrows, impossible sequence, false labels, unsupported invented detail, and mustNotShow violations.
-Return ONLY JSON {"pass":true|false,"continuityPreserved":true|false,"criticalErrors":["..."],"reason":"..."}.
+Return ONLY JSON {"pass":true|false,"continuityPreserved":true|false,"changeFulfilled":true|false,"criticalErrors":["..."],"reason":"..."}.
+Set changeFulfilled=true only if a meaningful, visible answer to the current question appears in the NEW image. For an explicit replacement, verify every required change and every forbidden old object.
 If only one image is supplied, set continuityPreserved to false; that is not a failure.
-If two images are supplied, set continuityPreserved true only if the underlying world and subject remain coherent.`;
+If two images are supplied, set continuityPreserved true if the unchanged context and style remain coherent; when mode=replace, the replaced object MUST change. If changeFulfilled is false, pass MUST be false.`;
  const images=anchor?[{type:"image_url",image_url:{url:anchor}},{type:"image_url",image_url:{url:dataUrl}}]:[{type:"image_url",image_url:{url:dataUrl}}];
  const out=await qwenText([{role:"user",content:[...images,{type:"text",text:prompt}]}],550);
  const verdict=parseJson(out.text);
  if(!verdict||typeof verdict.pass!=="boolean")return {pass:false,criticalErrors:["Invalid verification verdict"],reason:"invalid-verdict",continuityPreserved:false,usage:out.usage};
  if(anchor&&verdict.continuityPreserved!==true)return {pass:false,criticalErrors:[...(Array.isArray(verdict.criticalErrors)?verdict.criticalErrors:[]),"Continuity was not confirmed"],reason:verdict.reason||"continuity-unverified",continuityPreserved:false,usage:out.usage};
+ if(anchor&&verdict.changeFulfilled!==true)return {pass:false,criticalErrors:[...(Array.isArray(verdict.criticalErrors)?verdict.criticalErrors:[]),"User-requested visual change was not verified"],reason:"change-not-fulfilled",continuityPreserved:true,changeFulfilled:false,usage:out.usage};
  return {...verdict,continuityPreserved:anchor?verdict.continuityPreserved===true:false,usage:out.usage};
 }
 
@@ -115,19 +121,22 @@ export async function POST(req){
   const previous=String(context?.previousTitle||"").slice(0,180);
   const summary=String(context?.previousSummary||"").slice(0,900);
   const anchor=imageAnchor(context?.previousImage);
-  const truth=await buildTruthSpec(question,previous,summary);
+  const changePlan=visualChangePlan(question,previous,Boolean(anchor));
+  const truth=await buildTruthSpec(question,previous,summary,changePlan);
   const prompt=`Create exactly one premium cinematic educational visual for My Bee.
 User question: ${question}
 Existing topic: ${previous}
 Existing context: ${summary}
 LOCKED TRUTH: ${JSON.stringify(truth.spec)}
-${anchor?"Use the reference image as the SAME visual world. Preserve subject identity, spatial relationships, palette and lighting; evolve only what the follow-up requires.":"Create a coherent visual world that can evolve through follow-up questions."}
-The image itself must explain the idea. Prefer ZERO text. Use composition, cutaway, zoom, transparency, layers, flow, arrows and cause/effect only when licensed by LOCKED TRUTH. Omit uncertain details. Deep navy cinematic environment with restrained honey-gold guidance accents. No dashboard, cards, paragraphs, poster typography or irrelevant objects.`;
+VISUAL EDIT CONTRACT: ${JSON.stringify(changePlan)}
+Must satisfy EVERY required visual change. The resulting image must visibly answer the latest user request, not repeat the last frame.
+${anchor?"${changePlan.continuity} Give overriding priority to required changes and forbidden elements. A ceiling-mounted object MUST be removed if replaced by a floor-standing object.":"Create a coherent visual world that can evolve through follow-up questions."}
+The image itself must explain the idea. Use ZERO text, lettering or pseudo-lettering of any language; never invent word-like marks. Use composition, cutaway, zoom, transparency, layers, flow, arrows and cause/effect only when licensed by LOCKED TRUTH. Omit uncertain details. Deep navy cinematic environment with restrained honey-gold guidance accents. No dashboard, cards, paragraphs, poster typography or irrelevant objects.`;
   // Cost guard: one image generation per user request. No automatic paid regeneration.
   const out=await generateImage(prompt,anchor);
-  const verdict=await verifyVisual(out.data,truth.spec,anchor);
-  if(!verdict.pass)return NextResponse.json({ok:false,error:"Visual Truth Gate rejected generated image",visualTruthGate:verdict,provider:"qwen-only"},{status:422});
-  return NextResponse.json({ok:true,image:out.data,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.sourceEvidence.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
+  const verdict=await verifyVisual(out.data,truth.spec,anchor,changePlan);
+  if(!verdict.pass)return NextResponse.json({ok:false,error:verdict.reason==="change-not-fulfilled"?"لم يتغير المشهد وفق طلبك؛ أُبقيت الصورة السابقة.":"لم تجتز الصورة فحص الدقة أو الاستمرارية.",visualTruthGate:verdict,provider:"qwen-only"},{status:422});
+  return NextResponse.json({ok:true,image:out.data,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,visualChange:{mode:changePlan.mode,changeFulfilled:verdict.changeFulfilled===true,required:changePlan.required},generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.sourceEvidence.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
  }catch(error){
   console.error("[NAHLATY_QWEN_ERROR]",String(error?.message||error));
   return NextResponse.json({ok:false,error:String(error?.message||error)},{status:500});
