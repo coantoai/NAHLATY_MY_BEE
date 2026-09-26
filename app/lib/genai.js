@@ -21,20 +21,34 @@ export function isTransientGenAIError(error){
 
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
-export async function generateJson(ai,prompt,{maxAttempts=3,retryBaseMs=450}={}){
+export async function generateJson(ai,prompt,{maxAttempts=4,retryBaseMs=450}={}){
  let lastError=null;
- for(let attempt=1;attempt<=Math.max(1,maxAttempts);attempt++){
+ const attempts=Math.max(1,maxAttempts);
+ for(let attempt=1;attempt<=attempts;attempt++){
   try{
    const response=await ai.models.generateContent({
     model:GEMINI_MODEL,
-    contents:prompt,
+    contents:attempt===1?prompt:`${prompt}\n\nIMPORTANT RETRY: Return one complete, strictly valid JSON object only. Use double quotes for every key and string. Do not use comments, trailing commas, markdown fences, or text before/after the JSON.`,
     config:{responseMimeType:"application/json"}
    });
    const raw=String(response.text||"").replace(/```json|```/g,"").trim();
-   return JSON.parse(raw);
+   if(!raw) throw new SyntaxError("Empty JSON response");
+   try{
+    return JSON.parse(raw);
+   }catch(parseError){
+    const repaired=raw
+     .replace(/,\s*([}\]])/g,"$1")
+     .replace(/[\u201C\u201D]/g,'"')
+     .replace(/[\u2018\u2019]/g,"'");
+    if(repaired!==raw){
+     try{return JSON.parse(repaired);}catch{}
+    }
+    throw parseError;
+   }
   }catch(error){
    lastError=error;
-   if(!isTransientGenAIError(error)||attempt>=maxAttempts) throw error;
+   const retryable=isTransientGenAIError(error)||error instanceof SyntaxError;
+   if(!retryable||attempt>=attempts) throw error;
    const base=Math.max(0,retryBaseMs);
    const jitter=base?Math.floor(Math.random()*120):0;
    await sleep(base*(2**(attempt-1))+jitter);
