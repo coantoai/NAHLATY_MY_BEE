@@ -47,7 +47,7 @@ async function compactReference(source){
 }
 
 export default function LivingEngine(){
- const [q,setQ]=useState("كيف تعمل الرئتان؟");
+ const [q,setQ]=useState("");
  const [result,setResult]=useState(null);
  const [image,setImage]=useState("");
  const [loading,setLoading]=useState(false);
@@ -96,6 +96,21 @@ export default function LivingEngine(){
    setSaving("unavailable");
    setArchiveError("لم ينجح حفظ هذه التجربة على الجهاز. تحقق من مساحة التخزين أو إعدادات المتصفح.");
   }
+ }
+
+ async function exportArchive(){
+  try{
+   const saved=await listWorlds();
+   const full=await Promise.all(saved.map(async world=>({world,turns:await listTurns(world.id)})));
+   const payload={format:"nahlaty-visual-journal-v1",createdAt:new Date().toISOString(),worlds:full};
+   const blob=new Blob([JSON.stringify(payload)],{type:"application/json"});
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement("a");
+   a.href=url;
+   a.download="nahlaty-visual-archive.json";
+   document.body.appendChild(a);a.click();a.remove();
+   URL.revokeObjectURL(url);
+  }catch(error){setArchiveError("تعذر تصدير الأرشيف. تحقق من مساحة الجهاز والتخزين.");}
  }
 
  async function restoreWorld(world){
@@ -235,6 +250,7 @@ export default function LivingEngine(){
     <div><b style={{color:"#e8b84c",fontSize:22}}>نحلتي · MY BEE</b><div style={{opacity:.6,fontSize:12}}>LIVING VISUAL ENGINE · {saving==="saved"?"محفوظ محليًا":saving==="saving"?"جارٍ الحفظ…":saving==="loading"?"تحميل السجل…":"الحفظ غير متاح"}</div></div>
     <div style={{display:"flex",gap:8}}>
      {(followUp||selectedId)&&<button onClick={resetWorld} disabled={loading} style={{border:"1px solid #ffffff25",background:"#0d1320",color:"white",padding:"10px 14px",borderRadius:12}}>＋ بحث جديد</button>}
+     {worlds.length>0&&<button disabled={loading} onClick={exportArchive} style={{border:"1px solid #ffffff25",background:"#0d1320",color:"white",padding:"10px 14px",borderRadius:12}}>نسخة احتياطية ↓</button>}
      <a href="/" style={{color:"#e8b84c",padding:"10px 0"}}>النسخة الثابتة ←</a>
     </div>
    </header>
@@ -246,6 +262,7 @@ export default function LivingEngine(){
       padding:"9px 12px",borderRadius:11,border:w.id===selectedId?"1px solid #e8b84c":"1px solid #ffffff30",
       background:w.id===selectedId?"#302816":"#101725",color:"#f8f3e8",cursor:"pointer"}}>{w.title}</button>)}
    </nav>}
+   <div style={{fontSize:11,opacity:.55,marginBottom:12}}>الحفظ على هذا المتصفح فقط؛ لم نفعّل المزامنة بالإيميل بعد. للتنقّل بين الأجهزة استخدم النسخة الاحتياطية.</div>
    {archiveError&&<div role="alert" style={{padding:"10px 13px",border:"1px solid #e8b84c55",borderRadius:11,marginBottom:12,fontSize:12}}>{archiveError}</div>}
    <section style={{position:"relative",minHeight:"min(66vh,620px)",border:"1px solid #ffffff18",borderRadius:28,overflow:"hidden",background:"#090d16",boxShadow:"0 30px 80px #0008"}}>
     {image
