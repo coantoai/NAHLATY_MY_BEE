@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { POST as explainPOST } from "../explain/route";
+import { POST as visualPOST } from "../generate-visual/route";
 import { contextualHeartResult, localHeartResult } from "../../../lib/nahlaty-engine";
 import { compileVisualPlan } from "../../../lib/visual-director";
 import { getExperienceProfile } from "../../lib/experienceProfile";
@@ -8,7 +9,7 @@ import { internalRequestHeaders, rateLimitInfo, requestLimit } from "../../lib/r
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 180;
 
 const MODEL = process.env.QWEN_TEXT_MODEL || process.env.QWEN_VISION_MODEL || "qwen3-vl-flash";
 const API_KEY = process.env.DASHSCOPE_API_KEY;
@@ -92,6 +93,35 @@ function finalizeCurated(result,audience="عام"){
  return {...result,experience,renderPlan:compileVisualPlan(result)};
 }
 
+let heartContinuityPromise=null;
+async function heartContinuitySmoke(){
+ if(!heartContinuityPromise)heartContinuityPromise=(async()=>{
+  const started=Date.now();
+  const call=async(question,context={})=>{
+   const request=new Request("http://nahlaty.local/api/generate-visual",{
+    method:"POST",headers:{"content-type":"application/json",...internalRequestHeaders()},
+    body:JSON.stringify({question,context})
+   });
+   const res=await visualPOST(request);
+   return {status:res.status,body:await res.json()};
+  };
+  const first=await call("كيف يعمل القلب؟");
+  const summarize=x=>({ok:Boolean(x.status===200&&x.body?.ok),status:x.status,model:x.body?.model||null,
+   bytes:String(x.body?.image||"").length,source:x.body?.truthGate?.sourceEvidence?.source||null,
+   review:x.body?.truthGate?.reviewLevel||null,continuity:x.body?.continuity===true,
+   visualPassed:x.body?.visualTruthGate?.pass===true,visualErrors:x.body?.visualTruthGate?.criticalErrors||null,
+   error:String(x.body?.error||"").slice(0,280)});
+  if(!first.body?.ok)return {first:summarize(first),followUp:null,elapsedMs:Date.now()-started};
+  const next=await call("ادخل إلى القلب وأظهر كيف تمنع الصمامات رجوع الدم",{
+   previousTitle:"كيف يعمل القلب؟",
+   previousSummary:"الدورة الدموية: ينتقل الدم من الجسم إلى القلب الأيمن ثم إلى الرئتين ويعود إلى القلب الأيسر ثم إلى الجسم.",
+   previousImage:first.body.image
+  });
+  return {first:summarize(first),followUp:summarize(next),elapsedMs:Date.now()-started};
+ })().catch(e=>({ok:false,error:String(e?.message||e).slice(0,280)}));
+ return heartContinuityPromise;
+}
+
 export async function GET(){
  const heart=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
  const solar=curatedKnowledgeResult("كيف تعمل الخلية الشمسية؟");
@@ -109,6 +139,7 @@ export async function GET(){
   model:API_KEY?MODEL:null,
   sourcedKnowledge:["heart",...packs.map(p=>p.id)],
   requestProtection:rateLimitInfo(),
+  heartContinuitySmoke:process.env.VERCEL_ENV==="preview"?await heartContinuitySmoke():null,
   selfTest:{
    passed:Boolean(
     heart?.topic==="valves"&&
