@@ -16,7 +16,7 @@ const {
 }=await importSource("../lib/nahlaty-engine.js");
 
 const { compileVisualPlan }=await importSource("../lib/visual-director.js");
-const { curatedKnowledgeResult, listCuratedKnowledgePacks }=await importSource("../lib/knowledge-packs.js");
+const { curatedKnowledgeResult, curatedKnowledgeResultById, listCuratedKnowledgePacks }=await importSource("../lib/knowledge-packs.js");
 
 test("valve question maps to curated valve scene",()=>{
   const r=localHeartResult("كيف تمنع صمامات القلب رجوع الدم؟");
@@ -94,4 +94,12 @@ test("priority knowledge packs are sourced and routable",()=>{
     assert.ok(r.experience.sceneGraph.nodes.length>=4);
   }
   assert.equal(listCuratedKnowledgePacks().length,4);
+});
+
+test("a sourced follow-up opens the visual step that answers it",()=>{
+  const electrons=curatedKnowledgeResultById("solar-cell","ليش تتحرك الإلكترونات؟");
+  const current=curatedKnowledgeResultById("solar-cell","كيف يتحول هذا إلى تيار كهربائي؟");
+
+  assert.equal(electrons.experience.initialStep,1);
+  assert.equal(current.experience.initialStep,2);
 });

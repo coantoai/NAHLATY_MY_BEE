@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {visualChangePlan} from "../app/lib/visualChange.js";
+import {buildImagePrompt} from "../app/lib/imagePrompt.js";
 import {readFileSync} from "node:fs";
 
 test("a ceiling fan must be replaced, not preserved, when user asks for a pedestal fan",()=>{
@@ -45,6 +46,10 @@ test("living journey stores full turns in IndexedDB, not transient-only state",(
 test("visual result must pass a change-fulfilment review before it is shown",()=>{
  const route=readFileSync(new URL("../app/api/generate-visual/route.js",import.meta.url),"utf8");
  assert.match(route,/verdict\.changeFulfilled!==true/);
- assert.match(route,/changePlan\.continuity/);
+ const plan=visualChangePlan("حوّل المروحة السقفية إلى مروحة عمودية على الأرض","مروحة سقفية",true);
+ const imagePrompt=buildImagePrompt({visualBrief:"A freestanding pedestal fan stands on the floor, its motor housing open."},plan,true);
+ assert.match(imagePrompt,/Replace the requested subject visibly/);
+ assert.doesNotMatch(imagePrompt,/geometry lock|VISUAL EDIT CONTRACT/);
+ assert.match(route,/buildImagePrompt\(truth\.spec,changePlan,Boolean\(anchor\)\)/);
  assert.match(route,/change-not-fulfilled/);
 });
