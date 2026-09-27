@@ -28,5 +28,8 @@ These were discovered/classified in Point 1 and must return at their appropriate
 - Moderation before launch
 - Batch processing for large non-interactive evaluation workloads
 
+
+## Approved visual R&D carry-forward (2026-09-27)
+Read hybrid-visual-world-lab.md. The core interactive-world promise and economical hybrid motion direction are approved for investigation, NOT a completed implementation. Prototype the bee-pollination continuity proof in a separate LAB. Bring verified results into Points 6/7/8 and cost/reuse evidence into Point 10; include scenarios in Point 12. Do not delay the existing Work execution path or silently redefine a CLOSED point.
 ## Closure rule
 Every point needs an explicit Definition of Done and evidence. Do not mark CLOSED based on intention or documentation alone when the point requires working product behavior.
