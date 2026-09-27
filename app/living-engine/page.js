@@ -59,7 +59,8 @@ export default function LivingEngine(){
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState("");
  const [visualNotice,setVisualNotice]=useState("");
- const [activeStep,setActiveStep]=useState(0);\n const [showSemanticOverlay,setShowSemanticOverlay]=useState(false);
+ const [activeStep,setActiveStep]=useState(0);
+ const [showSemanticOverlay,setShowSemanticOverlay]=useState(false);
  const [history,setHistory]=useState([]);
  const [worlds,setWorlds]=useState([]);
  const [selectedId,setSelectedId]=useState("");
