@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {listTurns,listWorlds,makeId,storeTurn} from "../lib/livingHistory";
-import {initialVisualStep,resolveVisualOutcome,visualGenerationNeeded} from "../lib/visualOutcome";
+import {initialVisualStep,resolveVisualOutcome,sceneCaption,visualGenerationNeeded} from "../lib/visualOutcome";
 
 
 function SemanticFallback({experience,activeStep=0}){
@@ -13,6 +13,7 @@ function SemanticFallback({experience,activeStep=0}){
  const byId=new Map(nodes.map(n=>[n.id,n]));
  if(!nodes.length)return <div style={{height:"min(66vh,620px)",minHeight:460,display:"grid",placeItems:"center",padding:30,textAlign:"center",background:"radial-gradient(circle at 50% 45%,#172235 0%,#090d16 68%)"}}><div><div style={{fontSize:64,color:"#e8b84c"}}>✦</div><div style={{opacity:.55,fontSize:14}}>VISUAL UNDERSTANDING</div></div></div>;
  return <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-label={experience?.title||"مشهد بصري"} style={{width:"100%",height:"min(66vh,620px)",minHeight:460,display:"block",background:"radial-gradient(circle at 50% 45%,#172235 0%,#090d16 68%)"}}>
+  <style>{`@keyframes semantic-flow{to{stroke-dashoffset:-8}} .semantic-flow{stroke-dasharray:3 2;animation:semantic-flow 1.4s linear infinite}@media(prefers-reduced-motion:reduce){.semantic-flow{animation:none}}`}</style>
   <defs>
    <marker id="bee-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#e8b84c"/></marker>
    <filter id="bee-glow"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -20,13 +21,14 @@ function SemanticFallback({experience,activeStep=0}){
   {edges.map((edge,i)=>{
    const a=byId.get(edge.from),b=byId.get(edge.to);
    if(!a||!b)return null;
-   return <g key={edge.id||i}><line x1={Number(a.x)||50} y1={Number(a.y)||50} x2={Number(b.x)||50} y2={Number(b.y)||50} stroke={activeEdges.has(edge.id)?"#ffd96e":edge.causal?"#e8b84c":"#7e8ca6"} strokeWidth={activeEdges.has(edge.id)?1.6:edge.causal?1.05:.55} opacity={activeEdges.has(edge.id)?1:edge.causal?.9:.5} markerEnd="url(#bee-arrow)"/>{edge.causal&&edge.label&&<text x={((Number(a.x)||50)+(Number(b.x)||50))/2} y={((Number(a.y)||50)+(Number(b.y)||50))/2-1.5} fill="#d6d9df" fontSize="2.4" textAnchor="middle">{String(edge.label).split(/\s+/).slice(0,3).join(" ")}</text>}</g>;
+   return <g key={edge.id||i}><line className={activeEdges.has(edge.id)?"semantic-flow":undefined} x1={Number(a.x)||50} y1={Number(a.y)||50} x2={Number(b.x)||50} y2={Number(b.y)||50} stroke={activeEdges.has(edge.id)?"#ffd96e":edge.causal?"#e8b84c":"#7e8ca6"} strokeWidth={activeEdges.has(edge.id)?1.6:edge.causal?1.05:.55} opacity={activeEdges.has(edge.id)?1:edge.causal?.55:.35} markerEnd="url(#bee-arrow)"/>{activeEdges.has(edge.id)&&edge.label&&<text x={((Number(a.x)||50)+(Number(b.x)||50))/2} y={((Number(a.y)||50)+(Number(b.y)||50))/2-2} fill="#f8e7b6" fontSize="2.3" textAnchor="middle">{String(edge.label).split(/\s+/).slice(0,2).join(" ")}</text>}</g>;
   })}
   {nodes.map((node,i)=><g key={node.id||i} transform={`translate(${Number(node.x)||50} ${Number(node.y)||50})`} filter={node.knowledge==="fact"?"url(#bee-glow)":undefined}>
    <circle r={node.spatial?7.2:6.2} fill="#111827" stroke={focused.has(node.id)?"#fff0ad":node.knowledge==="fact"?"#e8b84c":"#8a96aa"} strokeWidth={focused.has(node.id)?1.6:node.knowledge==="fact" ? .9 : .55} opacity={focused.size&&!focused.has(node.id)?.55:1}/>
    <text y="-1" fill="#f6e7bd" fontSize="4.2" textAnchor="middle">{String(node.glyph||"●").slice(0,3)}</text>
    <text y="10" fill="#f7f2e7" fontSize="2.9" textAnchor="middle">{String(node.label||"").split(/\s+/).slice(0,3).join(" ")}</text>
   </g>)}
+  {sceneCaption(step)&&<g><rect x="7" y="85" width="86" height="11" rx="2" fill="#080e19" opacity=".88"/><text x="50" y="91.8" textAnchor="middle" fill="#f8e9bf" fontSize="2.6">{sceneCaption(step)}</text></g>}
  </svg>;
 }
 
