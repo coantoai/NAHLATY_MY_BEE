@@ -1,3 +1,7 @@
+export function visualGenerationNeeded(provider){
+ return provider!=="sourced-knowledge";
+}
+
 export function resolveVisualOutcome({previousResult,previousImage,nextResult,generatedImage,imageFailed}){
  if(!imageFailed){
   return {shownResult:nextResult,shownImage:generatedImage,status:"complete",notice:""};
