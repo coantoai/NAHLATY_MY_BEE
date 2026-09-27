@@ -79,7 +79,7 @@ async function generateImage(prompt,anchor){
  const r=await fetch(IMAGE_ENDPOINT,{method:"POST",headers:{"content-type":"application/json","authorization":`Bearer ${API_KEY}`},body:JSON.stringify({
   model:IMAGE_MODEL,
   input:{messages:[{role:"user",content}]},
-  parameters:{prompt_extend:false,n:1,size:"1536*1024",watermark:false,negative_prompt:"dashboard, UI cards, poster, title card, paragraph text, decorative typography, watermark, logo, inaccurate anatomy, reversed arrows, invented labels"}
+  parameters:{prompt_extend:false,n:1,size:"2048*1280",watermark:false,negative_prompt:"dashboard, UI cards, poster, title card, paragraph text, decorative typography, watermark, logo, inaccurate anatomy, reversed arrows, invented labels"}
  })});
  const p=await r.json().catch(()=>({}));
  if(!r.ok||p?.code)throw new Error(p?.message||`Qwen Image failed (${r.status})`);
