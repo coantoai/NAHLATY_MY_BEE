@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {resolveVisualOutcome} from "../app/lib/visualOutcome.js";
+import {resolveVisualOutcome,visualGenerationNeeded} from "../app/lib/visualOutcome.js";
+
+test("sourced knowledge can complete the visual journey without a paid image request",()=>{
+ assert.equal(visualGenerationNeeded("sourced-knowledge"),false);
+ assert.equal(visualGenerationNeeded("qwen-explain-engine"),true);
+});
 
 test("initial image failure retains the new explanatory graph as a usable turn",()=>{
  const graph={title:"القلب",sceneGraph:{nodes:[{id:"heart"}],edges:[]},steps:[{title:"النبض"}]};
