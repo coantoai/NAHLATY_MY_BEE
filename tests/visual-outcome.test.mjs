@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {resolveVisualOutcome,visualGenerationNeeded} from "../app/lib/visualOutcome.js";
+import {initialVisualStep,resolveVisualOutcome,visualGenerationNeeded} from "../app/lib/visualOutcome.js";
+
+test("a focused follow-up opens the relevant visual stage, not the overview",()=>{
+ assert.equal(initialVisualStep({initialStep:3,steps:Array.from({length:10},(_,i)=>({title:String(i)}))}),3);
+ assert.equal(initialVisualStep({initialStep:99,steps:[{title:"single"}]}),0);
+});
 
 test("sourced knowledge can complete the visual journey without a paid image request",()=>{
  assert.equal(visualGenerationNeeded("sourced-knowledge"),false);
