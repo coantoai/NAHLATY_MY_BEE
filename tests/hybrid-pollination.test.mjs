@@ -14,7 +14,7 @@ test("the same world and bee persist through every visual state", () => {
     assert.equal(scene.step, i + 1);
   }
   assert.equal(scene.flowerTwo.pollenReceived, true);
-  assert.equal(scene.flowerTwo.seedDevelopment, true);
+  assert.equal(scene.flowerTwo.postPollinationProcess, true);
   assert.equal(world, POLLINATION_WORLD_ID);
 });
 
