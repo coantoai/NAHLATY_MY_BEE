@@ -42,3 +42,14 @@ Point 8 meaningful 2.5D/vector/3D motion, camera, zoom, cutaway and interactive 
 Point 10 latency, cost controls, caching and asset reuse.
 Point 12 diverse tests of visual truth, UX and cost.
 This LAB runs on its own preview/branch; it must not stall the main BUILD → LAUNCH path. Promote only after the proof gates, with any material architecture/provider change requiring an owner Decision Gate.
+
+
+## Implementation checkpoint — 2026-09-27
+- Isolated branch: lab/hybrid-bee-pollination.
+- Draft PR: https://github.com/coantoai/NAHLATY_MY_BEE/pull/10, targeted to nahlaty-build-orchestrator; NOT merged.
+- Route: /hybrid-bee-lab; authored SVG botanical world + transparent semantic bee/pollen overlays.
+- Stable bee/world identities; step selection and bee/flower hotspots; blocked-versus-allowed pollen transfer via simple Arabic follow-up intent fixture. This is a limited deterministic authored demo, NOT general AI continuity or Qwen photorealistic compositing.
+- GitHub CI run https://github.com/coantoai/NAHLATY_MY_BEE/actions/runs/36325450376 succeeded: 72/72 tests, Next build and production smoke. Next built /hybrid-bee-lab.
+- Vercel branch preview READY at https://nahlaty-my-j8jkjzlvi-coantoai-9460.vercel.app/hybrid-bee-lab . Preview's direct external inspection returned login_required, so visual/browser interaction is UNVERIFIED. A verified preview build is not proof of UX quality.
+- No paid Qwen/GPU generation was performed by this prototype.
+- Next: interactive browser QA with authorized preview access; test real cinematic-image-plus-alpha compositing, perspective/occlusion and visual quality, then compare real cost/latency. No automatic promotion to Work's current main execution branch.
