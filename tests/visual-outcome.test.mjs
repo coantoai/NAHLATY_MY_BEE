@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {initialVisualStep,resolveVisualOutcome,visualGenerationNeeded} from "../app/lib/visualOutcome.js";
+import {initialVisualStep,resolveVisualOutcome,sceneCaption,visualGenerationNeeded} from "../app/lib/visualOutcome.js";
+
+test("scene caption stays short enough to fit inside the visual stage",()=>{
+ assert.equal(sceneCaption({text:"  تنتقل الطاقة عبر الخلية الشمسية.  "}),"تنتقل الطاقة عبر الخلية الشمسية.");
+ assert.ok(sceneCaption({text:"شرح بصري طويل ".repeat(12)}).length<=53);
+});
 
 test("a focused follow-up opens the relevant visual stage, not the overview",()=>{
  assert.equal(initialVisualStep({initialStep:3,steps:Array.from({length:10},(_,i)=>({title:String(i)}))}),3);
