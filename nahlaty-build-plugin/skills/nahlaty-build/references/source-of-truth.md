@@ -36,3 +36,8 @@ Current image-generation direction: Qwen Image 3.0 Standard.
 Gemini is not a current dependency/default.
 Do not exceed the agreed Qwen spend ceiling of USD 10 without explicit owner approval.
 Do not destroy or silently replace a working version during experiments.
+
+## Approved experiential direction (2026-09-27)
+The user should be able to look inside a subject, interact with its meaningful parts, change causal conditions, and continue discovery within the SAME recognizable visual world. This is a product direction, not evidence that the full capability has been implemented.
+
+Hybrid visual rendering (cinematic still + composited transparent reusable motion assets / animated vector / interactive 3D; video only when justified) is an approved direction for R&D. Its specific renderer, economic advantage, and quality still require proof. See hybrid-visual-world-lab.md. Keep implementation in an isolated LAB until proven.
