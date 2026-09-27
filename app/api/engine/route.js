@@ -150,7 +150,7 @@ export async function POST(request){
  const explicitHeartQuestion=/(قلب|heart|صمام|صمامات|أذين|اذين|بطين|تاجي|coronary)/i.test(input);
  const directHeart=sourceKind==="question"&&explicitHeartQuestion?localHeartResult(input):null;
  const shortFollowUp=sourceKind==="question"&&(/^(ليش|لماذا|كيف|وضح|اشرح|وبعدين|ثم ماذا|شو يعني|ماذا يعني|what|why|how)/i.test(input)||input.length<24);
- const priorPack=shortFollowUp?curatedKnowledgeResultById(context?.previous?.topic):null;
+ const priorPack=shortFollowUp?curatedKnowledgeResultById(context?.previous?.topic,input):null;
  const hasPriorContext=Boolean(context?.previous&&typeof context.previous==="object");
  const heartContext=sourceKind==="question"&&hasPriorContext&&!priorPack?contextualHeartResult(input,context):null;
  const sourced=directPack||directHeart||priorPack||heartContext;
