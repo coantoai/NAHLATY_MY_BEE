@@ -25,7 +25,7 @@ test("a counterfactual follow-up changes pollen transfer without rebuilding the 
   assert.equal(blocked.step, 3);
   assert.equal(blocked.flowerTwo.pollenReceived, false);
   assert.equal(blocked.bee.pollenOnLegs, true);
-  assert.equal(pollinationTransition(blocked, "NEXT").flowerTwo.seedDevelopment, false);
+  assert.equal(pollinationTransition(blocked, "NEXT").flowerTwo.postPollinationProcess, false);
   assert.equal(pollinationTransition(blocked, "ALLOW_TRANSFER").flowerTwo.pollenReceived, true);
 });
 
