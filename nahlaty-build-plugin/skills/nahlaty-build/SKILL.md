@@ -10,6 +10,7 @@ Use this skill whenever work changes, reviews, tests, deploys, or plans NAHLATY 
 Before acting, read:
 - references/source-of-truth.md
 - references/master-plan.md
+- references/hybrid-visual-world-lab.md (approved visual R&D direction; LAB, not automatic replacement of the current engine)
 - references/execution-rules.md
 
 ## Operating loop
