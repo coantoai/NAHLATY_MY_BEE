@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "nahlaty-build",
+  "version": "0.1.0",
+  "description": "Shared execution doctrine and build workflow for NAHLATY / MY BEE across ChatGPT Work and Codex."
+}
