@@ -2,6 +2,11 @@ export function visualGenerationNeeded(provider){
  return provider!=="sourced-knowledge";
 }
 
+export function initialVisualStep(experience){
+ const index=experience?.initialStep;
+ return Number.isInteger(index)&&index>=0&&index<(experience?.steps?.length||0)?index:0;
+}
+
 export function resolveVisualOutcome({previousResult,previousImage,nextResult,generatedImage,imageFailed}){
  if(!imageFailed){
   return {shownResult:nextResult,shownImage:generatedImage,status:"complete",notice:""};
