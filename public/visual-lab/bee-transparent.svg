@@ -27,8 +27,6 @@
 <circle cx="-52" cy="-14" r="2.3" fill="#fff5d8"/>
 <path d="M-45 -22 Q-56 -43 -74 -42 M-32 -24 Q-35 -47 -25 -50" stroke="#32251f" stroke-width="2.6" fill="none" stroke-linecap="round"/>
 <path d="M-19 20 Q-24 35 -36 40 M-2 28 Q3 42 -5 46 M22 23 Q29 37 25 44" fill="none" stroke="#463126" stroke-width="3" stroke-linecap="round"/>
-<g fill="#f7ce6b" filter="url(#aura)">
- <circle cx="-37" cy="41" r="6"/><circle cx="-33" cy="37" r="3"/><circle cx="-3" cy="48" r="4"/>
-</g>
+
 </g>
 </svg>
