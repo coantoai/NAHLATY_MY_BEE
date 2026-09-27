@@ -5,7 +5,7 @@ export function buildImagePrompt(spec,changePlan={},hasReference=false){
  if(!brief||brief.length>900||INTERNAL_TERMS.test(brief))throw new Error('Unsafe visual brief');
  const cloudScene=/(?:سحب|سحابة|ركامي|cumulus|cumulonimbus|cloud)/i.test(String(spec?.topic||''));
  const subjectGuard=cloudScene
-  ?'Depict atmospheric water-vapor cloud development above sun-warmed land: a broad diffuse low cloud base, natural rising humid air and condensation within the sky. This is meteorology, with no eruption, smoke column, ash, fire, explosion or mushroom cloud.'
+  ?'Depict atmospheric cloud formation in one continuous spatial scene: sunlight warms the ground; subtle translucent amber streamlines of humid air rise from a broad surface area; higher up they cool into tiny visible condensation droplets at the flat cloud base, then gather into several natural cauliflower-shaped cumulus towers. Keep these cause-and-effect stages simultaneously visible through light, depth and flow, rather than showing only a mature cloud. This is meteorology, with no eruption, smoke column, ash, fire, explosion or mushroom cloud.'
   :'';
  const continuity=hasReference
   ?changePlan?.mode==='replace'
