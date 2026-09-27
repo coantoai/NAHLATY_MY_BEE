@@ -2,11 +2,12 @@
   "name": "my-bee-visual-explainer",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-default-type=module --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "next": "14.2.35",

@@ -13,5 +13,5 @@ export const viewport={
 };
 
 export default function Layout({children}){
- return <html lang="ar" dir="rtl"><body>{children}</body></html>;
+ return <html lang="ar" dir="rtl"><body>{children}<div className="e2eSmokeBadge" data-e2e-smoke="issue-6" aria-label="اختبار التكامل رقم 6"><span aria-hidden="true">✓</span> E2E · #6</div></body></html>;
 }
