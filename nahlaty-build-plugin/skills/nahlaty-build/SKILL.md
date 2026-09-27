@@ -11,6 +11,7 @@ Before acting, read:
 - references/source-of-truth.md
 - references/master-plan.md
 - references/hybrid-visual-world-lab.md (approved visual R&D direction; LAB, not automatic replacement of the current engine)
+- references/visual-production-ideas-2026-09-27.md (verified R&D ideas, NOW/LAB/LATER; no silent vendor or product change)
 - references/execution-rules.md
 
 ## Operating loop
