@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {listTurns,listWorlds,makeId,storeTurn} from "../lib/livingHistory";
-import {resolveVisualOutcome,visualGenerationNeeded} from "../lib/visualOutcome";
+import {initialVisualStep,resolveVisualOutcome,visualGenerationNeeded} from "../lib/visualOutcome";
 
 
 function SemanticFallback({experience,activeStep=0}){
@@ -80,7 +80,7 @@ export default function LivingEngine(){
      setSelectedId(saved[0].id);
      setHistory(turns);
      const last=[...turns].reverse().find(t=>t.status==="complete"&&t.result);
-     if(last){setResult(last.result);setImage(last.image||"");setActiveStep(0);}
+     if(last){setResult(last.result);setImage(last.image||"");setActiveStep(initialVisualStep(last.result));}
     }
     setSaving("saved");
    }catch(error){
@@ -128,7 +128,7 @@ export default function LivingEngine(){
    const last=[...turns].reverse().find(t=>t.status==="complete"&&t.result);
    setResult(last?.result||null);
    setImage(last?.image||"");
-   setActiveStep(0);
+   setActiveStep(initialVisualStep(last?.result));
    setQ("");
    setError("");
    setVisualNotice("");
@@ -235,7 +235,7 @@ export default function LivingEngine(){
    setVisualNotice(outcome.notice);
    setResult(outcome.shownResult);
    setImage(outcome.shownImage);
-   if(outcome.status==="complete")setActiveStep(0);
+   if(outcome.status==="complete")setActiveStep(initialVisualStep(next));
    const done={...pending,title:next.title,image:visualImage,result:next,model:visualModel,
     status:outcome.status,error:imageFailed?imageError:"",updatedAt:Date.now()};
    setHistory(h=>h.map(t=>t.id===pending.id?done:t));
@@ -299,7 +299,7 @@ export default function LivingEngine(){
    {visualNotice&&<div role="status" style={{fontSize:12,opacity:.8,marginBottom:12}}>{visualNotice}</div>}
 
    {history.length>0&&<div style={{display:"flex",gap:10,overflowX:"auto",padding:"8px 0 20px"}}>
-    {history.map((h,i)=><button key={h.id||i} disabled={loading} onClick={()=>{if(h.status==="complete"&&h.result){setImage(h.image);setResult(h.result);setActiveStep(0);setQ("");setVisualNotice("");}}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
+    {history.map((h,i)=><button key={h.id||i} disabled={loading} onClick={()=>{if(h.status==="complete"&&h.result){setImage(h.image);setResult(h.result);setActiveStep(initialVisualStep(h.result));setQ("");setVisualNotice("");}}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
      {h.image?<img src={h.image} alt="" style={{width:"100%",height:90,objectFit:"cover",borderRadius:9}}/>:<div style={{width:"100%",height:90,borderRadius:9,display:"grid",placeItems:"center",background:"radial-gradient(circle,#25324b,#0a0f19)",color:"#e8b84c",fontSize:28}}>✦</div>}
      <small style={{display:"block",marginTop:8,lineHeight:1.4}}>{h.question}</small><small style={{display:"block",opacity:.55,marginTop:4}}>{h.status==="complete"?(h.image?"صورة محفوظة":"مشهد دلالي محفوظ"):h.status==="processing"?"لم يكتمل":h.status==="visual-failed"?"لم يتغير المشهد":"تعذر التنفيذ"}</small>
     </button>)}
