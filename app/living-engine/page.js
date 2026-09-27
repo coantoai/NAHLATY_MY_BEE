@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {listTurns,listWorlds,makeId,storeTurn} from "../lib/livingHistory";
-import {resolveVisualOutcome} from "../lib/visualOutcome";
+import {resolveVisualOutcome,visualGenerationNeeded} from "../lib/visualOutcome";
 
 
 function SemanticFallback({experience,activeStep=0}){
@@ -203,7 +203,8 @@ export default function LivingEngine(){
    let visualModel="semantic-fallback";
    let imageFailed=false;
    let imageError="";
-   try{
+   if(visualGenerationNeeded(ep.provider)){
+    try{
     const reference=await compactReference(image);
     if(image&&!reference)throw new Error("تعذر إرسال الصورة السابقة للتعديل.");
     const im=await fetch("/api/generate-visual",{
@@ -226,7 +227,10 @@ export default function LivingEngine(){
      imageFailed=true;
      imageError=ip?.error||"لم يؤكد فحص الصورة تنفيذ التغيير.";
     }
-   }catch(e){imageFailed=true;imageError=String(e?.message||e);}
+    }catch(e){imageFailed=true;imageError=String(e?.message||e);}
+   }else{
+    visualModel="sourced-knowledge-scene";
+   }
    const outcome=resolveVisualOutcome({previousResult:result,previousImage:image,nextResult:next,generatedImage:visualImage,imageFailed});
    setVisualNotice(outcome.notice);
    setResult(outcome.shownResult);
