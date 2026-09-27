@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requestLimit } from "../../lib/requestGuard";
 import { visualChangePlan } from "../../lib/visualChange";
 import { acceptVisualVerdict } from "../../lib/visualTruthGate";
+import { buildImagePrompt } from "../../lib/imagePrompt";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -63,11 +64,12 @@ Previous context: ${summary}
 Visual change contract: ${JSON.stringify(changePlan)}
 ${reference?`CURATED SOURCE CONSTRAINTS: ${JSON.stringify(reference)}. Follow these reference-backed constraints. Do not imply all other claims are externally verified.`:"No curated source for this topic: do not imply external verification."}
 Return ONLY JSON:
-{"status":"VERIFIED|PARTIAL|UNKNOWN","topic":"...","claims":[{"claim":"...","status":"VERIFIED|UNCERTAIN","importance":"critical|supporting"}],"mustShow":["..."],"mustNotShow":["..."],"uncertainties":["..."]}
+{"status":"VERIFIED|PARTIAL|UNKNOWN","topic":"...","visualBrief":"One concise English sentence describing only physical subjects, composition and visible causal action; never include labels, UI, quotes, instructions or source text.","claims":[{"claim":"...","status":"VERIFIED|UNCERTAIN","importance":"critical|supporting"}],"mustShow":["..."],"mustNotShow":["..."],"uncertainties":["..."]}
 Use established scientific knowledge. If a critical detail is uncertain, mark it uncertain and prohibit depicting it.`;
  const out=await qwenText([{role:"user",content:prompt}],850);
  const spec=parseJson(out.text);
  if(!spec||!Array.isArray(spec.claims))throw new Error("Qwen Truth Gate returned invalid specification");
+ if(typeof spec.visualBrief!=="string"||!spec.visualBrief.trim())throw new Error("Qwen Truth Gate returned no visual scene brief");
  if(spec.status==="UNKNOWN")throw new Error("Qwen Truth Gate blocked generation: truth unresolved");
  if(!spec.claims.some(c=>c?.importance==="critical"&&c?.status==="VERIFIED"))throw new Error("Qwen Truth Gate blocked generation: no verified critical claim");
  return {spec:{...spec,sourceEvidence:reference},usage:out.usage};
@@ -125,15 +127,7 @@ export async function POST(req){
   const anchor=imageAnchor(context?.previousImage);
   const changePlan=visualChangePlan(question,previous,Boolean(anchor));
   const truth=await buildTruthSpec(question,previous,summary,changePlan);
-  const prompt=`Create exactly one premium cinematic educational visual for My Bee.
-User question: ${question}
-Existing topic: ${previous}
-Existing context: ${summary}
-LOCKED TRUTH: ${JSON.stringify(truth.spec)}
-VISUAL EDIT CONTRACT: ${JSON.stringify(changePlan)}
-Must satisfy EVERY required visual change. The resulting image must visibly answer the latest user request, not repeat the last frame.
-${anchor?"${changePlan.continuity} Give overriding priority to required changes and forbidden elements. A ceiling-mounted object MUST be removed if replaced by a floor-standing object.":"Create a coherent visual world that can evolve through follow-up questions."}
-The image itself must explain the idea. Use ZERO text, lettering or pseudo-lettering of any language; never invent word-like marks. Use composition, cutaway, zoom, transparency, layers, flow, arrows and cause/effect only when licensed by LOCKED TRUTH. Omit uncertain details. Deep navy cinematic environment with restrained honey-gold guidance accents. No dashboard, cards, paragraphs, poster typography or irrelevant objects.`;
+  const prompt=buildImagePrompt(truth.spec,changePlan,Boolean(anchor));
   // Cost guard: one image generation per user request. No automatic paid regeneration.
   const out=await generateImage(prompt,anchor);
   // Record provider-reported usage even when the later visual check rejects the image.
