@@ -205,6 +205,10 @@ export default function LivingEngine(){
    let visualModel="semantic-fallback";
    let imageFailed=false;
    let imageError="";
+   let inspectionImage="";
+   let imageUsage=null;
+   let imageRequestId=null;
+   let imageVerdict=null;
    if(visualGenerationNeeded(ep.provider)){
     try{
     const reference=await compactReference(image);
@@ -222,6 +226,10 @@ export default function LivingEngine(){
      })
     });
     const ip=await im.json();
+    inspectionImage=String(ip?.inspectionImage||"").startsWith("data:image/")?ip.inspectionImage:"";
+    imageUsage=ip?.generationUsage||null;
+    imageRequestId=ip?.generationRequestId||null;
+    imageVerdict=ip?.visualTruthGate||null;
     if(im.ok&&ip?.ok&&String(ip.image||"").startsWith("data:image/")){
      visualImage=ip.image;
      visualModel=ip.model||"generated-image";
@@ -239,6 +247,8 @@ export default function LivingEngine(){
    setImage(outcome.shownImage);
    if(outcome.status==="complete")setActiveStep(initialVisualStep(next));
    const done={...pending,title:next.title,image:visualImage,result:next,model:visualModel,
+    // Rejected QA images stay out of the scene but remain in the exportable local archive.
+    inspectionImage,imageUsage,imageRequestId,imageVerdict,
     status:outcome.status,error:imageFailed?imageError:"",updatedAt:Date.now()};
    setHistory(h=>h.map(t=>t.id===pending.id?done:t));
    await persist(world,done);
