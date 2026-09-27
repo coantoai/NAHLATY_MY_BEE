@@ -62,3 +62,16 @@ This LAB runs on its own preview/branch; it must not stall the main BUILD → LA
 - Vercel branch preview READY at https://nahlaty-my-j8jkjzlvi-coantoai-9460.vercel.app/hybrid-bee-lab . Preview's direct external inspection returned login_required, so visual/browser interaction is UNVERIFIED. A verified preview build is not proof of UX quality.
 - No paid Qwen/GPU generation was performed by this prototype.
 - Next for Track A: authorized browser QA, improve auto-orientation, fully automatic smooth meaningful motion and visual polish while retaining authored vector rendering. Separately begin Track B as its OWN cinematic-still-plus-transparent-assets proof, test color/lighting/perspective/occlusion and compare its real latency/cost; do not mistake Track A for evidence that Track B works. No automatic promotion to Work's current main execution branch.
+
+
+## Two separate v2 proofs — 2026-09-27
+The following are experiments, NOT production features and not a universal world engine:
+- Track A native vector: /vector-bee-v2 — richer authored vector flowers/bee, requestAnimationFrame automatic flight, gradual facing aligned to the flight tangent, visual pollen carry/transfer, pause/speed and bounded Arabic counterfactual. No photo dependency.
+- Track B photo + transparent independent asset: /photo-overlay-v2 — an actual separately sourced Pexels photograph (photo 17516957) used as the cinematic still; independently authored transparent SVG bee in public/visual-lab/bee-transparent.svg, animated wings, flight overlay, manually adjustable flower anchors, warmth/size controls, and bounded causal transfer. No claim of automatic matching, physically correct occlusion or photorealistic bee rendering.
+- Shared flight sampler lib/pollination-flight-v2.js, with semantic-state tests; no new rendering dependency, paid GPU or Qwen call.
+- Branch lab/visual-methods-v2; draft PR https://github.com/coantoai/NAHLATY_MY_BEE/pull/11, targeted to the earlier LAB branch; NOT merged.
+- GitHub CI https://github.com/coantoai/NAHLATY_MY_BEE/actions/runs/36328121776: 77/77 tests, build and HTTP smoke all pass.
+- Vercel branch preview READY: https://nahlaty-my-rjxpag5qh-coantoai-9460.vercel.app/vector-bee-v2 and https://nahlaty-my-rjxpag5qh-coantoai-9460.vercel.app/photo-overlay-v2.
+- Both URLs returned login_required to an unauthenticated external browser. Actual screenshot, animation smoothness, photograph resolution and color/light matching are not yet browser-verified. A green CI/build is NOT visual acceptance.
+- Photography license: Pexels standard license for https://www.pexels.com/photo/two-pink-flowers-in-a-field-with-green-grass-17516957/ ; do not resell bare photography or treat Pexels as an unrestricted redistributable stock library.
+- Owner approval required before promoting any of this LAB to Work's active branch or replacing the default renderer.
