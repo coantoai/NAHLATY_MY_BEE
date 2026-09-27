@@ -59,7 +59,7 @@ export default function LivingEngine(){
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState("");
  const [visualNotice,setVisualNotice]=useState("");
- const [activeStep,setActiveStep]=useState(0);
+ const [activeStep,setActiveStep]=useState(0);\n const [showSemanticOverlay,setShowSemanticOverlay]=useState(false);
  const [history,setHistory]=useState([]);
  const [worlds,setWorlds]=useState([]);
  const [selectedId,setSelectedId]=useState("");
@@ -288,7 +288,16 @@ export default function LivingEngine(){
    {archiveError&&<div role="alert" style={{padding:"10px 13px",border:"1px solid #e8b84c55",borderRadius:11,marginBottom:12,fontSize:12}}>{archiveError}</div>}
    <section style={{position:"relative",minHeight:"min(66vh,620px)",border:"1px solid #ffffff18",borderRadius:28,overflow:"hidden",background:"#090d16",boxShadow:"0 30px 80px #0008"}}>
     {image
-     ?<img src={image} alt={result?.title||"مشهد مولد"} style={{width:"100%",height:"min(66vh,620px)",minHeight:460,objectFit:"cover",display:"block"}}/>
+     ?<><img src={image} alt={result?.title||"مشهد مولد"} style={{width:"100%",height:"min(66vh,620px)",minHeight:460,objectFit:"cover",display:"block"}}/>
+       {result?.steps?.length>0&&<div style={{position:"absolute",inset:"auto 14px 14px",display:"flex",gap:8,alignItems:"end",justifyContent:"space-between",flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{result.steps.slice(0,7).map((step,i)=><button key={i} type="button" aria-pressed={activeStep===i} onClick={()=>setActiveStep(i)} style={{padding:"8px 10px",borderRadius:10,border:activeStep===i?"1px solid #ffe38a":"1px solid #ffffff55",background:activeStep===i?"#17120bcc":"#090d16bb",color:"#fff8de",fontSize:12}}>{i+1}. {step.title||"التركيز"}</button>)}</div>
+        <button type="button" onClick={()=>setShowSemanticOverlay(v=>!v)} aria-expanded={showSemanticOverlay} style={{padding:"8px 10px",borderRadius:10,border:"1px solid #e8b84c88",background:"#1c170dcc",color:"#ffe9a8",fontSize:12}}>{showSemanticOverlay?"إخفاء خريطة المعنى":"إظهار خريطة المعنى"}</button>
+       </div>}
+       {showSemanticOverlay&&result&&<div role="dialog" aria-label="خريطة معنى المشهد" style={{position:"absolute",inset:"14px 14px auto",maxWidth:440,padding:16,borderRadius:16,background:"#070b14e8",border:"1px solid #e8b84c66",boxShadow:"0 12px 28px #0008"}}>
+        <b style={{color:"#ffe9a8"}}>{result.steps?.[activeStep]?.title||result.title}</b>
+        <p style={{margin:"8px 0 0",lineHeight:1.7,fontSize:13}}>{sceneCaption(result.steps?.[activeStep]||{})||result.summary}</p>
+       </div>}
+      </>
      :result
       ?<SemanticFallback experience={result} activeStep={activeStep}/>
       :<div style={{height:"min(66vh,620px)",minHeight:460,display:"grid",placeItems:"center",textAlign:"center",padding:30}}><div><div style={{fontSize:64}}>✦</div><h1 style={{fontSize:"clamp(30px,5vw,54px)",margin:"10px 0"}}>اسأل عن أي شيء</h1><p style={{opacity:.65,fontSize:18}}>السؤال يبني عالمًا بصريًا جديدًا. والسؤال التالي يعيد البحث داخل نفس العالم.</p></div></div>}
