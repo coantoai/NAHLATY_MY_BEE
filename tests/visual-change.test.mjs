@@ -47,8 +47,8 @@ test("visual result must pass a change-fulfilment review before it is shown",()=
  const route=readFileSync(new URL("../app/api/generate-visual/route.js",import.meta.url),"utf8");
  assert.match(route,/verdict\.changeFulfilled!==true/);
  const plan=visualChangePlan("حوّل المروحة السقفية إلى مروحة عمودية على الأرض","مروحة سقفية",true);
- const imagePrompt=buildImagePrompt({visualBrief:"A freestanding pedestal fan stands on the floor, its motor housing open."},plan,true);
- assert.match(imagePrompt,/Replace the requested subject visibly/);
+ const imagePrompt=buildImagePrompt({visualBrief:"A freestanding pedestal fan stands on the floor, its motor housing open.",scene:{subject:"freestanding pedestal fan",setting:"floor of a domestic room",objects:["upright pole","floor base","open motor housing"],avoid:["ceiling-mounted fan"]}},plan,true);
+ assert.match(imagePrompt,/REPLACE the requested object/);
  assert.doesNotMatch(imagePrompt,/geometry lock|VISUAL EDIT CONTRACT/);
  assert.match(route,/buildImagePrompt\(truth\.spec,changePlan,Boolean\(anchor\)\)/);
  assert.match(route,/change-not-fulfilled/);
