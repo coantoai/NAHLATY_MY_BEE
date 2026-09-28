@@ -3,6 +3,7 @@ import { requestLimit } from "../../lib/requestGuard";
 import { visualChangePlan } from "../../lib/visualChange";
 import { acceptVisualVerdict } from "../../lib/visualTruthGate";
 import { buildImagePrompt } from "../../lib/imagePrompt";
+import { buildAnswerFirst } from "../../lib/answerFirst";
 import { acceptedStageFocus, missingStageIndices, normalizeTextContent, resolveStageFocus, selectStagesForLocalization } from "../../lib/stageFocus";
 
 export const runtime="nodejs";
@@ -56,25 +57,29 @@ async function qwenText(messages,max_tokens=900){
  if(!r.ok)throw new Error(p?.error?.message||p?.message||`Qwen verification failed (${r.status})`);
  return {text:normalizeTextContent(p?.choices?.[0]?.message?.content),usage:p?.usage||null};
 }
-async function buildTruthSpec(question,previous,summary,changePlan){
+async function buildTruthSpec(question,previous,summary,changePlan,stages=[],upstreamAnswer=""){
  const reference=curatedVisualEvidence(question,previous);
- const prompt=`You are NAHLATY's scientific truth gate. Build a conservative visual truth specification for an educational image. Do not invent uncertain facts.
-Question: ${question}
-Previous topic: ${previous}
-Previous context: ${summary}
-Visual change contract: ${JSON.stringify(changePlan)}
-${reference?`CURATED SOURCE CONSTRAINTS: ${JSON.stringify(reference)}. Follow these reference-backed constraints. Do not imply all other claims are externally verified.`:"No curated source for this topic: do not imply external verification."}
-Return ONLY JSON:
-{"status":"VERIFIED|PARTIAL|UNKNOWN","topic":"...","visualBrief":"One concise English sentence describing only physical subjects, composition and visible causal action; never include labels, UI, quotes, instructions or source text.","claims":[{"claim":"...","status":"VERIFIED|UNCERTAIN","importance":"critical|supporting"}],"mustShow":["..."],"mustNotShow":["..."],"uncertainties":["..."]}
-Use established scientific knowledge. If a critical detail is uncertain, mark it uncertain and prohibit depicting it.`;
- const out=await qwenText([{role:"user",content:prompt}],850);
- const spec=parseJson(out.text);
- if(!spec||!Array.isArray(spec.claims))throw new Error("Qwen Truth Gate returned invalid specification");
- if(typeof spec.visualBrief!=="string"||!spec.visualBrief.trim())throw new Error("Qwen Truth Gate returned no visual scene brief");
- if(spec.status==="UNKNOWN")throw new Error("Qwen Truth Gate blocked generation: truth unresolved");
- if(!spec.claims.some(c=>c?.importance==="critical"&&c?.status==="VERIFIED"))throw new Error("Qwen Truth Gate blocked generation: no verified critical claim");
- return {spec:{...spec,sourceEvidence:reference},usage:out.usage};
+ const out=await buildAnswerFirst({question,previous,previousSummary:summary,evidence:reference,upstreamAnswer,stages,
+  apiKey:API_KEY,endpoint:CHAT_ENDPOINT,model:VISION_MODEL});
+ const plan=out.plan;
+ const spec={
+  status:"PARTIAL",
+  topic:plan.scene.subject,
+  questionIntent:plan.questionIntent,
+  answer:plan.answer,
+  visualBrief:plan.visualBrief,
+  scene:plan.scene,
+  causalSteps:plan.causalSteps,
+  claims:plan.claims.map(c=>({claim:c.claim,status:c.certainty==="uncertain"?"UNCERTAIN":"MODEL_REVIEWED",importance:"critical"})),
+  mustShow:plan.scene.objects,
+  mustNotShow:plan.scene.avoid,
+  uncertainties:plan.uncertainties,
+  sourceEvidence:reference,
+  answerFirstReview:out.review
+ };
+ return {spec,usage:out.usage};
 }
+
 async function generateImage(prompt,anchor){
  const content=[];
  if(anchor)content.push({image:anchor});
@@ -144,7 +149,7 @@ export async function POST(req){
   const anchor=imageAnchor(context?.previousImage);
   const stages=Array.isArray(body?.stages)?body.stages.slice(0,7).map(step=>({title:String(step?.title||'').slice(0,90),text:String(step?.text||'').slice(0,180)})):[];
   const changePlan=visualChangePlan(question,previous,Boolean(anchor));
-  const truth=await buildTruthSpec(question,previous,summary,changePlan);
+  const truth=await buildTruthSpec(question,previous,summary,changePlan,stages,String(body?.upstreamAnswer||"").slice(0,900));
   const prompt=buildImagePrompt(truth.spec,changePlan,Boolean(anchor));
   // Cost guard: one image generation per user request. No automatic paid regeneration.
   const out=await generateImage(prompt,anchor);
@@ -161,7 +166,7 @@ export async function POST(req){
   const stageFocus=resolvedFocus.regions;
   const focusDiagnostics={...resolvedFocus.diagnostics,locatorStatus:locator.status};
   console.info("[NAHLATY_STAGE_FOCUS]",JSON.stringify(focusDiagnostics));
-  return NextResponse.json({ok:true,image:out.data,stageFocus,stageFocusDiagnostics:focusDiagnostics,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,visualChange:{mode:changePlan.mode,changeFulfilled:verdict.changeFulfilled===true,required:changePlan.required},generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
+  return NextResponse.json({ok:true,image:out.data,stageFocus,stageFocusDiagnostics:focusDiagnostics,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,visualChange:{mode:changePlan.mode,changeFulfilled:verdict.changeFulfilled===true,required:changePlan.required},generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,questionIntent:truth.spec.questionIntent,answer:truth.spec.answer,causalSteps:truth.spec.causalSteps,scene:truth.spec.scene,answerFirstReview:truth.spec.answerFirstReview,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
  }catch(error){
   console.error("[NAHLATY_QWEN_ERROR]",String(error?.message||error));
   return NextResponse.json({ok:false,error:String(error?.message||error)},{status:500});
