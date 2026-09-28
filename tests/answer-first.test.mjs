@@ -61,7 +61,7 @@ test("text-only gate takes exactly two model calls; no image call",async()=>{
   assert.equal(calls.length,2);
   assert.equal(out.plan.scene.subject,"erupting volcano");
   assert.equal(out.review.pass,true);
-  assert.match(calls[0].body.messages[0].content,/BEFORE/);
+  assert.match(calls[0].body.messages[0].content,/FIRST answer/);
   assert.match(calls[1].body.messages[0].content,/Upstream UI stages/);
  }finally{globalThis.fetch=prior}
 });
