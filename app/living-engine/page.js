@@ -2,23 +2,24 @@
 import {useEffect,useRef,useState} from "react";
 import {listTurns,listWorlds,makeId,storeTurn} from "../lib/livingHistory";
 import {initialVisualStep,resolveVisualOutcome,sceneCaption,visualGenerationNeeded} from "../lib/visualOutcome";
-import {sceneStageFocus} from "../lib/stageFocus";
+import {acceptedStageFocus,cameraFrame} from "../lib/stageFocus";
+import {cloudFixture} from "../lib/cloudFixture";
 
-function FocusedImage({src,title,region}){
- const zoom=region?1.55:1;
- const width=1000,height=625;
- const tx=region?Math.max(width*(1-zoom),Math.min(0,width/2-zoom*width*region.x)):0;
- const ty=region?Math.max(height*(1-zoom),Math.min(0,height/2-zoom*height*region.y)):0;
- return <svg viewBox="0 0 1000 625" preserveAspectRatio="xMidYMid meet" role="img" aria-label={title||"مشهد بصري"} style={{width:"100%",height:"min(66vh,620px)",minHeight:460,display:"block",background:"#090d16"}}>
+function FocusedImage({src,title,region,dimensions}){
+ const width=1000,height=1000*(dimensions?.height||1280)/(dimensions?.width||2048);
+ const frame=cameraFrame(region);
+ const tx=frame.tx*width,ty=frame.ty*height,zoom=frame.scale;
+ const unit=height/625;
+ return <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={title||"مشهد بصري"} style={{width:"100%",height:"min(66vh,620px)",minHeight:460,display:"block",background:"#090d16"}}>
   <style>{`@keyframes bee-flow{to{stroke-dashoffset:-42}} @keyframes bee-pulse{50%{opacity:.3;transform:scale(1.14)}} .bee-flow{stroke-dasharray:12 13;animation:bee-flow 1.8s linear infinite} .bee-pulse{transform-box:fill-box;transform-origin:center;animation:bee-pulse 2.2s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.bee-flow,.bee-pulse{animation:none}}`}</style>
   <g transform={`translate(${tx} ${ty}) scale(${zoom})`} style={{transition:"transform 650ms ease-out"}}>
    <image href={src} width={width} height={height} preserveAspectRatio="none"/>
-   {region&&<g aria-hidden="true" fill="none" strokeWidth="2.5">
-    <circle className="bee-pulse" cx={width*region.x} cy={height*region.y} r="53" stroke={region.effect==='cooling'?'#a8ddff':'#ffe09a'} opacity=".7"/>
-    {region.effect==='updraft'&&[-36,0,36].map(offset=><path key={offset} className="bee-flow" d={`M ${width*region.x+offset} 620 Q ${width*region.x+offset-20} 545 ${width*region.x+offset} 470`} stroke="#ffce75" strokeWidth="4" strokeLinecap="round"/>)}
-    {region.effect==='cooling'&&<path className="bee-flow" d={`M ${width*region.x-60} ${height*region.y+45} Q ${width*region.x} ${height*region.y-35} ${width*region.x+60} ${height*region.y-60}`} stroke="#a8ddff" strokeWidth="5" strokeLinecap="round"/>}
-    {region.effect==='droplets'&&[-44,-20,8,34,58].map((offset,i)=><circle key={offset} className="bee-pulse" cx={width*region.x+offset} cy={height*region.y+(i%2)*18} r={4+i%3} fill="#b8eaff" stroke="#fff" strokeWidth="1"/>)}
-    {region.effect==='tower'&&<path className="bee-pulse" d={`M ${width*region.x-90} ${height*region.y+55} Q ${width*region.x-35} ${height*region.y-105} ${width*region.x+70} ${height*region.y-42}`} stroke="#fff0ad" strokeWidth="4" opacity=".7"/>}
+   {region&&<g aria-hidden="true" fill="none" strokeWidth={2.5*unit}>
+    <circle className="bee-pulse" cx={width*region.x} cy={height*region.y} r={53*unit} stroke={region.effect==='cooling'?'#a8ddff':'#ffe09a'} opacity=".7"/>
+    {region.effect==='updraft'&&[-36,0,36].map(offset=><path key={offset} className="bee-flow" d={`M ${width*region.x+offset*unit} ${height*.94} Q ${width*region.x+(offset-20)*unit} ${height*.82} ${width*region.x+offset*unit} ${height*.65}`} stroke="#ffce75" strokeWidth={4*unit} strokeLinecap="round"/>)}
+    {region.effect==='cooling'&&<path className="bee-flow" d={`M ${width*region.x-60*unit} ${height*region.y+45*unit} Q ${width*region.x} ${height*region.y-35*unit} ${width*region.x+60*unit} ${height*region.y-60*unit}`} stroke="#a8ddff" strokeWidth={5*unit} strokeLinecap="round"/>}
+    {region.effect==='droplets'&&[-44,-20,8,34,58].map((offset,i)=><circle key={offset} className="bee-pulse" cx={width*region.x+offset*unit} cy={height*region.y+(i%2)*18*unit} r={(4+i%3)*unit} fill="#b8eaff" stroke="#fff" strokeWidth={unit}/>)}
+    {region.effect==='tower'&&<path className="bee-pulse" d={`M ${width*region.x-90*unit} ${height*region.y+55*unit} Q ${width*region.x-35*unit} ${height*region.y-105*unit} ${width*region.x+70*unit} ${height*region.y-42*unit}`} stroke="#fff0ad" strokeWidth={4*unit} opacity=".7"/>}
    </g>}
   </g>
  </svg>;
@@ -78,6 +79,9 @@ export default function LivingEngine(){
  const [result,setResult]=useState(null);
  const [image,setImage]=useState("");
  const [stageFocus,setStageFocus]=useState([]);
+ const [imageDimensions,setImageDimensions]=useState({width:2048,height:1280});
+ const [viewingTurnId,setViewingTurnId]=useState("");
+ const [fixtureMode,setFixtureMode]=useState(false);
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState("");
  const [visualNotice,setVisualNotice]=useState("");
@@ -98,6 +102,25 @@ export default function LivingEngine(){
     const saved=await listWorlds();
     if(!active)return;
     setWorlds(saved);
+    if(new URLSearchParams(window.location.search).get("asset")===cloudFixture.id){
+     const world=saved.find(w=>w.id===cloudFixture.id)||{id:cloudFixture.id,title:cloudFixture.title,createdAt:Date.now(),updatedAt:Date.now()};
+     let turns=await listTurns(world.id);
+     if(!turns.length){
+      const turn={id:cloudFixture.id+"-turn",worldId:world.id,createdAt:Date.now(),question:cloudFixture.title,title:cloudFixture.title,status:"complete",image:cloudFixture.image,
+       result:{title:cloudFixture.title,summary:cloudFixture.summary,steps:cloudFixture.steps},
+       imageDimensions:{width:cloudFixture.width,height:cloudFixture.height},stageFocus:cloudFixture.stageFocus,cameraStep:-1,model:"saved-2k-asset",imageRequestId:cloudFixture.imageRequestId};
+      await storeTurn(world,turn);
+      turns=[turn];
+      setWorlds(await listWorlds());
+     }
+     if(!active)return;
+     const last=turns[turns.length-1];
+     worldRef.current=world;setSelectedId(world.id);setHistory(turns);setFixtureMode(true);
+     setResult(last.result);setImage(last.image);setImageDimensions(last.imageDimensions||{width:2048,height:1280});
+     setStageFocus(acceptedStageFocus(last.stageFocus,last.result?.steps));setViewingTurnId(last.id);
+     setActiveStep(Number.isInteger(last.cameraStep)?last.cameraStep:-1);
+     setSaving("saved");return;
+    }
     if(saved.length){
      const turns=await listTurns(saved[0].id);
      if(!active)return;
@@ -105,7 +128,7 @@ export default function LivingEngine(){
      setSelectedId(saved[0].id);
      setHistory(turns);
      const last=[...turns].reverse().find(t=>t.status==="complete"&&t.result);
-     if(last){setResult(last.result);setImage(last.image||"");setStageFocus(sceneStageFocus(last.stageFocus,last.result?.steps,last.result?.title));setActiveStep(initialVisualStep(last.result));}
+     if(last){setResult(last.result);setImage(last.image||"");setImageDimensions(last.imageDimensions||{width:2048,height:1280});setStageFocus(acceptedStageFocus(last.stageFocus,last.result?.steps));setViewingTurnId(last.id);setActiveStep(last.image?(Number.isInteger(last.cameraStep)?last.cameraStep:-1):initialVisualStep(last.result));}
     }
     setSaving("saved");
    }catch(error){
@@ -153,8 +176,10 @@ export default function LivingEngine(){
    const last=[...turns].reverse().find(t=>t.status==="complete"&&t.result);
    setResult(last?.result||null);
    setImage(last?.image||"");
-   setStageFocus(sceneStageFocus(last?.stageFocus,last?.result?.steps,last?.result?.title));
-   setActiveStep(initialVisualStep(last?.result));
+   setImageDimensions(last?.imageDimensions||{width:2048,height:1280});
+   setStageFocus(acceptedStageFocus(last?.stageFocus,last?.result?.steps));
+   setViewingTurnId(last?.id||"");setFixtureMode(world.id===cloudFixture.id);
+   setActiveStep(last?.image?(Number.isInteger(last.cameraStep)?last.cameraStep:-1):initialVisualStep(last?.result));
    setQ("");
    setError("");
    setVisualNotice("");
@@ -165,6 +190,7 @@ export default function LivingEngine(){
  function resetWorld(){
   setResult(null);
   setImage("");
+  setFixtureMode(false);setViewingTurnId("");
   setStageFocus([]);
   setHistory([]);
   worldRef.current=null;
@@ -173,6 +199,17 @@ export default function LivingEngine(){
   setVisualNotice("");
   setQ("");
   setActiveStep(0);
+ }
+
+ async function selectImageStage(index){
+  if(index>=0&&!stageFocus.some(region=>region.index===index))return;
+  setActiveStep(index);
+  const turn=history.find(item=>item.id===viewingTurnId);
+  if(turn&&worldRef.current){
+   const updated={...turn,cameraStep:index};
+   setHistory(items=>items.map(item=>item.id===turn.id?updated:item));
+   try{await storeTurn(worldRef.current,updated)}catch{setArchiveError("تعذر حفظ موضع الكاميرا على هذا الجهاز.")}
+  }
  }
 
  async function run(e){
@@ -259,7 +296,7 @@ export default function LivingEngine(){
     imageVerdict=ip?.visualTruthGate||null;
     if(im.ok&&ip?.ok&&String(ip.image||"").startsWith("data:image/")){
      visualImage=ip.image;
-     imageStageFocus=sceneStageFocus(ip.stageFocus,next.steps,next.title);
+     imageStageFocus=acceptedStageFocus(ip.stageFocus,next.steps);
      visualModel=ip.model||"generated-image";
     }else{
      imageFailed=true;
@@ -273,9 +310,12 @@ export default function LivingEngine(){
    setVisualNotice(outcome.notice);
    setResult(outcome.shownResult);
    setImage(outcome.shownImage);
-   if(outcome.status==="complete")setStageFocus(imageStageFocus);
-   if(outcome.status==="complete")setActiveStep(initialVisualStep(next));
-   const done={...pending,title:next.title,image:visualImage,stageFocus:imageStageFocus,result:next,model:visualModel,
+   if(outcome.status==="complete"){
+    setStageFocus(imageStageFocus);
+    setImageDimensions({width:imageUsage?.output_width||2048,height:imageUsage?.output_height||1280});
+    setActiveStep(visualImage?-1:initialVisualStep(next));setViewingTurnId(pending.id);
+   }
+   const done={...pending,title:next.title,image:visualImage,stageFocus:imageStageFocus,cameraStep:-1,imageDimensions:{width:imageUsage?.output_width||2048,height:imageUsage?.output_height||1280},result:next,model:visualModel,
     // Rejected QA images stay out of the scene but remain in the exportable local archive.
     inspectionImage,imageUsage,imageRequestId,imageVerdict,
     status:outcome.status,error:imageFailed?imageError:"",updatedAt:Date.now()};
@@ -317,7 +357,7 @@ export default function LivingEngine(){
    {archiveError&&<div role="alert" style={{padding:"10px 13px",border:"1px solid #e8b84c55",borderRadius:11,marginBottom:12,fontSize:12}}>{archiveError}</div>}
    <section style={{position:"relative",minHeight:"min(66vh,620px)",border:"1px solid #ffffff18",borderRadius:28,overflow:"hidden",background:"#090d16",boxShadow:"0 30px 80px #0008"}}>
     {image
-     ?<FocusedImage src={image} title={result?.title} region={stageFocus.find(region=>region.index===activeStep)}/>
+     ?<FocusedImage src={image} title={result?.title} region={stageFocus.find(region=>region.index===activeStep)} dimensions={imageDimensions}/>
      :result
       ?<SemanticFallback experience={result} activeStep={activeStep}/>
       :<div style={{height:"min(66vh,620px)",minHeight:460,display:"grid",placeItems:"center",textAlign:"center",padding:30}}><div><div style={{fontSize:64}}>✦</div><h1 style={{fontSize:"clamp(30px,5vw,54px)",margin:"10px 0"}}>اسأل عن أي شيء</h1><p style={{opacity:.65,fontSize:18}}>السؤال يبني عالمًا بصريًا جديدًا. والسؤال التالي يعيد البحث داخل نفس العالم.</p></div></div>}
@@ -327,26 +367,28 @@ export default function LivingEngine(){
    </section>
 
    {image&&result?.steps?.length>0&&<nav aria-label="مراحل الصورة" style={{display:"flex",gap:8,overflowX:"auto",padding:"12px 0 2px",alignItems:"center"}}>
-    {result.steps.slice(0,7).map((step,i)=><button key={i} type="button" aria-pressed={activeStep===i} onClick={()=>setActiveStep(i)} style={{flex:"0 0 auto",maxWidth:230,padding:"9px 12px",borderRadius:11,border:activeStep===i?"1px solid #ffe38a":"1px solid #ffffff55",background:activeStep===i?"#302816":"#101725",color:"#fff8de",fontSize:12}}>{i+1}. {step.title||"التركيز"}</button>)}
+    {result.steps.slice(0,7).map((step,i)=>{const enabled=stageFocus.some(region=>region.index===i);return <button key={i} type="button" disabled={!enabled} title={enabled?"":"لا يوجد موضع بصري موثوق لهذه المرحلة"} aria-pressed={activeStep===i} onClick={()=>selectImageStage(i)} style={{flex:"0 0 auto",maxWidth:230,padding:"9px 12px",borderRadius:11,border:activeStep===i?"1px solid #ffe38a":"1px solid #ffffff55",background:activeStep===i?"#302816":"#101725",color:"#fff8de",opacity:enabled?1:.5,fontSize:12}}>{i+1}. {step.title||"التركيز"}{enabled?"":" · غير متاح"}</button>})}
+    <button type="button" onClick={()=>selectImageStage(-1)} disabled={activeStep===-1} style={{flex:"0 0 auto",padding:"9px 12px",borderRadius:11,border:"1px solid #e8b84c88",background:"#101725",color:"#ffe9a8",fontSize:12}}>إعادة المشهد</button>
     <button type="button" onClick={()=>setShowSemanticOverlay(v=>!v)} aria-expanded={showSemanticOverlay} style={{flex:"0 0 auto",padding:"9px 12px",borderRadius:11,border:"1px solid #e8b84c88",background:"#101725",color:"#ffe9a8",fontSize:12}}>{showSemanticOverlay?"إخفاء الشرح":"عرض الشرح"}</button>
    </nav>}
    {image&&showSemanticOverlay&&result&&<div role="region" aria-label="شرح المرحلة" style={{padding:"12px 16px",marginTop:8,borderRadius:12,background:"#101725",border:"1px solid #e8b84c44"}}><b style={{color:"#ffe9a8"}}>{result.steps?.[activeStep]?.title||result.title}</b><p style={{margin:"6px 0 0",lineHeight:1.6,fontSize:13}}>{sceneCaption(result.steps?.[activeStep]||{})||result.summary}</p></div>}
+   {fixtureMode&&<div style={{fontSize:12,opacity:.7,marginTop:8}}>هذه تجربة تفاعل على صورة 2K محفوظة؛ طبقتا التبريد والقطرات توضيح بصري لمراحل لا تُرى منفردة في الصورة.</div>}
 
    {result?.steps?.length>0&&!image&&<nav aria-label="خطوات الشرح البصري" style={{display:"flex",gap:8,overflowX:"auto",padding:"12px 0 0"}}>
     {result.steps.map((step,i)=><button key={i} type="button" aria-pressed={activeStep===i} onClick={()=>setActiveStep(i)} style={{flex:"0 0 auto",maxWidth:220,padding:"9px 12px",borderRadius:11,border:activeStep===i?"1px solid #e8b84c":"1px solid #ffffff30",background:activeStep===i?"#302816":"#101725",color:"#f8f3e8"}}>{i+1}. {step.title||"الخطوة التالية"}</button>)}
    </nav>}
 
-   <form onSubmit={run} style={{display:"flex",gap:10,margin:"16px 0",flexWrap:"wrap"}}>
+   {!fixtureMode&&<form onSubmit={run} style={{display:"flex",gap:10,margin:"16px 0",flexWrap:"wrap"}}>
     <input autoFocus value={q} onChange={e=>setQ(e.target.value)} placeholder={followUp?"اسأل عن أي شيء تراه الآن…":"ما الذي تريد أن تفهمه؟"} style={{flex:"1 1 520px",padding:"18px 20px",borderRadius:18,border:"1px solid #ffffff22",background:"#0d1320",color:"white",fontSize:18,outline:"none"}}/>
     <button disabled={!ready||loading||!q.trim()} style={{padding:"0 26px",minHeight:58,borderRadius:18,border:0,background:"#e8b84c",color:"#111",fontWeight:800,fontSize:16,opacity:loading?.65:1}}>{loading?"يعمل…":followUp?"تعمّق داخل البحث":"ابدأ الفهم"}</button>
-   </form>
+   </form>}
 
    {followUp&&<div style={{fontSize:13,opacity:.6,margin:"-6px 4px 12px"}}>السؤال التالي يحتفظ بموضوع البحث وسياقه. استخدم «بحث جديد» عندما تريد الانتقال إلى موضوع آخر.</div>}
    {error&&<div style={{padding:14,border:"1px solid #ff6b6b55",borderRadius:14,color:"#ffb3b3",marginBottom:12}}>{error}</div>}
    {visualNotice&&<div role="status" style={{fontSize:12,opacity:.8,marginBottom:12}}>{visualNotice}</div>}
 
    {history.length>0&&<div style={{display:"flex",gap:10,overflowX:"auto",padding:"8px 0 20px"}}>
-     {history.map((h,i)=><button key={h.id||i} disabled={loading} onClick={()=>{if(h.status==="complete"&&h.result){setImage(h.image);setStageFocus(sceneStageFocus(h.stageFocus,h.result?.steps,h.result?.title));setResult(h.result);setActiveStep(initialVisualStep(h.result));setQ("");setVisualNotice("");}}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
+     {history.map((h,i)=><button key={h.id||i} disabled={loading} onClick={()=>{if(h.status==="complete"&&h.result){setImage(h.image);setImageDimensions(h.imageDimensions||{width:2048,height:1280});setStageFocus(acceptedStageFocus(h.stageFocus,h.result?.steps));setViewingTurnId(h.id);setResult(h.result);setActiveStep(h.image?(Number.isInteger(h.cameraStep)?h.cameraStep:-1):initialVisualStep(h.result));setQ("");setVisualNotice("");}}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
      {h.image?<img src={h.image} alt="" style={{width:"100%",height:90,objectFit:"cover",borderRadius:9}}/>:<div style={{width:"100%",height:90,borderRadius:9,display:"grid",placeItems:"center",background:"radial-gradient(circle,#25324b,#0a0f19)",color:"#e8b84c",fontSize:28}}>✦</div>}
      <small style={{display:"block",marginTop:8,lineHeight:1.4}}>{h.question}</small><small style={{display:"block",opacity:.55,marginTop:4}}>{h.status==="complete"?(h.image?"صورة محفوظة":"مشهد دلالي محفوظ"):h.status==="processing"?"لم يكتمل":h.status==="visual-failed"?"لم يتغير المشهد":"تعذر التنفيذ"}</small>
     </button>)}
