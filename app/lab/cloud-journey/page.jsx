@@ -3,7 +3,7 @@
 import {useCallback,useEffect,useRef,useState} from "react";
 import "./cloud-journey.css";
 
-const ART="/lab/cloud-journey/cloud.webp";
+const ART="/lab/cloud-journey/cloud.png";
 const scenes=[
  {id:"overview",title:"ما هي السحب الركامية؟",micro:"مشهد كامل",detail:"سحابة تنمو عموديًا من هواء رطب صاعد، وقد تتطوّر إلى سحابة ركامية مزنية.",fx:51,fy:46,z:1,kind:"none",chip:"01 / البداية",palette:"blue"},
  {id:"surface",title:"تسخين السطح",micro:"مصدر الطاقة",detail:"تسخّن الشمس سطح الأرض أو البحر؛ وهذا يساعد الهواء القريب على اكتساب حرارة.",fx:21,fy:82,z:1.68,kind:"sun",chip:"02 / الحرارة",palette:"warm"},
