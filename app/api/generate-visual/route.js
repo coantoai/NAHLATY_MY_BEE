@@ -3,7 +3,7 @@ import { requestLimit } from "../../lib/requestGuard";
 import { visualChangePlan } from "../../lib/visualChange";
 import { acceptVisualVerdict } from "../../lib/visualTruthGate";
 import { buildImagePrompt } from "../../lib/imagePrompt";
-import { acceptedStageFocus } from "../../lib/stageFocus";
+import { acceptedStageFocus, missingStageIndices, normalizeTextContent, resolveStageFocus, selectStagesForLocalization } from "../../lib/stageFocus";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -54,7 +54,7 @@ async function qwenText(messages,max_tokens=900){
  const r=await fetch(CHAT_ENDPOINT,{method:"POST",headers:{"content-type":"application/json","authorization":`Bearer ${API_KEY}`},body:JSON.stringify({model:VISION_MODEL,messages,temperature:0.1,max_tokens,enable_thinking:false})});
  const p=await r.json().catch(()=>({}));
  if(!r.ok)throw new Error(p?.error?.message||p?.message||`Qwen verification failed (${r.status})`);
- return {text:p?.choices?.[0]?.message?.content||"",usage:p?.usage||null};
+ return {text:normalizeTextContent(p?.choices?.[0]?.message?.content),usage:p?.usage||null};
 }
 async function buildTruthSpec(question,previous,summary,changePlan){
  const reference=curatedVisualEvidence(question,previous);
@@ -116,13 +116,18 @@ If two images are supplied, set continuityPreserved true if the unchanged contex
  return {...verdict,stageFocus:acceptedStageFocus(verdict.stageFocus,steps),continuityPreserved:anchor?verdict.continuityPreserved===true:false,usage:out.usage};
 }
 
-async function locateStages(dataUrl,steps){
- if(!steps.length)return [];
+async function locateStages(dataUrl,steps,indices){
+ if(!steps.length)return {focus:[],status:"no-stages"};
  try{
-  const prompt=`Look ONLY at the attached educational image. Locate the actual visible physical subject of each explanation stage. Image coordinates are normalized: x=0 left, x=1 right, y=0 top, y=1 bottom. Stages: ${JSON.stringify(steps.map((s,index)=>({index,title:s.title,text:s.text})))}. Return ONLY JSON {"stageFocus":[{"index":0,"visible":true,"x":0.5,"y":0.5}]}. Return visible:false without x,y for an absent or ambiguous subject. Do not infer positions from the stage text or invent an unseen process. No prose.`;
+  const targets=selectStagesForLocalization(steps,indices);
+  const prompt=`Inspect only the attached final image. For each listed stage, identify a visible image region that directly represents its described event. Return the center point of that visible region in normalized image coordinates, x and y from 0 to 1. Use the stage index exactly as supplied. If no visible region directly supports a stage, mark it visible:false and give no coordinates. Never infer a location from the topic or from typical layouts. Stages: ${JSON.stringify(targets)}. Return only JSON: {"stageFocus":[{"index":0,"visible":true,"x":0.5,"y":0.5}]}.`;
   const out=await qwenText([{role:"user",content:[{type:"image_url",image_url:{url:dataUrl}},{type:"text",text:prompt}]}],420);
-  return acceptedStageFocus(parseJson(out.text)?.stageFocus,steps);
- }catch(error){console.warn("[NAHLATY_STAGE_FOCUS_UNAVAILABLE]",String(error?.message||error));return []}
+  const parsed=parseJson(out.text);
+  if(!Array.isArray(parsed?.stageFocus))return {focus:[],status:"invalid-response"};
+  const requested=new Set(targets.map(target=>target.index));
+  const focus=acceptedStageFocus(parsed.stageFocus,steps).filter(region=>requested.has(region.index)).map(region=>({...region,source:"image-locator"}));
+  return {focus,status:focus.length?"located":"no-targets"};
+ }catch(error){console.warn("[NAHLATY_STAGE_FOCUS_UNAVAILABLE]",String(error?.message||error));return {focus:[],status:"provider-error"}}
 }
 
 export async function POST(req){
@@ -147,8 +152,16 @@ export async function POST(req){
   console.info("[NAHLATY_QWEN_IMAGE_USAGE]",JSON.stringify({requestId:out.requestId,model:IMAGE_MODEL,usage:out.usage}));
   const verdict=await verifyVisual(out.data,truth.spec,anchor,changePlan,stages);
   if(!verdict.pass)return NextResponse.json({ok:false,error:verdict.reason==="change-not-fulfilled"?"لم يتغير المشهد وفق طلبك؛ أُبقيت الصورة السابقة.":["visible-typography","infographic-layout","typography-unverified"].includes(verdict.reason)?"تحتوي الصورة نصوصًا أو تخطيط إنفوغرافيك؛ أُبقي المشهد السابق.":"لم تجتز الصورة فحص الدقة أو الاستمرارية.",visualTruthGate:verdict,provider:"qwen-only",inspectionImage:out.data,generationUsage:out.usage,generationRequestId:out.requestId,truthGateUsage:truth.usage},{status:422});
-  const stageFocus=verdict.stageFocus?.length?verdict.stageFocus:await locateStages(out.data,stages);
-  return NextResponse.json({ok:true,image:out.data,stageFocus,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,visualChange:{mode:changePlan.mode,changeFulfilled:verdict.changeFulfilled===true,required:changePlan.required},generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.sourceEvidence.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
+  const reviewedFocus=(verdict.stageFocus||[]).map(region=>({...region,source:"visual-review"}));
+  const missingIndices=missingStageIndices(reviewedFocus,stages);
+  const locator=missingIndices.length
+   ?await locateStages(out.data,stages,missingIndices)
+   :{focus:[],status:"not-needed"};
+  const resolvedFocus=resolveStageFocus(reviewedFocus,locator.focus,stages);
+  const stageFocus=resolvedFocus.regions;
+  const focusDiagnostics={...resolvedFocus.diagnostics,locatorStatus:locator.status};
+  console.info("[NAHLATY_STAGE_FOCUS]",JSON.stringify(focusDiagnostics));
+  return NextResponse.json({ok:true,image:out.data,stageFocus,stageFocusDiagnostics:focusDiagnostics,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,visualChange:{mode:changePlan.mode,changeFulfilled:verdict.changeFulfilled===true,required:changePlan.required},generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
  }catch(error){
   console.error("[NAHLATY_QWEN_ERROR]",String(error?.message||error));
   return NextResponse.json({ok:false,error:String(error?.message||error)},{status:500});
