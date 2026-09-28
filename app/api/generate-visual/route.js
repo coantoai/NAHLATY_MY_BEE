@@ -3,6 +3,7 @@ import { requestLimit } from "../../lib/requestGuard";
 import { visualChangePlan } from "../../lib/visualChange";
 import { acceptVisualVerdict } from "../../lib/visualTruthGate";
 import { buildImagePrompt } from "../../lib/imagePrompt";
+import { acceptedStageFocus } from "../../lib/stageFocus";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -93,24 +94,26 @@ async function generateImage(prompt,anchor){
  const bytes=Buffer.from(await ir.arrayBuffer());
  return {data:`data:${mime};base64,${bytes.toString("base64")}`,usage:p?.usage||null,requestId:p?.request_id||null};
 }
-async function verifyVisual(dataUrl,spec,anchor=null,changePlan={}){
+async function verifyVisual(dataUrl,spec,anchor=null,changePlan={},steps=[]){
  const prompt=`Inspect the educational result against this truth specification: ${JSON.stringify(spec)}
 The user-requested visual change contract is: ${JSON.stringify(changePlan)}
 ${anchor?"Make a direct before/after comparison. A scene with the old subject unchanged must FAIL, even if it is otherwise beautiful and scientifically plausible. For example, a request to change a ceiling fan into a freestanding pedestal fan FAILS if the result still has a ceiling fan. Do not confuse preserving palette with preserving the old object.":"This is a first creation with ONE image only. There is no previous frame or input image to compare. Judge the new image solely against the question and truth specification; never call it unchanged or identical to an imagined prior frame."}
 ${anchor?"There are TWO images: first = previous world, second = newly generated result. Confirm the original subject/world remains recognizable while the camera or explanatory detail evolves. A different animal, different anatomy, or unrelated visual world fails continuity except when a subject replacement is explicitly requested; in that case preserve only the unaffected visual setting and style.":"There is one newly generated image."}
 Reject factual contradictions: wrong anatomy, reversed flow/arrows, impossible sequence, false labels, unsupported invented detail, and mustNotShow violations.
 Reject any visible letters, pseudo-letters, words, paragraphs, captions, legends, labels, title blocks, UI cards, panels or infographic layouts in the IMAGE. Inspect the actual pixels even if the question and truth spec contain text. Set containsReadableText=true for visible text or pseudo-text in any language; set hasInfographicLayout=true for diagrams assembled as boxed panels, cards, charts or poster sections. A beautiful infographic still fails.
-Return ONLY JSON {"pass":true|false,"continuityPreserved":true|false,"changeFulfilled":true|false,"containsReadableText":true|false,"hasInfographicLayout":true|false,"criticalErrors":["..."],"reason":"..."}.
+The app's explanation stages are: ${JSON.stringify(steps.map((step,index)=>({index,title:String(step?.title||'').slice(0,90),description:String(step?.text||'').slice(0,180)})))}.
+For each stage that has a physically visible subject in the NEW image, locate the center of that exact subject as normalized x,y coordinates (0=left/top, 1=right/bottom). Do not infer positions from the question, prior image, or typical composition. If the subject is absent or ambiguous, set visible=false and omit x,y. These positions control camera movement, so an invented coordinate is worse than no zoom.
+Return ONLY JSON {"pass":true|false,"continuityPreserved":true|false,"changeFulfilled":true|false,"containsReadableText":true|false,"hasInfographicLayout":true|false,"criticalErrors":["..."],"reason":"...","stageFocus":[{"index":0,"visible":true,"x":0.5,"y":0.5}]}.
 Set changeFulfilled=true only if a meaningful, visible answer to the current question appears in the NEW image. For an explicit replacement, verify every required change and every forbidden old object.
 If only one image is supplied, set continuityPreserved to false; that is not a failure.
 If two images are supplied, set continuityPreserved true if the unchanged context and style remain coherent; when mode=replace, the replaced object MUST change. If changeFulfilled is false, pass MUST be false.`;
  const images=anchor?[{type:"image_url",image_url:{url:anchor}},{type:"image_url",image_url:{url:dataUrl}}]:[{type:"image_url",image_url:{url:dataUrl}}];
- const out=await qwenText([{role:"user",content:[...images,{type:"text",text:prompt}]}],550);
+ const out=await qwenText([{role:"user",content:[...images,{type:"text",text:prompt}]}],750);
  const verdict=acceptVisualVerdict(parseJson(out.text));
  if(!verdict||typeof verdict.pass!=="boolean")return {pass:false,criticalErrors:["Invalid verification verdict"],reason:"invalid-verdict",continuityPreserved:false,usage:out.usage};
  if(anchor&&verdict.continuityPreserved!==true)return {pass:false,criticalErrors:[...(Array.isArray(verdict.criticalErrors)?verdict.criticalErrors:[]),"Continuity was not confirmed"],reason:verdict.reason||"continuity-unverified",continuityPreserved:false,usage:out.usage};
  if(anchor&&verdict.changeFulfilled!==true)return {pass:false,criticalErrors:[...(Array.isArray(verdict.criticalErrors)?verdict.criticalErrors:[]),"User-requested visual change was not verified"],reason:"change-not-fulfilled",continuityPreserved:true,changeFulfilled:false,usage:out.usage};
- return {...verdict,continuityPreserved:anchor?verdict.continuityPreserved===true:false,usage:out.usage};
+ return {...verdict,stageFocus:acceptedStageFocus(verdict.stageFocus,steps),continuityPreserved:anchor?verdict.continuityPreserved===true:false,usage:out.usage};
 }
 
 export async function POST(req){
@@ -125,6 +128,7 @@ export async function POST(req){
   const previous=String(context?.previousTitle||"").slice(0,180);
   const summary=String(context?.previousSummary||"").slice(0,900);
   const anchor=imageAnchor(context?.previousImage);
+  const stages=Array.isArray(body?.stages)?body.stages.slice(0,7).map(step=>({title:String(step?.title||'').slice(0,90),text:String(step?.text||'').slice(0,180)})):[];
   const changePlan=visualChangePlan(question,previous,Boolean(anchor));
   const truth=await buildTruthSpec(question,previous,summary,changePlan);
   const prompt=buildImagePrompt(truth.spec,changePlan,Boolean(anchor));
@@ -132,9 +136,9 @@ export async function POST(req){
   const out=await generateImage(prompt,anchor);
   // Record provider-reported usage even when the later visual check rejects the image.
   console.info("[NAHLATY_QWEN_IMAGE_USAGE]",JSON.stringify({requestId:out.requestId,model:IMAGE_MODEL,usage:out.usage}));
-  const verdict=await verifyVisual(out.data,truth.spec,anchor,changePlan);
+  const verdict=await verifyVisual(out.data,truth.spec,anchor,changePlan,stages);
   if(!verdict.pass)return NextResponse.json({ok:false,error:verdict.reason==="change-not-fulfilled"?"لم يتغير المشهد وفق طلبك؛ أُبقيت الصورة السابقة.":["visible-typography","infographic-layout","typography-unverified"].includes(verdict.reason)?"تحتوي الصورة نصوصًا أو تخطيط إنفوغرافيك؛ أُبقي المشهد السابق.":"لم تجتز الصورة فحص الدقة أو الاستمرارية.",visualTruthGate:verdict,provider:"qwen-only",inspectionImage:out.data,generationUsage:out.usage,generationRequestId:out.requestId,truthGateUsage:truth.usage},{status:422});
-  return NextResponse.json({ok:true,image:out.data,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,visualChange:{mode:changePlan.mode,changeFulfilled:verdict.changeFulfilled===true,required:changePlan.required},generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.sourceEvidence.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
+  return NextResponse.json({ok:true,image:out.data,stageFocus:verdict.stageFocus,model:IMAGE_MODEL,provider:"qwen-only",continuity:Boolean(anchor)&&verdict.continuityPreserved===true,visualChange:{mode:changePlan.mode,changeFulfilled:verdict.changeFulfilled===true,required:changePlan.required},generationUsage:out.usage,generationRequestId:out.requestId,truthGate:{status:truth.spec.status,reviewLevel:truth.spec.sourceEvidence?"model-reviewed-with-curated-constraints":"model-reviewed-only",sourceEvidence:truth.spec.sourceEvidence?{topic:truth.spec.sourceEvidence.topic,source:truth.spec.sourceEvidence.source}:null,topic:truth.spec.topic,claims:truth.spec.claims,usage:truth.usage},visualTruthGate:{pass:true,usage:verdict.usage}});
  }catch(error){
   console.error("[NAHLATY_QWEN_ERROR]",String(error?.message||error));
   return NextResponse.json({ok:false,error:String(error?.message||error)},{status:500});
