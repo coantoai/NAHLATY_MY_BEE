@@ -2,7 +2,7 @@
 import {useEffect,useRef,useState} from "react";
 import {listTurns,listWorlds,makeId,storeTurn} from "../lib/livingHistory";
 import {initialVisualStep,resolveVisualOutcome,sceneCaption,visualGenerationNeeded} from "../lib/visualOutcome";
-import {acceptedStageFocus} from "../lib/stageFocus";
+import {sceneStageFocus} from "../lib/stageFocus";
 
 function FocusedImage({src,title,region}){
  const zoom=region?1.55:1;
@@ -10,11 +10,15 @@ function FocusedImage({src,title,region}){
  const tx=region?Math.max(width*(1-zoom),Math.min(0,width/2-zoom*width*region.x)):0;
  const ty=region?Math.max(height*(1-zoom),Math.min(0,height/2-zoom*height*region.y)):0;
  return <svg viewBox="0 0 1000 625" preserveAspectRatio="xMidYMid meet" role="img" aria-label={title||"مشهد بصري"} style={{width:"100%",height:"min(66vh,620px)",minHeight:460,display:"block",background:"#090d16"}}>
+  <style>{`@keyframes bee-flow{to{stroke-dashoffset:-42}} @keyframes bee-pulse{50%{opacity:.3;transform:scale(1.14)}} .bee-flow{stroke-dasharray:12 13;animation:bee-flow 1.8s linear infinite} .bee-pulse{transform-box:fill-box;transform-origin:center;animation:bee-pulse 2.2s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.bee-flow,.bee-pulse{animation:none}}`}</style>
   <g transform={`translate(${tx} ${ty}) scale(${zoom})`} style={{transition:"transform 650ms ease-out"}}>
    <image href={src} width={width} height={height} preserveAspectRatio="none"/>
-   {region&&<g aria-hidden="true" fill="none" stroke="#ffe09a" strokeWidth="2">
-    <circle cx={width*region.x} cy={height*region.y} r="38" opacity=".85"/>
-    <circle cx={width*region.x} cy={height*region.y} r="56" opacity=".35"/>
+   {region&&<g aria-hidden="true" fill="none" strokeWidth="2.5">
+    <circle className="bee-pulse" cx={width*region.x} cy={height*region.y} r="53" stroke={region.effect==='cooling'?'#a8ddff':'#ffe09a'} opacity=".7"/>
+    {region.effect==='updraft'&&[-36,0,36].map(offset=><path key={offset} className="bee-flow" d={`M ${width*region.x+offset} 620 Q ${width*region.x+offset-20} 545 ${width*region.x+offset} 470`} stroke="#ffce75" strokeWidth="4" strokeLinecap="round"/>)}
+    {region.effect==='cooling'&&<path className="bee-flow" d={`M ${width*region.x-60} ${height*region.y+45} Q ${width*region.x} ${height*region.y-35} ${width*region.x+60} ${height*region.y-60}`} stroke="#a8ddff" strokeWidth="5" strokeLinecap="round"/>}
+    {region.effect==='droplets'&&[-44,-20,8,34,58].map((offset,i)=><circle key={offset} className="bee-pulse" cx={width*region.x+offset} cy={height*region.y+(i%2)*18} r={4+i%3} fill="#b8eaff" stroke="#fff" strokeWidth="1"/>)}
+    {region.effect==='tower'&&<path className="bee-pulse" d={`M ${width*region.x-90} ${height*region.y+55} Q ${width*region.x-35} ${height*region.y-105} ${width*region.x+70} ${height*region.y-42}`} stroke="#fff0ad" strokeWidth="4" opacity=".7"/>}
    </g>}
   </g>
  </svg>;
@@ -101,7 +105,7 @@ export default function LivingEngine(){
      setSelectedId(saved[0].id);
      setHistory(turns);
      const last=[...turns].reverse().find(t=>t.status==="complete"&&t.result);
-     if(last){setResult(last.result);setImage(last.image||"");setStageFocus(acceptedStageFocus(last.stageFocus,last.result?.steps));setActiveStep(initialVisualStep(last.result));}
+     if(last){setResult(last.result);setImage(last.image||"");setStageFocus(sceneStageFocus(last.stageFocus,last.result?.steps,last.result?.title));setActiveStep(initialVisualStep(last.result));}
     }
     setSaving("saved");
    }catch(error){
@@ -149,7 +153,7 @@ export default function LivingEngine(){
    const last=[...turns].reverse().find(t=>t.status==="complete"&&t.result);
    setResult(last?.result||null);
    setImage(last?.image||"");
-   setStageFocus(acceptedStageFocus(last?.stageFocus,last?.result?.steps));
+   setStageFocus(sceneStageFocus(last?.stageFocus,last?.result?.steps,last?.result?.title));
    setActiveStep(initialVisualStep(last?.result));
    setQ("");
    setError("");
@@ -255,7 +259,7 @@ export default function LivingEngine(){
     imageVerdict=ip?.visualTruthGate||null;
     if(im.ok&&ip?.ok&&String(ip.image||"").startsWith("data:image/")){
      visualImage=ip.image;
-     imageStageFocus=acceptedStageFocus(ip.stageFocus,next.steps);
+     imageStageFocus=sceneStageFocus(ip.stageFocus,next.steps,next.title);
      visualModel=ip.model||"generated-image";
     }else{
      imageFailed=true;
@@ -313,16 +317,7 @@ export default function LivingEngine(){
    {archiveError&&<div role="alert" style={{padding:"10px 13px",border:"1px solid #e8b84c55",borderRadius:11,marginBottom:12,fontSize:12}}>{archiveError}</div>}
    <section style={{position:"relative",minHeight:"min(66vh,620px)",border:"1px solid #ffffff18",borderRadius:28,overflow:"hidden",background:"#090d16",boxShadow:"0 30px 80px #0008"}}>
     {image
-     ?<><FocusedImage src={image} title={result?.title} region={stageFocus.find(region=>region.index===activeStep)}/>
-       {result?.steps?.length>0&&<div style={{position:"absolute",inset:"auto 14px 14px",display:"flex",gap:8,alignItems:"end",justifyContent:"space-between",flexWrap:"wrap"}}>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{result.steps.slice(0,7).map((step,i)=><button key={i} type="button" aria-pressed={activeStep===i} onClick={()=>setActiveStep(i)} style={{padding:"8px 10px",borderRadius:10,border:activeStep===i?"1px solid #ffe38a":"1px solid #ffffff55",background:activeStep===i?"#17120bcc":"#090d16bb",color:"#fff8de",fontSize:12}}>{i+1}. {step.title||"التركيز"}</button>)}</div>
-        <button type="button" onClick={()=>setShowSemanticOverlay(v=>!v)} aria-expanded={showSemanticOverlay} style={{padding:"8px 10px",borderRadius:10,border:"1px solid #e8b84c88",background:"#1c170dcc",color:"#ffe9a8",fontSize:12}}>{showSemanticOverlay?"إخفاء خريطة المعنى":"إظهار خريطة المعنى"}</button>
-       </div>}
-       {showSemanticOverlay&&result&&<div role="dialog" aria-label="خريطة معنى المشهد" style={{position:"absolute",inset:"14px 14px auto",maxWidth:440,padding:16,borderRadius:16,background:"#070b14e8",border:"1px solid #e8b84c66",boxShadow:"0 12px 28px #0008"}}>
-        <b style={{color:"#ffe9a8"}}>{result.steps?.[activeStep]?.title||result.title}</b>
-        <p style={{margin:"8px 0 0",lineHeight:1.7,fontSize:13}}>{sceneCaption(result.steps?.[activeStep]||{})||result.summary}</p>
-       </div>}
-      </>
+     ?<FocusedImage src={image} title={result?.title} region={stageFocus.find(region=>region.index===activeStep)}/>
      :result
       ?<SemanticFallback experience={result} activeStep={activeStep}/>
       :<div style={{height:"min(66vh,620px)",minHeight:460,display:"grid",placeItems:"center",textAlign:"center",padding:30}}><div><div style={{fontSize:64}}>✦</div><h1 style={{fontSize:"clamp(30px,5vw,54px)",margin:"10px 0"}}>اسأل عن أي شيء</h1><p style={{opacity:.65,fontSize:18}}>السؤال يبني عالمًا بصريًا جديدًا. والسؤال التالي يعيد البحث داخل نفس العالم.</p></div></div>}
@@ -330,6 +325,12 @@ export default function LivingEngine(){
     {loading&&<div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",background:"#050811bb",backdropFilter:"blur(8px)",zIndex:3}}><div style={{textAlign:"center"}}><div style={{fontSize:52,color:"#e8b84c"}}>✦</div><b style={{fontSize:20}}>{followUp?"أطوّر نفس البحث…":"أبني العالم البصري…"}</b><p style={{opacity:.65}}>فهم السؤال ← بناء المعنى ← توليد المشهد</p></div></div>}
 
    </section>
+
+   {image&&result?.steps?.length>0&&<nav aria-label="مراحل الصورة" style={{display:"flex",gap:8,overflowX:"auto",padding:"12px 0 2px",alignItems:"center"}}>
+    {result.steps.slice(0,7).map((step,i)=><button key={i} type="button" aria-pressed={activeStep===i} onClick={()=>setActiveStep(i)} style={{flex:"0 0 auto",maxWidth:230,padding:"9px 12px",borderRadius:11,border:activeStep===i?"1px solid #ffe38a":"1px solid #ffffff55",background:activeStep===i?"#302816":"#101725",color:"#fff8de",fontSize:12}}>{i+1}. {step.title||"التركيز"}</button>)}
+    <button type="button" onClick={()=>setShowSemanticOverlay(v=>!v)} aria-expanded={showSemanticOverlay} style={{flex:"0 0 auto",padding:"9px 12px",borderRadius:11,border:"1px solid #e8b84c88",background:"#101725",color:"#ffe9a8",fontSize:12}}>{showSemanticOverlay?"إخفاء الشرح":"عرض الشرح"}</button>
+   </nav>}
+   {image&&showSemanticOverlay&&result&&<div role="region" aria-label="شرح المرحلة" style={{padding:"12px 16px",marginTop:8,borderRadius:12,background:"#101725",border:"1px solid #e8b84c44"}}><b style={{color:"#ffe9a8"}}>{result.steps?.[activeStep]?.title||result.title}</b><p style={{margin:"6px 0 0",lineHeight:1.6,fontSize:13}}>{sceneCaption(result.steps?.[activeStep]||{})||result.summary}</p></div>}
 
    {result?.steps?.length>0&&!image&&<nav aria-label="خطوات الشرح البصري" style={{display:"flex",gap:8,overflowX:"auto",padding:"12px 0 0"}}>
     {result.steps.map((step,i)=><button key={i} type="button" aria-pressed={activeStep===i} onClick={()=>setActiveStep(i)} style={{flex:"0 0 auto",maxWidth:220,padding:"9px 12px",borderRadius:11,border:activeStep===i?"1px solid #e8b84c":"1px solid #ffffff30",background:activeStep===i?"#302816":"#101725",color:"#f8f3e8"}}>{i+1}. {step.title||"الخطوة التالية"}</button>)}
@@ -345,7 +346,7 @@ export default function LivingEngine(){
    {visualNotice&&<div role="status" style={{fontSize:12,opacity:.8,marginBottom:12}}>{visualNotice}</div>}
 
    {history.length>0&&<div style={{display:"flex",gap:10,overflowX:"auto",padding:"8px 0 20px"}}>
-     {history.map((h,i)=><button key={h.id||i} disabled={loading} onClick={()=>{if(h.status==="complete"&&h.result){setImage(h.image);setStageFocus(acceptedStageFocus(h.stageFocus,h.result?.steps));setResult(h.result);setActiveStep(initialVisualStep(h.result));setQ("");setVisualNotice("");}}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
+     {history.map((h,i)=><button key={h.id||i} disabled={loading} onClick={()=>{if(h.status==="complete"&&h.result){setImage(h.image);setStageFocus(sceneStageFocus(h.stageFocus,h.result?.steps,h.result?.title));setResult(h.result);setActiveStep(initialVisualStep(h.result));setQ("");setVisualNotice("");}}} style={{minWidth:190,maxWidth:190,textAlign:"right",padding:10,borderRadius:14,border:"1px solid #ffffff18",background:"#0c111b",color:"white"}}>
      {h.image?<img src={h.image} alt="" style={{width:"100%",height:90,objectFit:"cover",borderRadius:9}}/>:<div style={{width:"100%",height:90,borderRadius:9,display:"grid",placeItems:"center",background:"radial-gradient(circle,#25324b,#0a0f19)",color:"#e8b84c",fontSize:28}}>✦</div>}
      <small style={{display:"block",marginTop:8,lineHeight:1.4}}>{h.question}</small><small style={{display:"block",opacity:.55,marginTop:4}}>{h.status==="complete"?(h.image?"صورة محفوظة":"مشهد دلالي محفوظ"):h.status==="processing"?"لم يكتمل":h.status==="visual-failed"?"لم يتغير المشهد":"تعذر التنفيذ"}</small>
     </button>)}
