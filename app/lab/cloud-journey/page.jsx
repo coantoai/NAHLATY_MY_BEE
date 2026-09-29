@@ -6,7 +6,7 @@ import "./cloud-journey.css";
 const ART="/lab/cloud-journey/cloud.png";
 const scenes=[
  {id:"overview",title:"ما هي السحب الركامية؟",micro:"مشهد كامل",detail:"سحابة تنمو عموديًا من هواء رطب صاعد، وقد تتطوّر إلى سحابة ركامية مزنية.",fx:51,fy:46,z:1,kind:"none",chip:"01 / البداية",palette:"blue"},
- {id:"surface",title:"تسخين السطح",micro:"مصدر الطاقة",detail:"تسخّن الشمس سطح الأرض أو البحر؛ وهذا يساعد الهواء القريب على اكتساب حرارة.",fx:21,fy:82,z:1.68,kind:"heat",chip:"02 / الحرارة",palette:"warm"},
+ {id:"surface",title:"تسخين السطح",micro:"مصدر الطاقة",detail:"تسخّن الشمس سطح الأرض أو البحر؛ وهذا يساعد الهواء القريب على اكتساب حرارة.",fx:21,fy:82,z:1.68,kind:"none",chip:"02 / الحرارة",palette:"warm"},
  {id:"updraft",title:"صعود الهواء الرطب",micro:"اتّجاه الحركة",detail:"عندما يصبح الهواء أدفأ من محيطه، يمكنه الصعود حاملًا بخار ماء غير مرئي.",fx:42,fy:68,z:1.47,kind:"none",chip:"03 / الصعود",palette:"warm"},
  {id:"condensation",title:"تكوّن القطرات",micro:"من هواء إلى غيم",detail:"مع الصعود يتمدّد الهواء ويبرد. إذا بلغ الإشباع، يتكاثف بخار الماء إلى قطرات دقيقة.",fx:47,fy:48,z:1.64,kind:"none",chip:"04 / التكاثف",palette:"ice"},
  {id:"growth",title:"النمو الرأسي للسحابة",micro:"تضخّم البرج",detail:"يستمر نمو البرج السحابي ما دام الصعود وتغذية السحابة بالرطوبة مناسبين.",fx:50,fy:31,z:1.48,kind:"none",chip:"05 / النمو",palette:"blue"},
