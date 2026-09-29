@@ -6,11 +6,11 @@ import "./cloud-journey.css";
 const ART="/lab/cloud-journey/cloud.png";
 const scenes=[
  {id:"overview",title:"ما هي السحب الركامية؟",micro:"مشهد كامل",detail:"سحابة تنمو عموديًا من هواء رطب صاعد، وقد تتطوّر إلى سحابة ركامية مزنية.",fx:51,fy:46,z:1,kind:"none",chip:"01 / البداية",palette:"blue"},
- {id:"surface",title:"تسخين السطح",micro:"مصدر الطاقة",detail:"تسخّن الشمس سطح الأرض أو البحر؛ وهذا يساعد الهواء القريب على اكتساب حرارة.",fx:21,fy:82,z:1.68,kind:"sun",chip:"02 / الحرارة",palette:"warm"},
- {id:"updraft",title:"صعود الهواء الرطب",micro:"اتّجاه الحركة",detail:"عندما يصبح الهواء أدفأ من محيطه، يمكنه الصعود حاملًا بخار ماء غير مرئي.",fx:42,fy:68,z:1.47,kind:"rise",chip:"03 / الصعود",palette:"warm"},
- {id:"condensation",title:"تكوّن القطرات",micro:"من هواء إلى غيم",detail:"مع الصعود يتمدّد الهواء ويبرد. إذا بلغ الإشباع، يتكاثف بخار الماء إلى قطرات دقيقة.",fx:47,fy:48,z:1.64,kind:"drops",chip:"04 / التكاثف",palette:"ice"},
- {id:"growth",title:"النمو الرأسي للسحابة",micro:"تضخّم البرج",detail:"يستمر نمو البرج السحابي ما دام الصعود وتغذية السحابة بالرطوبة مناسبين.",fx:50,fy:31,z:1.48,kind:"growth",chip:"05 / النمو",palette:"blue"},
- {id:"anvil",title:"انتشار السندان",micro:"الحد الأعلى",detail:"في السحابة الركامية المزنية، قد ينتشر أعلى السحابة أفقيًا قرب طبقة تحدّ من صعودها.",fx:69,fy:14,z:1.61,kind:"anvil",chip:"06 / السندان",palette:"ice"},
+ {id:"surface",title:"تسخين السطح",micro:"مصدر الطاقة",detail:"تسخّن الشمس سطح الأرض أو البحر؛ وهذا يساعد الهواء القريب على اكتساب حرارة.",fx:21,fy:82,z:1.68,kind:"heat",chip:"02 / الحرارة",palette:"warm"},
+ {id:"updraft",title:"صعود الهواء الرطب",micro:"اتّجاه الحركة",detail:"عندما يصبح الهواء أدفأ من محيطه، يمكنه الصعود حاملًا بخار ماء غير مرئي.",fx:42,fy:68,z:1.47,kind:"none",chip:"03 / الصعود",palette:"warm"},
+ {id:"condensation",title:"تكوّن القطرات",micro:"من هواء إلى غيم",detail:"مع الصعود يتمدّد الهواء ويبرد. إذا بلغ الإشباع، يتكاثف بخار الماء إلى قطرات دقيقة.",fx:47,fy:48,z:1.64,kind:"none",chip:"04 / التكاثف",palette:"ice"},
+ {id:"growth",title:"النمو الرأسي للسحابة",micro:"تضخّم البرج",detail:"يستمر نمو البرج السحابي ما دام الصعود وتغذية السحابة بالرطوبة مناسبين.",fx:50,fy:31,z:1.48,kind:"none",chip:"05 / النمو",palette:"blue"},
+ {id:"anvil",title:"انتشار السندان",micro:"الحد الأعلى",detail:"في السحابة الركامية المزنية، قد ينتشر أعلى السحابة أفقيًا قرب طبقة تحدّ من صعودها.",fx:69,fy:14,z:1.61,kind:"none",chip:"06 / السندان",palette:"ice"},
  {id:"rain",title:"هطول الأمطار",micro:"داخل السحابة",detail:"تنمو القطرات أو بلورات الجليد، وحين تكبر بما يكفي تسقط كهطول.",fx:69,fy:65,z:1.61,kind:"rain",chip:"07 / الهطول",palette:"ice"},
  {id:"lightning",title:"البرق والرعد",micro:"تفريغ كهربائي",detail:"في العواصف الرعدية ينشأ انفصال للشحنات؛ البرق تفريغ كهربائي، والرعد صوت تمدّد الهواء السريع.",fx:68,fy:57,z:1.73,kind:"flash",chip:"08 / الطاقة",palette:"violet"}
 ];
@@ -26,31 +26,14 @@ function Effect({kind}){
  if(kind==="none")return null;
  return <svg className={"cloud-effect cloud-effect-"+kind} viewBox="0 0 100 58" preserveAspectRatio="none" aria-hidden="true">
   <defs>
-   <linearGradient id="warm-air" x1="0" x2="0" y1="1" y2="0"><stop stopColor="#ffb248" stopOpacity="0"/><stop offset=".45" stopColor="#ffbb5b" stopOpacity=".94"/><stop offset="1" stopColor="#fff2ad" stopOpacity=".6"/></linearGradient>
-   <linearGradient id="cool-air" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#bceeff" stopOpacity=".1"/><stop offset=".6" stopColor="#6fd0ff" stopOpacity=".95"/><stop offset="1" stopColor="#b3e9ff" stopOpacity=".2"/></linearGradient>
-   <filter id="glow"><feGaussianBlur stdDeviation="1.05" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+   <linearGradient id="warm-air" x1="0" x2="0" y1="1" y2="0"><stop stopColor="#ff9b36" stopOpacity="0"/><stop offset=".48" stopColor="#ffad49" stopOpacity=".68"/><stop offset="1" stopColor="#ffe0a0" stopOpacity=".18"/></linearGradient>
+   <linearGradient id="cool-air" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#d8f6ff" stopOpacity=".15"/><stop offset=".65" stopColor="#8bdcff" stopOpacity=".82"/><stop offset="1" stopColor="#c8f2ff" stopOpacity=".15"/></linearGradient>
+   <filter id="glow"><feGaussianBlur stdDeviation=".8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>
-  {kind==="sun"&&<>
-   <circle cx="17" cy="29" r="6.5" fill="#ffcd69" opacity=".65" filter="url(#glow)"/>
-   {[0,1,2,3,4].map(i=><path key={i} d={"M "+(11+i*4)+" 33 Q "+(15+i*3)+" 41 "+(24+i*3)+" 46"} fill="none" stroke="url(#warm-air)" strokeWidth="1.2" strokeLinecap="round" className="glow-flow"/>)}
-  </>}
-  {kind==="rise"&&[0,1,2].map(i=><g key={i} className="glow-flow" style={{animationDelay:(i*.32)+"s"}}>
-   <path d={"M "+(29+i*9)+" 55 Q "+(20+i*9)+" 40 "+(36+i*4)+" 29 Q "+(39+i*4)+" 25 "+(39+i*5)+" 18"} fill="none" stroke="url(#warm-air)" strokeWidth="1.35" strokeLinecap="round" filter="url(#glow)"/>
-   <path d={"M "+(35+i*5)+" 21 l "+(4)+ " -4 l "+(-1)+" 6"} fill="none" stroke="#ffdb87" strokeWidth=".8" strokeLinecap="round" strokeLinejoin="round"/>
-  </g>)}
-  {kind==="drops"&&<g filter="url(#glow)">{Array.from({length:16},(_,i)=>{
-   const x=34+(i%8)*4.3,y=18+Math.floor(i/8)*6.5;
-   return <g className="drop-pulse" key={i} style={{animationDelay:(i*.12)+"s"}}><circle cx={x} cy={y} r={.46+(i%3)*.1} fill="#c6f6ff"/><circle cx={x+.7} cy={y-.7} r=".35" fill="#5dcbff" opacity=".8"/></g>;
-  })}</g>}
-  {kind==="growth"&&[0,1,2].map(i=><g key={i} className="glow-flow" style={{animationDelay:(i*.25)+"s"}}>
-   <path d={"M "+(39+i*9)+" 46 Q "+(33+i*9)+" 25 "+(42+i*9)+" 11"} fill="none" stroke="url(#cool-air)" strokeWidth="1.3" strokeLinecap="round"/>
-   <path d={"M "+(39+i*9)+" 15 l "+(3)+" -5 l "+(2)+" 5"} fill="none" stroke="#b7f4ff" strokeWidth=".9"/>
-  </g>)}
-  {kind==="anvil"&&<g className="glow-flow"><path d="M 46 13 Q 57 4 76 8" stroke="url(#cool-air)" strokeWidth="1.55" fill="none"/><path d="M 73 5 l 5 3 l -5 3" stroke="#b6e9ff" strokeWidth="1" fill="none"/><path d="M 42 15 Q 32 8 19 11" stroke="url(#cool-air)" strokeWidth="1.3" fill="none"/><path d="M 21 8 l -4 3 l 4 3" stroke="#b6e9ff" strokeWidth="1" fill="none"/></g>}
-  {kind==="rain"&&Array.from({length:29},(_,i)=>{
-   const x=52+(i%10)*2.4,y=30+Math.floor(i/10)*6.5;
-   return <path key={i} className="rain-stroke" style={{animationDelay:(i%7)*.17+"s"}} d={"M "+x+" "+y+" l -1.1 6"} stroke="url(#cool-air)" strokeWidth=".54" strokeLinecap="round" />;
-  })}
+  {kind==="heat"&&<g className="heat-haze">
+   {[0,1,2,3].map(i=><path key={i} d={"M "+(24+i*5)+" 57 C "+(21+i*5)+" 51 "+(30+i*4)+" 47 "+(27+i*5)+" 41 C "+(24+i*5)+" 35 "+(31+i*4)+" 31 "+(30+i*4)+" 25"} fill="none" stroke="url(#warm-air)" strokeWidth=".72" strokeLinecap="round" style={{animationDelay:(i*.27)+"s"}}/> )}
+  </g>}
+  {kind==="rain"&&Array.from({length:29},(_,i)=>{const x=52+(i%10)*2.4,y=30+Math.floor(i/10)*6.5;return <path key={i} className="rain-stroke" style={{animationDelay:(i%7)*.17+"s"}} d={"M "+x+" "+y+" l -1.1 6"} stroke="url(#cool-air)" strokeWidth=".54" strokeLinecap="round" />;})}
   {kind==="flash"&&<g className="flash-pulse"><path d="M 65 12 L 55 29 L 64 29 L 56 47 L 77 22 L 66 24 L 74 12 Z" fill="#ffffff" stroke="#aff2ff" strokeWidth=".75" strokeLinejoin="round" filter="url(#glow)"/><path d="M 35 19 L 31 27 L 38 26 L 30 39" fill="none" stroke="#e8d8ff" strokeWidth=".7" filter="url(#glow)"/></g>}
  </svg>;
 }
