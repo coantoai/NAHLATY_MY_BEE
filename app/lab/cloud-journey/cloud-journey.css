@@ -46,12 +46,9 @@ button,a{-webkit-tap-highlight-color:transparent}
 .cloud-ico{font-size:20px;vertical-align:-1px;margin-left:3px;font-family:Arial}
 .cloud-motion{position:absolute;inset:0;pointer-events:none;z-index:2}
 .cloud-effect{position:absolute;inset:0;width:100%;height:100%;opacity:.93}
-.cloud-effect-sun{filter:drop-shadow(0 0 18px #ffb44c)}
-.cloud-effect-rise,.cloud-effect-growth,.cloud-effect-anvil{filter:drop-shadow(0 0 5px #7cc7f36b)}
-.glow-flow{stroke-dasharray:12 3;animation:flow 2.15s linear infinite;stroke-dashoffset:21}
-@keyframes flow{to{stroke-dashoffset:0;opacity:.83}}
-.drop-pulse{animation:drop-appear 2.1s ease-in-out infinite;transform-origin:50% 50%}
-@keyframes drop-appear{0%,100%{opacity:.2}50%{opacity:1}}
+.cloud-effect-heat{filter:drop-shadow(0 0 8px #ff9d4038)}
+.heat-haze path{stroke-dasharray:8 5;animation:heat-rise 2.8s ease-in-out infinite}
+@keyframes heat-rise{0%{stroke-dashoffset:20;opacity:0}28%{opacity:.48}75%{opacity:.28}100%{stroke-dashoffset:0;opacity:0}}
 .rain-stroke{animation:fall 1.7s linear infinite;stroke-dasharray:5 4}
 @keyframes fall{0%{stroke-dashoffset:0;opacity:0}25%{opacity:.95}100%{stroke-dashoffset:-18;opacity:0}}
 .flash-pulse{animation:flash 4.1s linear infinite}
@@ -129,3 +126,41 @@ button,a{-webkit-tap-highlight-color:transparent}
  .glow-flow,.drop-pulse,.rain-stroke,.flash-pulse{animation:none}
  .flash-pulse{opacity:1}
 }
+
+/* Review v2: thumbnails must read as different story beats, not duplicates. */
+.cloud-thumb-overview .cloud-thumb-img{filter:saturate(.9) brightness(.92)}
+.cloud-thumb-surface .cloud-thumb-img{filter:saturate(1.18) sepia(.18) brightness(.92)}
+.cloud-thumb-updraft .cloud-thumb-img{filter:saturate(1.08) contrast(1.08)}
+.cloud-thumb-condensation .cloud-thumb-img{filter:saturate(.72) brightness(1.12) contrast(1.06)}
+.cloud-thumb-growth .cloud-thumb-img{filter:saturate(.92) contrast(1.16) brightness(.96)}
+.cloud-thumb-anvil .cloud-thumb-img{filter:saturate(.76) brightness(1.1)}
+.cloud-thumb-rain .cloud-thumb-img{filter:saturate(.78) brightness(.78) contrast(1.18)}
+.cloud-thumb-lightning .cloud-thumb-img{filter:saturate(.68) brightness(.64) contrast(1.3)}
+.cloud-thumb-surface:before,.cloud-thumb-updraft:before,.cloud-thumb-condensation:before,.cloud-thumb-growth:before,.cloud-thumb-anvil:before,.cloud-thumb-rain:before,.cloud-thumb-lightning:before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none}
+.cloud-thumb-surface:before{background:radial-gradient(circle at 22% 82%,#ffae4245,transparent 38%)}
+.cloud-thumb-updraft:before{background:linear-gradient(0deg,#ff9d3b35,transparent 62%)}
+.cloud-thumb-condensation:before{background:radial-gradient(circle at 48% 44%,#e4f8ff42,transparent 32%)}
+.cloud-thumb-growth:before{background:radial-gradient(ellipse at 50% 28%,#d9f4ff35,transparent 48%)}
+.cloud-thumb-anvil:before{background:linear-gradient(180deg,#dff6ff30,transparent 43%)}
+.cloud-thumb-rain:before{background:linear-gradient(180deg,transparent 35%,#3d88ad3d)}
+.cloud-thumb-lightning:before{background:radial-gradient(circle at 68% 54%,#d9eaff46,transparent 28%)}
+
+/* Semantic hints: subtle, scene-native cues; rain/lightning remain unchanged. */
+.cloud-embedded-cards-mask{position:absolute;z-index:3;left:0;right:0;bottom:0;height:18%;pointer-events:none;background:linear-gradient(180deg,transparent 0%,#0a1824cc 42%,#07111df5 100%);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.semantic-hint{position:absolute;pointer-events:none;z-index:2}
+.hint-overview{left:34%;top:20%;width:34%;height:46%;border-radius:50%;background:radial-gradient(ellipse,#d9efff16 0%,#b8e2ff0c 38%,transparent 72%);animation:hint-breathe 3.8s ease-in-out infinite}
+.hint-heat{left:8%;bottom:8%;width:31%;height:31%;border-radius:50%;background:radial-gradient(ellipse at 50% 80%,#ffbd5940 0%,#ef8f2520 28%,transparent 68%);filter:blur(5px);animation:heat-shimmer 2.6s ease-in-out infinite}
+.hint-updraft{left:30%;bottom:14%;width:24%;height:50%;filter:blur(.2px)}
+.hint-updraft i{position:absolute;bottom:0;width:22%;height:78%;border-radius:50%;background:linear-gradient(0deg,#f6c06a05,#f3d49f22 45%,#dff4ff08 100%);filter:blur(7px);animation:air-rise 2.8s ease-in-out infinite}
+.hint-updraft i:nth-child(1){left:12%}.hint-updraft i:nth-child(2){left:40%;height:92%;animation-delay:.45s}.hint-updraft i:nth-child(3){left:68%;height:70%;animation-delay:.9s}
+.hint-condense{left:35%;top:27%;width:29%;height:31%;border-radius:50%;background:radial-gradient(circle,#eefbff1c,transparent 66%);filter:drop-shadow(0 0 8px #d9f7ff24)}
+.hint-condense i{position:absolute;width:5px;height:5px;border-radius:50%;background:#e9faff9e;box-shadow:0 0 8px #d9f7ff80;animation:droplet-form 2.9s ease-in-out infinite}
+.hint-condense i:nth-child(1){left:18%;top:58%}.hint-condense i:nth-child(2){left:31%;top:35%;animation-delay:.3s}.hint-condense i:nth-child(3){left:44%;top:67%;animation-delay:.6s}.hint-condense i:nth-child(4){left:57%;top:28%;animation-delay:.9s}.hint-condense i:nth-child(5){left:72%;top:52%;animation-delay:1.2s}.hint-condense i:nth-child(6){left:81%;top:31%;animation-delay:1.5s}.hint-condense i:nth-child(7){left:24%;top:78%;animation-delay:1.8s}.hint-condense i:nth-child(8){left:51%;top:49%;animation-delay:2.1s}.hint-condense i:nth-child(9){left:67%;top:74%;animation-delay:2.4s}.hint-condense i:nth-child(10){left:38%;top:20%;animation-delay:2.7s}
+.hint-growth{left:35%;top:8%;width:31%;height:51%;border-radius:48% 52% 45% 55%;background:radial-gradient(ellipse at 50% 65%,#e8f7ff18 0%,#d6efff0d 45%,transparent 72%);filter:blur(2px);animation:cloud-grow 3.2s ease-in-out infinite}
+.hint-anvil{right:10%;top:6%;width:43%;height:19%;border-radius:50%;background:radial-gradient(ellipse,#e4f7ff24 0%,#d7f1ff0d 48%,transparent 75%);filter:blur(4px);animation:anvil-spread 3.3s ease-in-out infinite}
+@keyframes hint-breathe{50%{transform:scale(1.06);opacity:.7}}
+@keyframes heat-shimmer{0%,100%{transform:translateY(3px) scaleX(.96);opacity:.55}50%{transform:translateY(-7px) scaleX(1.05);opacity:.9}}
+@keyframes air-rise{0%{transform:translateY(18px) scaleX(.75);opacity:0}35%{opacity:.72}100%{transform:translateY(-35px) scaleX(1.12);opacity:0}}
+@keyframes droplet-form{0%,100%{transform:scale(.25);opacity:.15}48%{transform:scale(1.15);opacity:.95}72%{transform:scale(.82);opacity:.7}}
+@keyframes cloud-grow{0%,100%{transform:scale(.94) translateY(5px);opacity:.35}50%{transform:scale(1.07) translateY(-6px);opacity:.75}}
+@keyframes anvil-spread{0%,100%{transform:scaleX(.82);opacity:.35}50%{transform:scaleX(1.08);opacity:.72}}
