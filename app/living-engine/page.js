@@ -412,7 +412,7 @@ export default function LivingEngine(){
     <button disabled={!ready||loading||!q.trim()} style={{padding:"0 26px",minHeight:58,borderRadius:18,border:0,background:"#e8b84c",color:"#111",fontWeight:800,fontSize:16,opacity:loading?.65:1}}>{loading?"يعمل…":followUp?"تعمّق داخل البحث":"ابدأ الفهم"}</button>
    </form>}
 
-   {followUp&&<div style={{fontSize:13,opacity:.6,margin:"-6px 4px 12px"}}>السؤال التالي يحتفظ بموضوع البحث وسياقه. استخدم «بحث جديد» عندما تريد الانتقال إلى موضوع آخر.</div>}
+   {followUp&&<div style={{fontSize:13,opacity:.6,margin:"8px 4px 12px",lineHeight:1.5}}>السؤال التالي يحتفظ بموضوع البحث وسياقه. استخدم «بحث جديد» عندما تريد الانتقال إلى موضوع آخر.</div>}
    {error&&<div style={{padding:14,border:"1px solid #ff6b6b55",borderRadius:14,color:"#ffb3b3",marginBottom:12}}>{error}</div>}
    {visualNotice&&<div role="status" style={{fontSize:12,opacity:.8,marginBottom:12}}>{visualNotice}</div>}
 

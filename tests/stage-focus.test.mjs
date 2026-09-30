@@ -96,3 +96,9 @@ test('a user can ground an unresolved stage by tapping the visible image region'
  ]);
  assert.equal(imagePointAt(0,0,{left:0,top:0,width:0,height:0}),null);
 });
+
+test('mobile notes below the image remain in normal flow without negative overlap',()=>{
+ const page=readFileSync(new URL('../app/living-engine/page.js',import.meta.url),'utf8');
+ assert.doesNotMatch(page,/margin:\"-6px 4px 12px\"/);
+ assert.match(page,/margin:\"8px 4px 12px\",lineHeight:1\.5/);
+});
