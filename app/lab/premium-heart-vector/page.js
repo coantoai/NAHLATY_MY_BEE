@@ -79,7 +79,7 @@ export default function PremiumHeartVectorLab(){
 
    <div style={styles.panel}>
     <div style={styles.panelHead}><b>التوليد</b><span>طلب واحد فقط عند الضغط</span></div>
-    <button onClick={generate} disabled={loading||status?.configured===false} style={{...styles.button,opacity:(loading||status?.configured===false)?.55:1}}>
+    <button onClick={generate} disabled={loading||status?.configured===false} style={{...styles.button,opacity:(loading||status?.configured===false)? .55:1}}>
      {loading?"يتم التوليد…":"ولّد Premium SVG واحد"}
     </button>
     {status?.configured===false&&<p style={styles.warn}>المتبقي الوحيد لبدء التوليد: إضافة RECRAFT_API_TOKEN إلى Vercel Preview.</p>}
