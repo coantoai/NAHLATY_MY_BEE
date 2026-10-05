@@ -1,0 +1,81 @@
+name: OmniLottie Lium Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "Lium pod SSH host"
+        required: true
+        default: "146.120.227.147"
+      port:
+        description: "Lium pod SSH port"
+        required: true
+        default: "30350"
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        env:
+          LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          KEY_B64="$(printf '%s' "$LIUM_SSH_PRIVATE_KEY" | tr -d '[:space:]')"
+          printf '%s' "$KEY_B64" | base64 --decode > /tmp/lium_key_raw
+          {
+            echo '-----BEGIN OPENSSH PRIVATE KEY-----'
+            base64 -w 0 /tmp/lium_key_raw
+            echo
+            echo '-----END OPENSSH PRIVATE KEY-----'
+          } > ~/.ssh/lium_nahlaty
+          chmod 600 ~/.ssh/lium_nahlaty
+          ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
+
+      - name: Install and verify OmniLottie
+        shell: bash
+        env:
+          HOST: ${{ inputs.host }}
+          PORT: ${{ inputs.port }}
+        run: |
+          set -euo pipefail
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/lium_nahlaty -p "$PORT" root@"$HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          echo "=== GPU ==="
+          nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
+          apt-get update -qq
+          apt-get install -y -qq git wget >/dev/null
+          if ! command -v conda >/dev/null 2>&1; then
+            wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
+            bash /tmp/miniconda.sh -b -p /opt/conda
+            export PATH=/opt/conda/bin:$PATH
+          else
+            export PATH="$(dirname "$(command -v conda)"):$PATH"
+          fi
+          eval "$(conda shell.bash hook)"
+          if [ ! -d /workspace/OmniLottie/.git ]; then
+            git clone --depth 1 https://github.com/OpenVGLab/OmniLottie /workspace/OmniLottie
+          fi
+          cd /workspace/OmniLottie
+          if ! conda env list | awk '{print $1}' | grep -qx omnilottie; then
+            conda create -y -n omnilottie python=3.10
+          fi
+          conda activate omnilottie
+          python -m pip install -q --upgrade pip
+          python -m pip install -q torch==2.3.0+cu121 torchvision==0.18.0+cu121 --index-url https://download.pytorch.org/whl/cu121
+          python -m pip install -q -r requirements.txt
+          python - <<'PY'
+          import torch
+          print("TORCH", torch.__version__)
+          print("CUDA", torch.cuda.is_available())
+          if torch.cuda.is_available():
+              print("GPU", torch.cuda.get_device_name(0))
+              print("VRAM_GB", round(torch.cuda.get_device_properties(0).total_memory/1024**3,1))
+          PY
+          python inference_hf.py --help >/tmp/omnilottie-help.txt
+          echo "OMNILOTTIE_INSTALL_OK"
+          REMOTE
