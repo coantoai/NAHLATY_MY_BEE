@@ -1,6 +1,6 @@
 import { requestLimit } from "../../lib/requestGuard";
 import { generateRecraftVector } from "../../lib/recraftVector";
-import { HEART_REQUIRED_CONCEPT_IDS, HEART_SCENE_SPEC } from "../../lib/heartSemanticVector";
+import { HEART_REFERENCE_ASSETS, HEART_REQUIRED_CONCEPT_IDS, HEART_SCENE_SPEC, HEART_SCIENTIFIC_SOURCES } from "../../lib/heartSemanticVector";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -10,6 +10,27 @@ const HEART_PROMPT=`Premium scientific vector illustration of the human heart fo
 
 function str(value,max=10000){
  return String(value||"").trim().slice(0,max);
+}
+
+function defaultHeartStyleReferences(body={}){
+ if(body?.styleId)return [];
+ const supplied=Array.isArray(body?.styleReferenceUrls)?body.styleReferenceUrls.filter(Boolean):[];
+ if(supplied.length)return supplied;
+ if(body?.model)return [];
+ return HEART_REFERENCE_ASSETS.map(item=>item.publicUrl);
+}
+
+export async function GET(){
+ return Response.json({
+  ok:true,
+  configured:Boolean(process.env.RECRAFT_API_TOKEN),
+  provider:"recraft",
+  preset:"heart",
+  spend:0,
+  referenceAssets:HEART_REFERENCE_ASSETS,
+  scientificSources:HEART_SCIENTIFIC_SOURCES,
+  semanticReady:false
+ },{headers:{"cache-control":"no-store"}});
 }
 
 export async function POST(req){
@@ -35,7 +56,7 @@ export async function POST(req){
    model:body?.model,
    size:body?.size||"4:3",
    styleId:body?.styleId,
-   styleReferenceUrls:body?.styleReferenceUrls,
+   styleReferenceUrls,
    styleMatch:body?.styleMatch,
    randomSeed:body?.randomSeed,
    negativePrompt:body?.negativePrompt
@@ -49,6 +70,8 @@ export async function POST(req){
    metrics:{bytes:result.bytes,pathCount:result.pathCount,groupCount:result.groupCount},
    billing:{credits:result.credits,model:result.model},
    providerAsset:{imageId:result.imageId,styleId:result.styleId,revisedPrompt:result.revisedPrompt},
+   referenceAssets:preset=="heart"?HEART_REFERENCE_ASSETS:[],
+   scientificSources:preset=="heart"?HEART_SCIENTIFIC_SOURCES:[],
    semantic:preset==="heart"?{
     ready:false,
     sceneId:HEART_SCENE_SPEC.sceneId,
