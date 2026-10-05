@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-default-type=module --test tests/*.test.mjs"
+    "test": "node --experimental-default-type=module --test tests/*.test.mjs",
+    "test:interactive-vector": "node --test --test-isolation=none tests/figurelabs-client.test.mjs tests/figurelabs-heart.test.mjs tests/heart-svg.test.mjs",
+    "figurelabs:heart": "node scripts/figurelabs-heart.mjs"
   },
   "dependencies": {
     "next": "14.2.35",

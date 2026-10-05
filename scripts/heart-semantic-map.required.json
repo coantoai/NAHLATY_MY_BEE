@@ -1,0 +1,60 @@
+{
+  "parts": {
+    "chamber-right-atrium": [],
+    "chamber-right-ventricle": [],
+    "chamber-left-atrium": [],
+    "chamber-left-ventricle": [],
+    "valve-tricuspid": [],
+    "valve-pulmonary": [],
+    "valve-mitral": [],
+    "valve-aortic": [],
+    "vessel-vena-cava": [],
+    "vessel-pulmonary-artery": [],
+    "vessel-pulmonary-veins": [],
+    "vessel-aorta": [],
+    "flow-deoxygenated": [],
+    "flow-oxygenated": []
+  },
+  "labels": {
+    "chamber-right-atrium": [],
+    "chamber-right-ventricle": [],
+    "chamber-left-atrium": [],
+    "chamber-left-ventricle": [],
+    "valve-tricuspid": [],
+    "valve-pulmonary": [],
+    "valve-mitral": [],
+    "valve-aortic": [],
+    "vessel-vena-cava": [],
+    "vessel-pulmonary-artery": [],
+    "vessel-pulmonary-veins": [],
+    "vessel-aorta": []
+  },
+  "flowRoutes": {
+    "flow-deoxygenated": {
+      "pathId": "",
+      "route": [
+        "body",
+        "vessel-vena-cava",
+        "chamber-right-atrium",
+        "valve-tricuspid",
+        "chamber-right-ventricle",
+        "valve-pulmonary",
+        "vessel-pulmonary-artery",
+        "lungs"
+      ]
+    },
+    "flow-oxygenated": {
+      "pathId": "",
+      "route": [
+        "lungs",
+        "vessel-pulmonary-veins",
+        "chamber-left-atrium",
+        "valve-mitral",
+        "chamber-left-ventricle",
+        "valve-aortic",
+        "vessel-aorta",
+        "body"
+      ]
+    }
+  }
+}
