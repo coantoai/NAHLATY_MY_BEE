@@ -2,8 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
  HEART_FLOW_PATH,
+ HEART_REFERENCE_ASSETS,
  HEART_REQUIRED_CONCEPT_IDS,
  HEART_SCENE_SPEC,
+ HEART_SCIENTIFIC_SOURCES,
  bindHeartSemanticIds,
  cardiacOutputLitersPerMinute,
  validateHeartSemanticManifest
@@ -57,4 +59,14 @@ test("semantic binding decorates reviewed SVG elements for runtime access",()=>{
  assert.match(bound,/data-concept-id="heart\.leftVentricle"/);
  assert.match(bound,/tabindex="0"/);
  assert.match(bound,/role="button"/);
+});
+
+
+test("heart scene has permanent visual references and authoritative scientific sources",()=>{
+ assert.ok(HEART_REFERENCE_ASSETS.length>=2);
+ assert.ok(HEART_REFERENCE_ASSETS.every(x=>x.path.startsWith("/heart-cinematic/heart-")));
+ assert.ok(HEART_REFERENCE_ASSETS.every(x=>x.publicUrl.startsWith("https://raw.githubusercontent.com/")));
+ assert.ok(HEART_SCIENTIFIC_SOURCES.length>=2);
+ assert.ok(HEART_SCIENTIFIC_SOURCES.every(x=>x.url.startsWith("https://www.nhlbi.nih.gov/")));
+ assert.deepEqual(HEART_SCENE_SPEC.scientificSources,HEART_SCIENTIFIC_SOURCES);
 });
