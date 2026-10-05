@@ -49,12 +49,15 @@ jobs:
           nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
           apt-get update -qq
           apt-get install -y -qq git wget >/dev/null
-          if ! command -v conda >/dev/null 2>&1; then
+          if [ -x /opt/conda/bin/conda ]; then
+            export PATH=/opt/conda/bin:$PATH
+          elif command -v conda >/dev/null 2>&1; then
+            export PATH="$(dirname "$(command -v conda)"):$PATH"
+          else
+            rm -rf /opt/conda
             wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
             bash /tmp/miniconda.sh -b -p /opt/conda
             export PATH=/opt/conda/bin:$PATH
-          else
-            export PATH="$(dirname "$(command -v conda)"):$PATH"
           fi
           eval "$(conda shell.bash hook)"
           if [ ! -d /workspace/OmniLottie/.git ]; then
