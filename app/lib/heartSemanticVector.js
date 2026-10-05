@@ -89,7 +89,7 @@ export const HEART_SCENE_SPEC=Object.freeze({
   knowledge:"fact"
  })),
  parameters:[
-  {id:"heart.heartRate",label:{ar:"معدل النبض",en:"Heart rate"},unit:"bpm",min:60,max:120,step:1,default:60},
+  {id:"heart.heartRate",label:{ar:"معدل النبض",en:"Heart rate"},unit:"bpm",min:40,max:180,step:1,default:60},
   {id:"heart.strokeVolume",label:{ar:"حجم الضربة",en:"Stroke volume"},unit:"mL/beat",fixed:70},
   {id:"heart.cardiacOutput",label:{ar:"النتاج القلبي",en:"Cardiac output"},unit:"L/min",formula:"heartRate*strokeVolume/1000",educationalAssumption:true}
  ],
@@ -116,7 +116,7 @@ export function cardiacOutputLitersPerMinute(heartRate,strokeVolume=70){
 }
 
 function escapeRegExp(value){
- return String(value).replace(/[.*+?^$()|[\\]\\]/g,"\\$&");
+ return String(value).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 }
 
 export function validateHeartSemanticManifest(manifest={}){
@@ -128,6 +128,7 @@ export function validateHeartSemanticManifest(manifest={}){
  for(const item of bindings){
   const conceptId=String(item?.conceptId||"");
   const elementId=String(item?.elementId||"");
+  if(!HEART_REQUIRED_CONCEPT_IDS.includes(conceptId))errors.push("unknown conceptId: "+conceptId);
   if(!conceptId||!elementId){errors.push("binding requires conceptId and elementId");continue;}
   if(!/^[A-Za-z_][A-Za-z0-9_:.-]*$/.test(elementId)){errors.push("invalid elementId: "+elementId);continue;}
   if(seenConcepts.has(conceptId))errors.push("duplicate conceptId: "+conceptId);
@@ -151,10 +152,14 @@ export function bindHeartSemanticIds(svg,manifest={}){
   const conceptId=String(item.conceptId);
   const elementId=String(item.elementId);
   const idEscaped=escapeRegExp(elementId);
-  const re=new RegExp("(<(?:g|path|ellipse|circle|polygon|polyline|rect)\\b[^>]*\\bid=[\"']"+idEscaped+"[\"'][^>]*?)(\\s*\\/?>)","i");
+  const count=[...output.matchAll(new RegExp("\\s+id=[\"']"+idEscaped+"[\"']","g"))].length;
+  if(count>1)throw new Error("SVG element must be unique: "+elementId);
+  const re=new RegExp("(<(?:g|path|ellipse|circle|polygon|polyline|rect)\\b[^>]*\\sid=[\"']"+idEscaped+"[\"'][^>]*?)(\\s*\\/?>)","i");
   if(!re.test(output))throw new Error("SVG element not found: "+elementId);
   output=output.replace(re,(match,start,end)=>{
-   if(/\bdata-concept-id=/.test(start))return match;
+   const current=start.match(/\bdata-concept-id=["']([^"']*)["']/)?.[1];
+   if(current&&current!==conceptId)throw new Error("Conflicting semantic annotation: "+elementId);
+   if(current)return match;
    return start+" data-concept-id=\""+conceptId+"\" tabindex=\"0\" role=\"button\""+end;
   });
  }

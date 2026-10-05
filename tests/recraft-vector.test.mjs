@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildRecraftVectorRequest, normalizeRecraftVectorRequest, validateProviderSvg } from "../app/lib/recraftVector.js";
+import { buildRecraftVectorRequest, normalizeRecraftVectorRequest, validateProviderSvg, scopeInlineSvgStyles } from "../app/lib/recraftVector.js";
 
 test("defaults to one low-cost native vector generation",()=>{
  const req=buildRecraftVectorRequest({prompt:"premium scientific heart"});
@@ -41,4 +41,26 @@ test("accepts a real path-based SVG shell and reports geometry",()=>{
  assert.equal(result.pathCount,4);
  assert.equal(result.groupCount,1);
  assert.ok(result.bytes>0);
+});
+
+test("inline vectors reject hidden raster, executable references and CSS imports",()=>{
+ const paths='<path/><path/><path/><path/>';
+ for(const content of [
+  '<defs><mask><image href="data:image/png;base64,AAAA"/></mask></defs>',
+  '<a href="javascript:alert(1)">'+paths+'</a>',
+  '<use href="&#106;avascript:alert(1)"/>',
+  '<style>@import "https://example.com/a.css";</style>',
+  '<style>path{fill:u\\72l(https://example.com/a)}</style>',
+  '<animate attributeName="href" values="javascript:alert(1)"/>',
+  '<path id="duplicate"/><g id="duplicate"/>'
+ ])assert.throws(()=>validateProviderSvg('<svg>'+content+paths+'</svg>'),/Unsafe|Duplicate/);
+ assert.throws(()=>validateProviderSvg('<!DOCTYPE svg [<!ENTITY a "boom">]><svg>'+paths+'</svg>'));
+});
+
+test("inline provider styling cannot target the application outside its SVG host",()=>{
+ const svg='<svg><style>body{display:none}.cls-1,.cls-2{fill:red}</style></svg>';
+ const scoped=scopeInlineSvgStyles(svg,'.nativeHost');
+ assert.match(scoped,/\.nativeHost > svg body\{/);
+ assert.match(scoped,/\.nativeHost > svg \.cls-1,\.nativeHost > svg \.cls-2\{/);
+ assert.throws(()=>scopeInlineSvgStyles(svg,'body,html'),/Invalid/);
 });

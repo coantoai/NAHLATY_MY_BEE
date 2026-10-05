@@ -61,6 +61,16 @@ test("semantic binding decorates reviewed SVG elements for runtime access",()=>{
  assert.match(bound,/role="button"/);
 });
 
+test("semantic binding rejects unknown concepts, duplicate elements and conflicting annotations",()=>{
+ const manifest=completeManifest();
+ const svg='<svg>'+manifest.bindings.map(x=>'<path id="'+x.elementId+'" d="M0 0"/>').join("")+'</svg>';
+ assert.throws(()=>bindHeartSemanticIds(svg.replace('id="part-0"','id="part-0" data-concept-id="heart.aorta"'),manifest),/conflict/i);
+ assert.throws(()=>bindHeartSemanticIds(svg.replace('</svg>','<path id="part-0"/></svg>'),manifest),/unique|duplicate/i);
+ assert.equal(validateHeartSemanticManifest({...manifest,bindings:[...manifest.bindings,{conceptId:'bad" onclick="alert(1)',elementId:"bad"}]}).ok,false);
+ const dotted={...manifest,bindings:manifest.bindings.map((x,i)=>({...x,elementId:'part.'+i}))};
+ assert.throws(()=>bindHeartSemanticIds(svg,dotted),/not found/i);
+});
+
 
 test("heart scene has permanent visual references and authoritative scientific sources",()=>{
  assert.ok(HEART_REFERENCE_ASSETS.length>=2);

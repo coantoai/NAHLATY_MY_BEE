@@ -75,15 +75,30 @@ export function validateProviderSvg(svg){
   /<iframe\b/i,
   /<object\b/i,
   /<embed\b/i,
+  /<image\b/i,
+  /<\s*(?:animate\w*|set|discard|handler|listener)\b/i,
+  /<!DOCTYPE|<!ENTITY/i,
+  /<\?[^x]|<\?xml-stylesheet/i,
   /\son[a-z]+\s*=/i,
-  /(?:href|xlink:href)\s*=\s*["']\s*(?:https?:)?\/\//i,
-  /url\(\s*["']?\s*(?:https?:)?\/\//i
+  /(?:href|xlink:href)\s*=\s*["'](?!#[A-Za-z_][A-Za-z0-9_:.-]*["'])/i,
+  /url\(\s*["']?(?!#[A-Za-z_][A-Za-z0-9_:.-]*["']?\s*\))/i,
+  /@|\\/,
+  /<\/?[A-Za-z_][\w.-]*:/,
+  /(?:javascript|vbscript|data)\s*:/i
  ];
  if(forbidden.some(re=>re.test(source)))throw new Error("Unsafe SVG content rejected");
+ const ids=[...source.matchAll(/\s+id\s*=\s*["']([^"']+)["']/g)].map(x=>x[1]);
+ if(new Set(ids).size!==ids.length)throw new Error("Duplicate SVG IDs rejected");
  const pathCount=(source.match(/<path\b/gi)||[]).length;
  const groupCount=(source.match(/<g\b/gi)||[]).length;
  if(pathCount<4)throw new Error("SVG geometry is too shallow for a premium semantic asset");
- return {svg:source,pathCount,groupCount,bytes:Buffer.byteLength(source,"utf8")};
+ return {svg:source,pathCount,groupCount,bytes:new TextEncoder().encode(source).byteLength};
+}
+
+export function scopeInlineSvgStyles(svg,scope){
+ if(!/^\.[A-Za-z_][A-Za-z0-9_-]*$/.test(scope))throw new Error("Invalid SVG style scope");
+ return String(svg).replace(/(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi,(_,open,css,close)=>
+  open+css.replace(/(^|})([^{}]+)\{/g,(_,end,selectors)=>end+selectors.split(",").map(selector=>scope+" > svg "+selector.trim()).join(",")+"{")+close);
 }
 
 export async function generateRecraftVector(input,{token=process.env.RECRAFT_API_TOKEN,fetchImpl=fetch}={}){

@@ -1,0 +1,49 @@
+{
+  "checks": [
+    "native vector loads automatically; no raster",
+    "desktop has no horizontal overflow",
+    "all four visible parts select through existing runtime",
+    "keyboard selects actual SVG geometry",
+    "drag moves actual part in screen coordinates and preserves other parts",
+    "runtime reset restores geometry",
+    "labels toggle keeps SVG selectable",
+    "vessels layer toggles independently of exterior",
+    "existing zoom and reset controls work",
+    "40 and 180 BPM change native pulse period",
+    "existing play/pause controls native animation",
+    "lab reset restores BPM and runtime",
+    "mobile and tablet responsive checks",
+    "no browser runtime errors",
+    "embedded lab preserves existing home session",
+    "generic runtime and saved scene still restore/select",
+    "unsafe native SVG from saved sessions is rejected before insertion"
+  ],
+  "passed": 17,
+  "url": "http://127.0.0.1:3021",
+  "unitTests": {
+    "passed": 99,
+    "failed": 0,
+    "command": "node --test --test-isolation=none tests/*.test.mjs"
+  },
+  "productionBuild": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "assetIncludedInServerTrace": true
+  },
+  "svg": {
+    "originalAnatomicalPaths": 45,
+    "nativeMaskPaths": 594,
+    "totalPaths": 639,
+    "embeddedRasterImages": 0
+  },
+  "visualComparison": {
+    "reference": "Original NIH/NIAID asset",
+    "normalizedMeanAbsoluteRgbDifferencePercent": 0.15243490163096357,
+    "screenshotSize": "580x820",
+    "note": "Shading-mask approximation only; does not measure clinical accuracy or premium-reference equivalence."
+  },
+  "fullHeartBenchmark": {
+    "pass": false,
+    "reason": "Source is external view; internal chambers/valves and physiological flow are not verified geometrically."
+  }
+}
