@@ -139,7 +139,7 @@ export function bindHeartSemanticIds(svg,manifest={}){
   const conceptId=String(item.conceptId);
   const elementId=String(item.elementId);
   const idEscaped=escapeRegExp(elementId);
-  const re=new RegExp("(<(?:g|path|ellipse|circle|polygon|polyline|rect)\\b[^>]*\\bid=[\"']"+idEscaped+"[\"'][^>]*)(>)","i");
+  const re=new RegExp("(<(?:g|path|ellipse|circle|polygon|polyline|rect)\\b[^>]*\\bid=[\"']"+idEscaped+"[\"'][^>]*?)(\\s*\\/?>)","i");
   if(!re.test(output))throw new Error("SVG element not found: "+elementId);
   output=output.replace(re,(match,start,end)=>{
    if(/\bdata-concept-id=/.test(start))return match;
