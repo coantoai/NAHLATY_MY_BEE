@@ -9,19 +9,21 @@ import {
  validateHeartSemanticManifest
 } from "../app/lib/heartSemanticVector.js";
 
-test("heart SceneSpec contains the full benchmark anatomy",()=>{
+test("heart SceneSpec contains the full benchmark anatomy plus lung context",()=>{
  assert.equal(HEART_SCENE_SPEC.sceneId,"heart.core-flow");
- assert.equal(HEART_SCENE_SPEC.concepts.length,HEART_REQUIRED_CONCEPT_IDS.length);
- assert.equal(new Set(HEART_SCENE_SPEC.concepts.map(x=>x.conceptId)).size,HEART_REQUIRED_CONCEPT_IDS.length);
+ assert.equal(HEART_SCENE_SPEC.concepts.length,HEART_REQUIRED_CONCEPT_IDS.length+1);
+ assert.equal(new Set(HEART_SCENE_SPEC.concepts.map(x=>x.conceptId)).size,HEART_REQUIRED_CONCEPT_IDS.length+1);
  for(const id of HEART_REQUIRED_CONCEPT_IDS){
   assert.ok(HEART_SCENE_SPEC.concepts.some(x=>x.conceptId===id),id);
  }
+ const lungs=HEART_SCENE_SPEC.concepts.find(x=>x.conceptId==="circulation.lungs");
+ assert.equal(lungs?.assetRequired,false);
 });
 
-test("blood flow order is one-way through the four valves",()=>{
+test("blood flow order is one-way and passes through the lungs",()=>{
  assert.deepEqual(HEART_FLOW_PATH,[
   "heart.venaCava","heart.rightAtrium","heart.tricuspidValve","heart.rightVentricle",
-  "heart.pulmonaryValve","heart.pulmonaryArtery","heart.pulmonaryVeins","heart.leftAtrium",
+  "heart.pulmonaryValve","heart.pulmonaryArtery","circulation.lungs","heart.pulmonaryVeins","heart.leftAtrium",
   "heart.mitralValve","heart.leftVentricle","heart.aorticValve","heart.aorta"
  ]);
  assert.equal(HEART_SCENE_SPEC.relations.length,HEART_FLOW_PATH.length-1);
