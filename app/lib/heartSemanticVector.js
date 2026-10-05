@@ -1,3 +1,13 @@
+export const HEART_REFERENCE_ASSETS=Object.freeze([
+ {path:"/heart-cinematic/heart-01.webp",publicUrl:"https://raw.githubusercontent.com/coantoai/NAHLATY_MY_BEE/main/public/heart-cinematic/heart-01.webp",role:"external-overview"},
+ {path:"/heart-cinematic/heart-02.webp",publicUrl:"https://raw.githubusercontent.com/coantoai/NAHLATY_MY_BEE/main/public/heart-cinematic/heart-02.webp",role:"cutaway-reference"}
+]);
+
+export const HEART_SCIENTIFIC_SOURCES=Object.freeze([
+ {title:"NHLBI — Heart anatomy",url:"https://www.nhlbi.nih.gov/health/heart/anatomy"},
+ {title:"NHLBI — Blood flow through the heart",url:"https://www.nhlbi.nih.gov/health/heart/blood-flow"}
+]);
+
 export const HEART_REQUIRED_CONCEPT_IDS=Object.freeze([
  "heart.venaCava",
  "heart.rightAtrium",
@@ -94,6 +104,8 @@ export const HEART_SCENE_SPEC=Object.freeze({
   {at:.72,state:"heart.ejection",focus:["heart.pulmonaryArtery","heart.aorta"],action:"flow"},
   {at:1,state:"heart.filling",focus:["heart.rightAtrium","heart.leftAtrium"],action:"reset"}
  ],
+ scientificSources:HEART_SCIENTIFIC_SOURCES,
+ referenceAssets:HEART_REFERENCE_ASSETS,
  sourceLicense:[]
 });
 
