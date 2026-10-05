@@ -6,11 +6,12 @@ const LEGACY_KEY="eshrahli:last-session";
 
 export default function useLastSession({
  content,audience,result,active,
- setContent,setAudience,setResult,setActive,setSpeed
+ setContent,setAudience,setResult,setActive,setSpeed,enabled=true
 }){
  const [sessionRestored,setSessionRestored]=useState(false);
 
  useEffect(()=>{
+  if(!enabled)return;
   try{
    const raw=localStorage.getItem(KEY)||localStorage.getItem(LEGACY_KEY);
    if(!raw)return;
@@ -24,16 +25,17 @@ export default function useLastSession({
    if(saved.result?.presentation?.paceSec)setSpeed(saved.result.presentation.paceSec);
    setSessionRestored(true);
   }catch{}
- },[setContent,setAudience,setResult,setActive,setSpeed]);
+ },[setContent,setAudience,setResult,setActive,setSpeed,enabled]);
 
  useEffect(()=>{
+  if(!enabled)return;
   if(!result?.sceneGraph?.nodes?.length)return;
   try{
    localStorage.setItem(KEY,JSON.stringify({
     content,audience,result,active,updatedAt:Date.now()
    }));
   }catch{}
- },[content,audience,result,active]);
+ },[content,audience,result,active,enabled]);
 
  return {sessionRestored,setSessionRestored};
 }

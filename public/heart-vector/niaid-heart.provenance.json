@@ -1,0 +1,516 @@
+{
+  "assetId": "niaid-bioart-228-file-630873",
+  "title": "Human Heart",
+  "provider": "NIH/NIAID BioArt",
+  "creator": "Ryan Kissinger",
+  "credit": "Courtesy of NIAID",
+  "license": "Public Domain",
+  "sourcePage": "https://bioart.niaid.nih.gov/bioart/228",
+  "sourceUrl": "https://bioart.niaid.nih.gov/api/bioarts/228/files/630873",
+  "sourceSha256": "e2260fd13db30aae8f5a4ab4df1fbbf3582c6599315b8380cac08bfe832d9aa9",
+  "svgSha256": "a8d968b2239391333156180456a4b022920b0cd8971756f7d1c4d8cc132b5f1c",
+  "viewBox": "0 0 289.44 406.42",
+  "originalPathCount": 45,
+  "originalGroups": [
+    "niaid-group-001",
+    "niaid-group-002",
+    "niaid-group-003",
+    "niaid-group-004",
+    "bottom_vessels",
+    "niaid-group-006",
+    "niaid-group-007",
+    "niaid-group-008",
+    "top_vessels",
+    "niaid-group-010",
+    "niaid-group-011",
+    "niaid-group-012",
+    "niaid-group-013",
+    "niaid-group-014",
+    "niaid-group-015",
+    "niaid-group-016",
+    "niaid-group-017",
+    "niaid-group-018",
+    "niaid-group-019",
+    "left_vessels",
+    "niaid-group-021",
+    "niaid-group-022",
+    "niaid-group-023",
+    "niaid-group-024",
+    "niaid-group-025",
+    "niaid-group-026",
+    "niaid-group-027",
+    "niaid-group-028",
+    "niaid-group-029",
+    "niaid-group-030",
+    "niaid-group-031",
+    "niaid-group-032",
+    "niaid-group-033",
+    "niaid-group-034",
+    "niaid-group-035",
+    "niaid-group-036",
+    "niaid-group-037",
+    "niaid-group-038",
+    "niaid-group-039"
+  ],
+  "anatomyPaths": [
+    {
+      "elementId": "niaid-path-001",
+      "sourceClass": "cls-34",
+      "pathSha256": "3fded1ef53d0ce47527a6bd9e8005d97377443e9736ac9147a684db8fa86ad57"
+    },
+    {
+      "elementId": "niaid-path-002",
+      "sourceClass": "cls-65",
+      "pathSha256": "03560427af4ec18a348e2ab3827c98c3ad523689e49734405897ad87952c9e08"
+    },
+    {
+      "elementId": "niaid-path-003",
+      "sourceClass": "cls-7",
+      "pathSha256": "4b9d5cf7cafe450c7fd7b47d26a9a1d46b11338d437e50119f1e9b3ca95a6146"
+    },
+    {
+      "elementId": "niaid-path-004",
+      "sourceClass": "cls-30",
+      "pathSha256": "77f69fd4c96d18af9f5e44da9c4af89d8919f028dd9d2da6f34867913a335578"
+    },
+    {
+      "elementId": "niaid-path-005",
+      "sourceClass": "cls-75",
+      "pathSha256": "e12e91d397e63197b0b95cc6dbcc111fdf4b23b653320837e61418881ea2c59d"
+    },
+    {
+      "elementId": "niaid-path-006",
+      "sourceClass": "cls-4",
+      "pathSha256": "23cc337938e2cec972c88e6ea5b26ed21db557e1ca9cba7a44819e94707c141f"
+    },
+    {
+      "elementId": "niaid-path-007",
+      "sourceClass": "cls-19",
+      "pathSha256": "bba111357a48b792ce5a3266d4b216f58a19d227944fa00186f938685a0a5f77"
+    },
+    {
+      "elementId": "niaid-path-008",
+      "sourceClass": "cls-30",
+      "pathSha256": "56ef5c35fdfe761bad4c9a1a2d49c321cbc9ebd1ea2450f4c11ee142ce5e5c47"
+    },
+    {
+      "elementId": "niaid-path-009",
+      "sourceClass": "cls-19",
+      "pathSha256": "7707a9a692839868780eb0762a278f4fb03f1028989e92b886251fe0c854e91e"
+    },
+    {
+      "elementId": "niaid-path-010",
+      "sourceClass": "cls-30",
+      "pathSha256": "f17d9a92b052a7c951a353c62acdfc8c5f840416527f40a12a49f92b3d35ce4b"
+    },
+    {
+      "elementId": "niaid-path-011",
+      "sourceClass": "cls-7",
+      "pathSha256": "e76e5c24a2296e849ea41447d8ed1b73e29a7eb74a873e525a243a139674bf28"
+    },
+    {
+      "elementId": "niaid-path-012",
+      "sourceClass": "cls-30",
+      "pathSha256": "7fea22e1cead192037aba1dd4e0baca5143479a5149798aba5dc6164cb27d592"
+    },
+    {
+      "elementId": "niaid-path-013",
+      "sourceClass": "cls-12",
+      "pathSha256": "21128fbceb4832eb50b01c3b940403a470da0497e9effc8c25e3df5e1bc9b169"
+    },
+    {
+      "elementId": "niaid-path-014",
+      "sourceClass": "cls-58",
+      "pathSha256": "79895d441c2569f33f5ffc4e150192878fd4f4fe1c883a5a34e7c5914ee1e1d2"
+    },
+    {
+      "elementId": "niaid-path-015",
+      "sourceClass": "cls-30",
+      "pathSha256": "55a158e7d519ef26e6fedf2cf5dfe7dd26eea4837ae71d2a8e4e4e0d3b349a59"
+    },
+    {
+      "elementId": "niaid-path-016",
+      "sourceClass": "cls-30",
+      "pathSha256": "029eb1dd09bf257ec93d8358d1855cd9a493947b3e219a174b545932195c691a"
+    },
+    {
+      "elementId": "niaid-path-017",
+      "sourceClass": "cls-30",
+      "pathSha256": "029eb1dd09bf257ec93d8358d1855cd9a493947b3e219a174b545932195c691a"
+    },
+    {
+      "elementId": "niaid-path-018",
+      "sourceClass": "cls-4",
+      "pathSha256": "e841216fc77ed725fb102c73044aace38a05a995458e8d55f7a7a6752ef1ff86"
+    },
+    {
+      "elementId": "niaid-path-019",
+      "sourceClass": "cls-7",
+      "pathSha256": "674576c72c0ce10f3fdb89ff008f829c032d850c7b835ac7250825371557c7a3"
+    },
+    {
+      "elementId": "niaid-path-020",
+      "sourceClass": "cls-63",
+      "pathSha256": "ad58c84c3fbf7cb4964fc0610edcde86d234a992145c5658e479019783b1100e"
+    },
+    {
+      "elementId": "niaid-path-021",
+      "sourceClass": "cls-22",
+      "pathSha256": "79efcbfdae3c289f72e3d064b9ea7758f9ee3cffe1a51c2d195413aaaa10a5ae"
+    },
+    {
+      "elementId": "niaid-path-022",
+      "sourceClass": "cls-4",
+      "pathSha256": "218fa7a7ba5eb1b226af6bd52d664b3cf608487f1b2d294a4bdf3b0d07493033"
+    },
+    {
+      "elementId": "niaid-path-023",
+      "sourceClass": "cls-4",
+      "pathSha256": "0f3cfb64948e03654d5db742aa58aeaa3336b4cc1919377a78e4d80e4a387986"
+    },
+    {
+      "elementId": "niaid-path-024",
+      "sourceClass": "cls-63",
+      "pathSha256": "2b68fb045d8eb4a39798b12f376ddad280b82427e794d4cd2d6ee26dcba07750"
+    },
+    {
+      "elementId": "niaid-path-025",
+      "sourceClass": "cls-5",
+      "pathSha256": "24c1d1c6dd2010e1f2bdd12181ae25e67d4c19e54ea40b592d715c270cdb332f"
+    },
+    {
+      "elementId": "niaid-path-026",
+      "sourceClass": "cls-69",
+      "pathSha256": "24c1d1c6dd2010e1f2bdd12181ae25e67d4c19e54ea40b592d715c270cdb332f"
+    },
+    {
+      "elementId": "niaid-path-027",
+      "sourceClass": "cls-38",
+      "pathSha256": "fba687bf3a2e02559822ac8a5ac6251ea396f576b645b96641ec7034a1d53d1f"
+    },
+    {
+      "elementId": "niaid-path-028",
+      "sourceClass": "cls-38",
+      "pathSha256": "904ca4f92a115d26bc053faf23e146e4d0183089cb2c0d263d093c49c1dd0a2b"
+    },
+    {
+      "elementId": "niaid-path-029",
+      "sourceClass": "cls-35",
+      "pathSha256": "d64b8be14dd340f0d44beb45f7f4dc36c807545049ee4d93817f7cf321c8878a"
+    },
+    {
+      "elementId": "niaid-path-030",
+      "sourceClass": "cls-35",
+      "pathSha256": "7b3c939587dff905a7b1c1b78af42c427fcee858af8646a0dc16955ba7a3c522"
+    },
+    {
+      "elementId": "niaid-path-031",
+      "sourceClass": "cls-9",
+      "pathSha256": "b262ea8511b8b14f0f7f72b7636e5873eaa2e56de99144be07bfae7317558e4e"
+    },
+    {
+      "elementId": "niaid-path-032",
+      "sourceClass": "cls-9",
+      "pathSha256": "65240d3774c3ee5049e5a5848f10783583282efe2335b33f0f051b0a6b23543f"
+    },
+    {
+      "elementId": "niaid-path-033",
+      "sourceClass": "cls-77",
+      "pathSha256": "1916d3c9667ba1f53c8d0fb53eba45e4cff4ba77f9a4468c87e0ad80de600b35"
+    },
+    {
+      "elementId": "niaid-path-034",
+      "sourceClass": "cls-77",
+      "pathSha256": "ecd565ab3558f67418d0f063efb371a5f5715661ee28cddeb632b8d8bdbaeda1"
+    },
+    {
+      "elementId": "niaid-path-035",
+      "sourceClass": "cls-8",
+      "pathSha256": "24c1d1c6dd2010e1f2bdd12181ae25e67d4c19e54ea40b592d715c270cdb332f"
+    },
+    {
+      "elementId": "niaid-path-036",
+      "sourceClass": "cls-6",
+      "pathSha256": "96f0c56da2fb8646d5f65c5d429a212ab8514a12a118da091ea67ee6c06f491a"
+    },
+    {
+      "elementId": "niaid-path-037",
+      "sourceClass": "cls-3",
+      "pathSha256": "96a3dde6f63f8015876c27822cfa27aa6f1e1feace4691cc4913061c269133ba"
+    },
+    {
+      "elementId": "niaid-path-038",
+      "sourceClass": "cls-30",
+      "pathSha256": "474628beedf45849954d09dfd7a3b31d8c3f16d734fd1fc12f691e5b7cfabf9c"
+    },
+    {
+      "elementId": "niaid-path-039",
+      "sourceClass": "cls-30",
+      "pathSha256": "bb7edd4f6b11720c3b55a7a46e04a25f1675ee1c6b3304d2e4420f142670eca1"
+    },
+    {
+      "elementId": "niaid-path-040",
+      "sourceClass": "cls-30",
+      "pathSha256": "543d48918eca0594cb50ee209b75d721685aca6e872a269634f13f047b0f725d"
+    },
+    {
+      "elementId": "niaid-path-041",
+      "sourceClass": "cls-78",
+      "pathSha256": "42ed66d946f3c9d743437a06534f95a85047d0ac721966fd94cbc03bbc6318ec"
+    },
+    {
+      "elementId": "niaid-path-042",
+      "sourceClass": "cls-78",
+      "pathSha256": "42ed66d946f3c9d743437a06534f95a85047d0ac721966fd94cbc03bbc6318ec"
+    },
+    {
+      "elementId": "niaid-path-043",
+      "sourceClass": "cls-12",
+      "pathSha256": "5418d4d43fa651e0d5ca46b80d9e480861f6191ed23ea85910dcbf34f4b5d5b1"
+    },
+    {
+      "elementId": "niaid-path-044",
+      "sourceClass": "cls-29",
+      "pathSha256": "2a31444c0f7f89f097fd02b7b02c48c329cf1fff643238c32db1123a3ea8ba01"
+    },
+    {
+      "elementId": "niaid-path-045",
+      "sourceClass": "cls-63",
+      "pathSha256": "b30afb118935e17e3a19cce3df9383891f0f479bab6417175d3a743c667abf8b"
+    }
+  ],
+  "vectorizedMaskCount": 28,
+  "maskConversion": {
+    "maxEdge": 160,
+    "grayLevels": 32,
+    "algorithm": "Lanczos resampling; grayscale luminance quantization; horizontal runs merged vertically into native path rectangles",
+    "masks": [
+      {
+        "id": "niaid-vector-mask-001",
+        "sampleSize": [
+          107,
+          160
+        ],
+        "rectangles": 2328
+      },
+      {
+        "id": "niaid-vector-mask-002",
+        "sampleSize": [
+          135,
+          149
+        ],
+        "rectangles": 2010
+      },
+      {
+        "id": "niaid-vector-mask-003",
+        "sampleSize": [
+          52,
+          160
+        ],
+        "rectangles": 670
+      },
+      {
+        "id": "niaid-vector-mask-004",
+        "sampleSize": [
+          102,
+          126
+        ],
+        "rectangles": 2241
+      },
+      {
+        "id": "niaid-vector-mask-005",
+        "sampleSize": [
+          48,
+          82
+        ],
+        "rectangles": 758
+      },
+      {
+        "id": "niaid-vector-mask-006",
+        "sampleSize": [
+          51,
+          105
+        ],
+        "rectangles": 780
+      },
+      {
+        "id": "niaid-vector-mask-007",
+        "sampleSize": [
+          102,
+          160
+        ],
+        "rectangles": 1052
+      },
+      {
+        "id": "niaid-vector-mask-008",
+        "sampleSize": [
+          68,
+          102
+        ],
+        "rectangles": 608
+      },
+      {
+        "id": "niaid-vector-mask-009",
+        "sampleSize": [
+          85,
+          160
+        ],
+        "rectangles": 1719
+      },
+      {
+        "id": "niaid-vector-mask-010",
+        "sampleSize": [
+          54,
+          95
+        ],
+        "rectangles": 959
+      },
+      {
+        "id": "niaid-vector-mask-011",
+        "sampleSize": [
+          53,
+          160
+        ],
+        "rectangles": 9
+      },
+      {
+        "id": "niaid-vector-mask-012",
+        "sampleSize": [
+          57,
+          160
+        ],
+        "rectangles": 925
+      },
+      {
+        "id": "niaid-vector-mask-013",
+        "sampleSize": [
+          78,
+          92
+        ],
+        "rectangles": 889
+      },
+      {
+        "id": "niaid-vector-mask-014",
+        "sampleSize": [
+          76,
+          107
+        ],
+        "rectangles": 1329
+      },
+      {
+        "id": "niaid-vector-mask-015",
+        "sampleSize": [
+          63,
+          48
+        ],
+        "rectangles": 584
+      },
+      {
+        "id": "niaid-vector-mask-016",
+        "sampleSize": [
+          148,
+          160
+        ],
+        "rectangles": 4760
+      },
+      {
+        "id": "niaid-vector-mask-017",
+        "sampleSize": [
+          127,
+          160
+        ],
+        "rectangles": 3273
+      },
+      {
+        "id": "niaid-vector-mask-018",
+        "sampleSize": [
+          141,
+          160
+        ],
+        "rectangles": 2415
+      },
+      {
+        "id": "niaid-vector-mask-019",
+        "sampleSize": [
+          111,
+          160
+        ],
+        "rectangles": 3015
+      },
+      {
+        "id": "niaid-vector-mask-020",
+        "sampleSize": [
+          160,
+          107
+        ],
+        "rectangles": 951
+      },
+      {
+        "id": "niaid-vector-mask-021",
+        "sampleSize": [
+          56,
+          50
+        ],
+        "rectangles": 449
+      },
+      {
+        "id": "niaid-vector-mask-022",
+        "sampleSize": [
+          81,
+          112
+        ],
+        "rectangles": 1006
+      },
+      {
+        "id": "niaid-vector-mask-023",
+        "sampleSize": [
+          100,
+          79
+        ],
+        "rectangles": 639
+      },
+      {
+        "id": "niaid-vector-mask-024",
+        "sampleSize": [
+          77,
+          155
+        ],
+        "rectangles": 2
+      },
+      {
+        "id": "niaid-vector-mask-025",
+        "sampleSize": [
+          48,
+          87
+        ],
+        "rectangles": 371
+      },
+      {
+        "id": "niaid-vector-mask-026",
+        "sampleSize": [
+          133,
+          160
+        ],
+        "rectangles": 8
+      },
+      {
+        "id": "niaid-vector-mask-027",
+        "sampleSize": [
+          56,
+          160
+        ],
+        "rectangles": 840
+      },
+      {
+        "id": "niaid-vector-mask-028",
+        "sampleSize": [
+          160,
+          139
+        ],
+        "rectangles": 1387
+      }
+    ]
+  },
+  "approximationDisclosure": "All original anatomy paths and transforms are preserved. Only the 28 embedded PNG shading masks are approximated as native grayscale SVG paths. No anatomy has been reconstructed or clinically inferred.",
+  "semanticReady": false
+}
