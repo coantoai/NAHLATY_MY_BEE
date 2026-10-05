@@ -27,7 +27,8 @@ const labels={
  "heart.leftVentricle":["البطين الأيسر","Left ventricle"],
  "heart.aorticValve":["الصمام الأبهري","Aortic valve"],
  "heart.aorta":["الأبهر","Aorta"],
- "heart.myocardium":["عضلة القلب","Myocardium"]
+ "heart.myocardium":["عضلة القلب","Myocardium"],
+ "circulation.lungs":["الرئتان","Lungs"]
 };
 
 const chambers=new Set(["heart.rightAtrium","heart.rightVentricle","heart.leftAtrium","heart.leftVentricle"]);
@@ -40,6 +41,7 @@ export const HEART_FLOW_PATH=Object.freeze([
  "heart.rightVentricle",
  "heart.pulmonaryValve",
  "heart.pulmonaryArtery",
+ "circulation.lungs",
  "heart.pulmonaryVeins",
  "heart.leftAtrium",
  "heart.mitralValve",
@@ -48,15 +50,21 @@ export const HEART_FLOW_PATH=Object.freeze([
  "heart.aorta"
 ]);
 
+const heartConcepts=HEART_REQUIRED_CONCEPT_IDS.map(conceptId=>({
+ conceptId,
+ label:{ar:labels[conceptId][0],en:labels[conceptId][1]},
+ kind:chambers.has(conceptId)?"chamber":valves.has(conceptId)?"valve":conceptId==="heart.myocardium"?"tissue":"vessel",
+ assetRequired:true
+}));
+
 export const HEART_SCENE_SPEC=Object.freeze({
  version:"scene-spec/v1",
  sceneId:"heart.core-flow",
  title:{ar:"كيف يعمل القلب؟",en:"How does the heart work?"},
- concepts:HEART_REQUIRED_CONCEPT_IDS.map(conceptId=>({
-  conceptId,
-  label:{ar:labels[conceptId][0],en:labels[conceptId][1]},
-  kind:chambers.has(conceptId)?"chamber":valves.has(conceptId)?"valve":conceptId==="heart.myocardium"?"tissue":"vessel"
- })),
+ concepts:[
+  ...heartConcepts,
+  {conceptId:"circulation.lungs",label:{ar:labels["circulation.lungs"][0],en:labels["circulation.lungs"][1]},kind:"externalContext",assetRequired:false}
+ ],
  layers:[
   {id:"heart.layer.anatomy",label:{ar:"التشريح",en:"Anatomy"},defaultVisible:true},
   {id:"heart.layer.flow",label:{ar:"مسار الدم",en:"Blood flow"},defaultVisible:true},
@@ -96,7 +104,7 @@ export function cardiacOutputLitersPerMinute(heartRate,strokeVolume=70){
 }
 
 function escapeRegExp(value){
- return String(value).replace(/[.*+?^()|[\\]\\]/g,"\\$&");
+ return String(value).replace(/[.*+?^$()|[\\]\\]/g,"\\$&");
 }
 
 export function validateHeartSemanticManifest(manifest={}){
@@ -109,6 +117,7 @@ export function validateHeartSemanticManifest(manifest={}){
   const conceptId=String(item?.conceptId||"");
   const elementId=String(item?.elementId||"");
   if(!conceptId||!elementId){errors.push("binding requires conceptId and elementId");continue;}
+  if(!/^[A-Za-z_][A-Za-z0-9_:.-]*$/.test(elementId)){errors.push("invalid elementId: "+elementId);continue;}
   if(seenConcepts.has(conceptId))errors.push("duplicate conceptId: "+conceptId);
   if(seenElements.has(elementId))errors.push("duplicate elementId: "+elementId);
   seenConcepts.add(conceptId);seenElements.add(elementId);
@@ -133,7 +142,7 @@ export function bindHeartSemanticIds(svg,manifest={}){
   const re=new RegExp("(<(?:g|path|ellipse|circle|polygon|polyline|rect)\\b[^>]*\\bid=[\"']"+idEscaped+"[\"'][^>]*)(>)","i");
   if(!re.test(output))throw new Error("SVG element not found: "+elementId);
   output=output.replace(re,(match,start,end)=>{
-   if(/\\bdata-concept-id=/.test(start))return match;
+   if(/\bdata-concept-id=/.test(start))return match;
    return start+" data-concept-id=\""+conceptId+"\" tabindex=\"0\" role=\"button\""+end;
   });
  }
