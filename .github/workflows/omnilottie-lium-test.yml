@@ -71,8 +71,9 @@ jobs:
           fi
           conda activate omnilottie
           python -m pip install -q --upgrade pip
-          python -m pip install -q torch==2.3.0+cu121 --index-url https://download.pytorch.org/whl/cu121
-          python -m pip install -q -r requirements.txt
+          python -m pip uninstall -y torchvision torchaudio torch >/dev/null 2>&1 || true
+          python -m pip install -q --no-cache-dir torch==2.3.0+cu121 --index-url https://download.pytorch.org/whl/cu121
+          python -m pip install -q --no-cache-dir -r requirements.txt
           python - <<'PY'
           import torch
           print("TORCH", torch.__version__)
