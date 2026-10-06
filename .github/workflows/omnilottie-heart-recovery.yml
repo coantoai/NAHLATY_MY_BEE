@@ -74,6 +74,8 @@ jobs:
           fi
 
           cat > "$OUT/diagnose.py" <<'PY'
+          import sys
+          sys.path.insert(0, "/opt/OmniLottie")
           import torch
           from decoder_hf import LottieDecoder
           from transformers import AutoProcessor
