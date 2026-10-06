@@ -1,0 +1,108 @@
+name: OmniLottie Heart Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "Lium pod SSH host"
+        required: true
+        default: "146.120.227.147"
+      port:
+        description: "Lium pod SSH port"
+        required: true
+        default: "30350"
+
+jobs:
+  heart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        env:
+          LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          KEY_B64="$(printf '%s' "$LIUM_SSH_PRIVATE_KEY" | tr -d '[:space:]')"
+          printf '%s' "$KEY_B64" | base64 --decode > /tmp/lium_key_raw
+          {
+            echo '-----BEGIN OPENSSH PRIVATE KEY-----'
+            base64 -w 0 /tmp/lium_key_raw
+            echo
+            echo '-----END OPENSSH PRIVATE KEY-----'
+          } > ~/.ssh/lium_nahlaty
+          chmod 600 ~/.ssh/lium_nahlaty
+          ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
+
+      - name: Generate heart with OmniLottie
+        shell: bash
+        env:
+          HOST: ${{ inputs.host }}
+          PORT: ${{ inputs.port }}
+        run: |
+          set -euo pipefail
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/lium_nahlaty -p "$PORT" root@"$HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+
+          CACHE=/workspace/omnilottie-docker
+          HF_CACHE=/workspace/hf-cache
+          OUT=/workspace/omnilottie-output
+          mkdir -p "$CACHE" "$HF_CACHE" "$OUT"
+
+          if ! docker image inspect nahlaty/omnilottie:test >/dev/null 2>&1; then
+            cat > "$CACHE/Dockerfile" <<'DOCKERFILE'
+          FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          ENV DEBIAN_FRONTEND=noninteractive PIP_DISABLE_PIP_VERSION_CHECK=1
+          RUN apt-get update && apt-get install -y --no-install-recommends git libgl1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+          WORKDIR /opt
+          RUN git clone --depth 1 https://github.com/OpenVGLab/OmniLottie.git
+          WORKDIR /opt/OmniLottie
+          RUN python -m pip install --no-cache-dir -r requirements.txt
+          RUN python -m pip check
+          DOCKERFILE
+            docker build -t nahlaty/omnilottie:test "$CACHE"
+          fi
+
+          if [ ! -f "$HF_CACHE/OmniLottie/config.json" ]; then
+            docker run --rm --gpus all               -e HF_HOME=/hf-cache               -v "$HF_CACHE:/hf-cache"               nahlaty/omnilottie:test               huggingface-cli download OmniLottie/OmniLottie --local-dir /hf-cache/OmniLottie
+          fi
+
+          rm -f "$OUT/heart.json" "$OUT/heart-prompt.txt"
+
+          cat > "$OUT/heart-prompt.txt" <<'PROMPT'
+          A premium scientific animated cutaway of a realistic human heart, front-facing and centered, designed as a clean Lottie animation. Show detailed anatomical left and right ventricles, left and right atria, major blood vessels, and internal cutaway structure. Use red for oxygenated blood and blue for deoxygenated blood. The heart gently pulses in a smooth seamless loop. Show subtle animated directional blood flow through the chambers and major vessels, with slight valve motion and clear internal flow emphasis. Modern premium medical aesthetic, precise, visually rich, layered, vector-friendly, not cartoonish, not childish, not a flat school infographic. Minimal background. The heart is the main subject and should feel suitable for a world-class interactive visual learning product.
+          PROMPT
+
+          PROMPT_TEXT="$(tr '\n' ' ' < "$OUT/heart-prompt.txt")"
+
+          docker run --rm --gpus all             -e HF_HOME=/hf-cache             -v "$HF_CACHE:/hf-cache"             -v "$OUT:/output"             nahlaty/omnilottie:test             python inference_hf.py               --model_path /hf-cache/OmniLottie               --text "$PROMPT_TEXT"               --output /output/heart.json
+
+          docker run --rm -v "$OUT:/output" nahlaty/omnilottie:test python - <<'PY'
+          import json, os
+          p="/output/heart.json"
+          assert os.path.isfile(p) and os.path.getsize(p)>100, "missing/empty heart Lottie output"
+          with open(p, encoding="utf-8") as f:
+              d=json.load(f)
+          assert isinstance(d, dict)
+          assert isinstance(d.get("layers"), list) and d["layers"], "no Lottie layers"
+          print("OMNILOTTIE_HEART_OK")
+          print("SIZE_BYTES", os.path.getsize(p))
+          print("LAYERS", len(d["layers"]))
+          print("VERSION", d.get("v"))
+          print("FRAMES", d.get("ip"), d.get("op"), "FPS", d.get("fr"))
+          PY
+          REMOTE
+
+          mkdir -p output
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty root@"$HOST":/workspace/omnilottie-output/heart.json output/heart.json
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty root@"$HOST":/workspace/omnilottie-output/heart-prompt.txt output/heart-prompt.txt
+
+      - name: Upload heart result
+        uses: actions/upload-artifact@v4
+        with:
+          name: omnilottie-heart-result
+          path: output/
+          if-no-files-found: error
+          retention-days: 7
