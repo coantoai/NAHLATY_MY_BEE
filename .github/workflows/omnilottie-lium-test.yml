@@ -73,22 +73,38 @@ jobs:
           conda env remove -y -n omnilottie >/dev/null 2>&1 || true
           conda create -y -n omnilottie python=3.10 pip
           conda activate omnilottie
+
+          # OmniLottie upstream's tested stack: Python 3.10, torch 2.3.0,
+          # torchvision 0.18.0, CUDA 12.1. Keep torch wheels isolated from
+          # Conda's MKL solver to avoid iJIT_NotifyEvent ABI conflicts.
           python -m pip install -q --upgrade "pip<25"
-          conda install -y -q pytorch=2.3.0 torchvision=0.18.0 pytorch-cuda=12.1 "mkl=2024.0.*" -c pytorch -c nvidia -c defaults
+          python -m pip install -q --no-cache-dir \
+            torch==2.3.0 torchvision==0.18.0 \
+            --index-url https://download.pytorch.org/whl/cu121
+
           python - <<'PY'
-          import torch
+          import torch, torchvision
           print("TORCH_PRECHECK", torch.__version__)
-          print("CUDA_PRECHECK", torch.cuda.is_available())
-          assert torch.cuda.is_available(), "CUDA unavailable after PyTorch install"
+          print("TORCHVISION_PRECHECK", torchvision.__version__)
+          print("CUDA_BUILD", torch.version.cuda)
+          print("CUDA_AVAILABLE", torch.cuda.is_available())
+          assert torch.__version__.startswith("2.3.0")
+          assert torchvision.__version__.startswith("0.18.0")
+          assert torch.cuda.is_available(), "CUDA unavailable after official PyTorch wheel install"
+          print("GPU", torch.cuda.get_device_name(0))
           PY
+
+          # Install OmniLottie deps only after the GPU stack is proven.
           python -m pip install -q --no-cache-dir -r requirements.txt
+
           python - <<'PY'
-          import torch
-          print("TORCH", torch.__version__)
-          print("CUDA", torch.cuda.is_available())
-          if torch.cuda.is_available():
-              print("GPU", torch.cuda.get_device_name(0))
-              print("VRAM_GB", round(torch.cuda.get_device_properties(0).total_memory/1024**3,1))
+          import torch, transformers, cv2, gradio
+          print("TORCH_FINAL", torch.__version__)
+          print("CUDA_FINAL", torch.cuda.is_available())
+          print("TRANSFORMERS", transformers.__version__)
+          print("OPENCV", cv2.__version__)
+          print("GRADIO", gradio.__version__)
+          assert torch.cuda.is_available()
           PY
           python inference_hf.py --help >/tmp/omnilottie-help.txt
           echo "OMNILOTTIE_INSTALL_OK"
