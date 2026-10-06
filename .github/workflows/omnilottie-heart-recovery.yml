@@ -1,0 +1,189 @@
+name: OmniLottie Heart Recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "Lium pod SSH host"
+        required: true
+        default: "146.120.227.147"
+      port:
+        description: "Lium pod SSH port"
+        required: true
+        default: "30350"
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        env:
+          LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          KEY_B64="$(printf '%s' "$LIUM_SSH_PRIVATE_KEY" | tr -d '[:space:]')"
+          printf '%s' "$KEY_B64" | base64 --decode > /tmp/lium_key_raw
+          {
+            echo '-----BEGIN OPENSSH PRIVATE KEY-----'
+            base64 -w 0 /tmp/lium_key_raw
+            echo
+            echo '-----END OPENSSH PRIVATE KEY-----'
+          } > ~/.ssh/lium_nahlaty
+          chmod 600 ~/.ssh/lium_nahlaty
+          ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
+
+      - name: Diagnose and recover OmniLottie heart generation
+        shell: bash
+        env:
+          HOST: ${{ inputs.host }}
+          PORT: ${{ inputs.port }}
+        run: |
+          set -euo pipefail
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/lium_nahlaty -p "$PORT" root@"$HOST" 'bash -s' <<'REMOTE'
+          set -uo pipefail
+
+          CACHE=/workspace/omnilottie-docker
+          HF_CACHE=/workspace/hf-cache
+          OUT=/workspace/omnilottie-recovery-output
+          mkdir -p "$CACHE" "$HF_CACHE" "$OUT"
+          rm -f "$OUT"/*.json "$OUT"/*.txt || true
+
+          echo "=== GPU ==="
+          nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
+
+          if ! docker image inspect nahlaty/omnilottie:test >/dev/null 2>&1; then
+            cat > "$CACHE/Dockerfile" <<'DOCKERFILE'
+          FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+          ENV DEBIAN_FRONTEND=noninteractive PIP_DISABLE_PIP_VERSION_CHECK=1
+          RUN apt-get update && apt-get install -y --no-install-recommends git libgl1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+          WORKDIR /opt
+          RUN git clone --depth 1 https://github.com/OpenVGLab/OmniLottie.git
+          WORKDIR /opt/OmniLottie
+          RUN python -m pip install --no-cache-dir -r requirements.txt
+          RUN python -m pip check
+          DOCKERFILE
+            docker build -t nahlaty/omnilottie:test "$CACHE"
+          fi
+
+          if [ ! -f "$HF_CACHE/OmniLottie/config.json" ]; then
+            docker run --rm --gpus all               -e HF_HOME=/hf-cache               -v "$HF_CACHE:/hf-cache"               nahlaty/omnilottie:test               huggingface-cli download OmniLottie/OmniLottie --local-dir /hf-cache/OmniLottie
+          fi
+
+          cat > "$OUT/diagnose.py" <<'PY'
+          import torch
+          from decoder_hf import LottieDecoder
+          from transformers import AutoProcessor
+          from inference_hf import build_messages, prepare_inference_input
+
+          model_path="/hf-cache/OmniLottie"
+          device=torch.device("cuda")
+          model=LottieDecoder.from_pretrained(model_path, torch_dtype=torch.bfloat16, trust_remote_code=True).to(device).eval()
+          processor=AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-3B-Instruct", padding_side="left", trust_remote_code=True)
+
+          emb_rows=model.transformer.get_input_embeddings().weight.shape[0]
+          out_rows=model.transformer.get_output_embeddings().weight.shape[0]
+          print("MODEL_VOCAB", model.vocab_size)
+          print("EMBED_ROWS", emb_rows)
+          print("LM_HEAD_ROWS", out_rows)
+          assert emb_rows == model.vocab_size == 192400
+          assert out_rows == model.vocab_size
+
+          prompts=[
+              "A red ball gently pulses once.",
+              "An anatomical human heart cutaway with red and blue blood flow and a gentle heartbeat."
+          ]
+          for p in prompts:
+              inp=prepare_inference_input(processor, build_messages("text", text_prompt=p), device)
+              ids=inp["input_ids"]
+              print("PROMPT", p)
+              print("INPUT_SHAPE", tuple(ids.shape), "ID_MIN", int(ids.min()), "ID_MAX", int(ids.max()))
+              assert int(ids.min()) >= 0
+              assert int(ids.max()) < emb_rows
+              pos,_=model.transformer.get_rope_index(
+                  input_ids=inp["input_ids"],
+                  attention_mask=inp["attention_mask"],
+                  image_grid_thw=None,
+                  video_grid_thw=None
+              )
+              pos=pos * inp["attention_mask"][None,]
+              print("POSITION_MIN", int(pos.min()), "POSITION_MAX", int(pos.max()))
+          print("PRECHECK_OK")
+          PY
+
+          echo "=== VOCAB / INPUT / POSITION PRECHECK ==="
+          docker run --rm --gpus all             -e HF_HOME=/hf-cache             -v "$HF_CACHE:/hf-cache"             -v "$OUT:/recovery"             nahlaty/omnilottie:test             python /recovery/diagnose.py | tee "$OUT/precheck.txt"
+          PRECHECK_STATUS=${PIPESTATUS[0]}
+          if [ "$PRECHECK_STATUS" -ne 0 ]; then
+            echo "PRECHECK_FAILED"
+            exit "$PRECHECK_STATUS"
+          fi
+
+          echo "=== CONTROL GENERATION WITH OFFICIAL SAMPLING SETTINGS ==="
+          if docker run --rm --gpus all             -e HF_HOME=/hf-cache             -e CUDA_LAUNCH_BLOCKING=1             -v "$HF_CACHE:/hf-cache"             -v "$OUT:/output"             nahlaty/omnilottie:test             python inference_hf.py               --model_path /hf-cache/OmniLottie               --text "A red ball gently pulses once."               --do_sample --temperature 0.8 --top_p 0.25 --top_k 5               --max_tokens 512               --output /output/control.json
+          then
+            echo "CONTROL_OK"
+          else
+            echo "CONTROL_FAILED"
+            exit 21
+          fi
+
+          echo "=== HEART GENERATION: OFFICIAL SAMPLING MODE ==="
+          HEART_PROMPT="An anatomical human heart cutaway. Red and blue blood flow through the chambers while the heart gently beats. Clean premium medical vector animation."
+          if docker run --rm --gpus all             -e HF_HOME=/hf-cache             -e CUDA_LAUNCH_BLOCKING=1             -v "$HF_CACHE:/hf-cache"             -v "$OUT:/output"             nahlaty/omnilottie:test             python inference_hf.py               --model_path /hf-cache/OmniLottie               --text "$HEART_PROMPT"               --do_sample --temperature 0.8 --top_p 0.25 --top_k 5               --max_tokens 1024               --output /output/heart.json
+          then
+            echo "HEART_PRIMARY_OK"
+            HEART_OK=1
+          else
+            echo "HEART_PRIMARY_FAILED"
+            HEART_OK=0
+          fi
+
+          if [ "$HEART_OK" -ne 1 ]; then
+            echo "=== HEART FALLBACK: REDUCED TOKEN BUDGET ==="
+            if docker run --rm --gpus all               -e HF_HOME=/hf-cache               -e CUDA_LAUNCH_BLOCKING=1               -v "$HF_CACHE:/hf-cache"               -v "$OUT:/output"               nahlaty/omnilottie:test               python inference_hf.py                 --model_path /hf-cache/OmniLottie                 --text "A human heart cutaway gently beating with red and blue blood flow."                 --do_sample --temperature 0.8 --top_p 0.25 --top_k 5                 --max_tokens 512                 --output /output/heart.json
+            then
+              echo "HEART_FALLBACK_OK"
+              HEART_OK=1
+            else
+              echo "HEART_FALLBACK_FAILED"
+              HEART_OK=0
+            fi
+          fi
+
+          if [ "$HEART_OK" -ne 1 ]; then
+            exit 22
+          fi
+
+          echo "=== VALIDATE HEART JSON ==="
+          docker run --rm -v "$OUT:/output" nahlaty/omnilottie:test python - <<'PY'
+          import json, os
+          p="/output/heart.json"
+          assert os.path.isfile(p) and os.path.getsize(p)>100
+          with open(p, encoding="utf-8") as f:
+              d=json.load(f)
+          assert isinstance(d, dict)
+          assert isinstance(d.get("layers"), list) and len(d["layers"]) > 0
+          print("OMNILOTTIE_HEART_RECOVERY_OK")
+          print("SIZE_BYTES", os.path.getsize(p))
+          print("LAYERS", len(d["layers"]))
+          print("FPS", d.get("fr"))
+          print("FRAMES", d.get("ip"), d.get("op"))
+          PY
+          REMOTE
+
+          mkdir -p output
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty root@"$HOST":/workspace/omnilottie-recovery-output/heart.json output/heart.json
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty root@"$HOST":/workspace/omnilottie-recovery-output/control.json output/control.json
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty root@"$HOST":/workspace/omnilottie-recovery-output/precheck.txt output/precheck.txt
+
+      - name: Upload recovery artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: omnilottie-heart-recovery
+          path: output/
+          if-no-files-found: error
+          retention-days: 7
