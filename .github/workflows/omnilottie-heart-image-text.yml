@@ -1,0 +1,310 @@
+name: OmniLottie Heart Image Text Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  image_text_test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare reference image
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode experiments/omnilottie/heart-reference.jpg.b64 > /tmp/heart-reference.jpg
+          test -s /tmp/heart-reference.jpg
+          file /tmp/heart-reference.jpg
+
+      - name: Prepare SSH key
+        shell: bash
+        env:
+          LIUM_SSH_PRIVATE_KEY: ${{ secrets.LIUM_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          KEY_B64="$(printf '%s' "$LIUM_SSH_PRIVATE_KEY" | tr -d '[:space:]')"
+          printf '%s' "$KEY_B64" | base64 --decode > /tmp/lium_key_raw
+          {
+            echo '-----BEGIN OPENSSH PRIVATE KEY-----'
+            base64 -w 0 /tmp/lium_key_raw
+            echo
+            echo '-----END OPENSSH PRIVATE KEY-----'
+          } > ~/.ssh/lium_nahlaty
+          chmod 600 ~/.ssh/lium_nahlaty
+          ssh-keygen -y -f ~/.ssh/lium_nahlaty >/dev/null
+
+      - name: Run real Image + Text inference on Lium
+        shell: bash
+        env:
+          HOST: "146.120.227.147"
+          PORT: "30350"
+        run: |
+          set -euo pipefail
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/lium_nahlaty -p "$PORT" root@"$HOST" \
+            'mkdir -p /workspace/omnilottie-image-text-input /workspace/omnilottie-image-text-output'
+
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty \
+            /tmp/heart-reference.jpg \
+            root@"$HOST":/workspace/omnilottie-image-text-input/heart-reference.jpg
+
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/lium_nahlaty -p "$PORT" root@"$HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+
+          HF_CACHE=/workspace/hf-cache
+          OUT=/workspace/omnilottie-image-text-output
+          IN=/workspace/omnilottie-image-text-input
+          mkdir -p "$OUT"
+          rm -f "$OUT"/*.json "$OUT"/*.txt || true
+
+          echo "=== GPU ==="
+          nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
+
+          if ! docker image inspect nahlaty/omnilottie:test >/dev/null 2>&1; then
+            echo "ERROR: cached Docker image nahlaty/omnilottie:test is missing."
+            exit 31
+          fi
+
+          if [ ! -f "$HF_CACHE/OmniLottie/config.json" ]; then
+            echo "ERROR: cached OmniLottie model is missing."
+            exit 32
+          fi
+
+          test -s "$IN/heart-reference.jpg"
+
+          cat > "$OUT/run_image_text.py" <<'PY'
+          import argparse
+          import json
+          import sys
+          from pathlib import Path
+
+          import torch
+          from PIL import Image
+
+          sys.path.insert(0, "/opt/OmniLottie")
+
+          from decoder_hf import LottieDecoder
+          from transformers import AutoProcessor
+          from inference_hf import (
+              build_messages,
+              prepare_inference_input,
+              generate_lottie,
+              tokens_to_lottie_json,
+          )
+
+          parser = argparse.ArgumentParser()
+          parser.add_argument("--image", required=True)
+          parser.add_argument("--output", required=True)
+          parser.add_argument("--mode", choices=["greedy", "sample"], default="greedy")
+          parser.add_argument("--max_tokens", type=int, default=1536)
+          args = parser.parse_args()
+
+          prompt = (
+              "Preserve the reference heart anatomy and its red and blue color coding. "
+              "Animate a gentle rhythmic heartbeat and clearly visible red and blue blood flow "
+              "through the chambers and major vessels. Keep the dark premium medical look. "
+              "Do not add text or labels. Make the motion smooth and seamless."
+          )
+
+          device = torch.device("cuda")
+          model_path = "/hf-cache/OmniLottie"
+
+          print("Loading OmniLottie...")
+          model = LottieDecoder.from_pretrained(
+              model_path,
+              torch_dtype=torch.bfloat16,
+              trust_remote_code=True,
+          ).to(device).eval()
+
+          processor = AutoProcessor.from_pretrained(
+              "Qwen/Qwen2.5-VL-3B-Instruct",
+              padding_side="left",
+              trust_remote_code=True,
+          )
+
+          image = Image.open(args.image).convert("RGB")
+          image = image.resize((448, 448), Image.LANCZOS)
+
+          # IMPORTANT: force the multimodal image branch explicitly.
+          # The upstream CLI currently checks --text before --image, so passing both
+          # through the CLI can accidentally select Text-to-Lottie.
+          messages = build_messages("image", text_prompt=prompt, image=image)
+          inputs = prepare_inference_input(processor, messages, device)
+
+          print("MODE: IMAGE+TEXT")
+          print("PROMPT:", prompt)
+          print("PIXEL_VALUES:", None if inputs["pixel_values"] is None else tuple(inputs["pixel_values"].shape))
+          print("IMAGE_GRID:", None if inputs["image_grid_thw"] is None else inputs["image_grid_thw"].tolist())
+
+          use_sampling = args.mode == "sample"
+          tokens = generate_lottie(
+              model=model,
+              inputs=inputs,
+              max_tokens=args.max_tokens,
+              device=device,
+              use_sampling=use_sampling,
+              temperature=0.8,
+              top_p=0.25,
+              top_k=5,
+          )
+
+          print("GENERATED_TOKENS:", len(tokens))
+          if not tokens:
+              raise RuntimeError("No Lottie tokens generated")
+
+          data = tokens_to_lottie_json(tokens)
+          if not isinstance(data, dict):
+              raise RuntimeError("Invalid Lottie JSON root")
+          layers = data.get("layers")
+          if not isinstance(layers, list) or not layers:
+              raise RuntimeError("Generated Lottie has no layers")
+
+          out = Path(args.output)
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+          meta = {
+              "mode": "image+text",
+              "decode": args.mode,
+              "tokens": len(tokens),
+              "width": data.get("w"),
+              "height": data.get("h"),
+              "fps": data.get("fr"),
+              "ip": data.get("ip"),
+              "op": data.get("op"),
+              "layers": len(layers),
+              "prompt": prompt,
+          }
+          Path(str(out) + ".meta.json").write_text(
+              json.dumps(meta, indent=2), encoding="utf-8"
+          )
+          print("IMAGE_TEXT_OK")
+          print(json.dumps(meta))
+          PY
+
+          echo "=== IMAGE + TEXT PRIMARY: GREEDY ==="
+          if docker run --rm --gpus all \
+              -e HF_HOME=/hf-cache \
+              -e CUDA_LAUNCH_BLOCKING=1 \
+              -v "$HF_CACHE:/hf-cache" \
+              -v "$IN:/input" \
+              -v "$OUT:/output" \
+              nahlaty/omnilottie:test \
+              python /output/run_image_text.py \
+                --image /input/heart-reference.jpg \
+                --output /output/heart-image-text.json \
+                --mode greedy \
+                --max_tokens 1536
+          then
+            echo "PRIMARY_IMAGE_TEXT_OK" | tee "$OUT/status.txt"
+          else
+            echo "PRIMARY_IMAGE_TEXT_FAILED"
+            rm -f "$OUT/heart-image-text.json" "$OUT/heart-image-text.json.meta.json"
+
+            echo "=== IMAGE + TEXT FALLBACK: SAMPLING ==="
+            docker run --rm --gpus all \
+              -e HF_HOME=/hf-cache \
+              -e CUDA_LAUNCH_BLOCKING=1 \
+              -v "$HF_CACHE:/hf-cache" \
+              -v "$IN:/input" \
+              -v "$OUT:/output" \
+              nahlaty/omnilottie:test \
+              python /output/run_image_text.py \
+                --image /input/heart-reference.jpg \
+                --output /output/heart-image-text.json \
+                --mode sample \
+                --max_tokens 1024
+
+            echo "FALLBACK_IMAGE_TEXT_OK" | tee "$OUT/status.txt"
+          fi
+
+          python - <<'PY'
+          import json, os
+          p="/workspace/omnilottie-image-text-output/heart-image-text.json"
+          assert os.path.isfile(p) and os.path.getsize(p) > 100
+          with open(p, encoding="utf-8") as f:
+              d=json.load(f)
+          assert isinstance(d.get("layers"), list) and len(d["layers"]) > 0
+          print("FINAL_VALIDATION_OK")
+          print("SIZE_BYTES", os.path.getsize(p))
+          print("LAYERS", len(d["layers"]))
+          print("FPS", d.get("fr"))
+          print("FRAMES", d.get("ip"), d.get("op"))
+          PY
+          REMOTE
+
+          mkdir -p output
+          cp /tmp/heart-reference.jpg output/heart-reference.jpg
+
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty \
+            root@"$HOST":/workspace/omnilottie-image-text-output/heart-image-text.json \
+            output/heart-image-text.json
+
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty \
+            root@"$HOST":/workspace/omnilottie-image-text-output/heart-image-text.json.meta.json \
+            output/heart-image-text.meta.json
+
+          scp -P "$PORT" -i ~/.ssh/lium_nahlaty \
+            root@"$HOST":/workspace/omnilottie-image-text-output/status.txt \
+            output/status.txt
+
+      - name: Build offline preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js \
+            -o output/lottie.min.js
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(Path("output/heart-image-text.json").read_text())
+          html = """<!doctype html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>OmniLottie Heart Image+Text Preview</title>
+            <style>
+              html,body{margin:0;background:#081018;color:#fff;font-family:system-ui;height:100%}
+              body{display:grid;place-items:center}
+              #wrap{width:min(94vw,820px)}
+              #anim{width:100%;aspect-ratio:1;background:#081018;border-radius:18px;overflow:hidden}
+              .note{opacity:.72;margin-top:12px;text-align:center;font-size:13px}
+            </style>
+          </head>
+          <body>
+            <div id="wrap">
+              <div id="anim"></div>
+              <div class="note">OmniLottie — real Image + Text inference</div>
+            </div>
+            <script src="lottie.min.js"></script>
+            <script>
+              const animationData = __DATA__;
+              lottie.loadAnimation({
+                container: document.getElementById('anim'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                animationData
+              });
+            </script>
+          </body>
+          </html>""".replace("__DATA__", json.dumps(data, separators=(",",":")))
+          Path("output/preview.html").write_text(html, encoding="utf-8")
+          PY
+
+      - name: Upload Image + Text result
+        uses: actions/upload-artifact@v4
+        with:
+          name: omnilottie-heart-image-text
+          path: output/
+          if-no-files-found: error
+          retention-days: 7
