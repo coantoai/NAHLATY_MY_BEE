@@ -72,7 +72,7 @@ jobs:
           rm -f "$OUT/heart.json" "$OUT/heart-prompt.txt"
 
           cat > "$OUT/heart-prompt.txt" <<'PROMPT'
-          A premium scientific animated cutaway of a realistic human heart, front-facing and centered, designed as a clean Lottie animation. Show detailed anatomical left and right ventricles, left and right atria, major blood vessels, and internal cutaway structure. Use red for oxygenated blood and blue for deoxygenated blood. The heart gently pulses in a smooth seamless loop. Show subtle animated directional blood flow through the chambers and major vessels, with slight valve motion and clear internal flow emphasis. Modern premium medical aesthetic, precise, visually rich, layered, vector-friendly, not cartoonish, not childish, not a flat school infographic. Minimal background. The heart is the main subject and should feel suitable for a world-class interactive visual learning product.
+          An anatomical human heart cutaway with red and blue blood flow and a gentle heartbeat. Clean premium medical vector animation.
           PROMPT
 
           PROMPT_TEXT="$(tr '\n' ' ' < "$OUT/heart-prompt.txt")"
