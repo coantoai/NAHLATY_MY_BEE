@@ -295,6 +295,8 @@ export default function LivingEngine(){
    let imageUsage=null;
    let imageRequestId=null;
    let imageVerdict=null;
+   let imagePromptUsed="";
+   let imageUnderstandingPlan=null;
    let imageStageFocus=[];
    let imageStageFocusDiagnostics=null;
    if(visualGenerationNeeded(ep.provider)){
@@ -307,6 +309,7 @@ export default function LivingEngine(){
      body:JSON.stringify({
       question,
       stages:next.steps,
+      upstreamAnswer:next.summary,
       context:{
        previousTitle:previous?.title||next.title,
        previousSummary:previous?.summary||next.summary,
@@ -319,6 +322,8 @@ export default function LivingEngine(){
     imageUsage=ip?.generationUsage||null;
     imageRequestId=ip?.generationRequestId||null;
     imageVerdict=ip?.visualTruthGate||null;
+    imagePromptUsed=String(ip?.imagePrompt||"").slice(0,8000);
+    imageUnderstandingPlan=ip?.truthGate||null;
     imageStageFocusDiagnostics=ip?.stageFocusDiagnostics||null;
     if(im.ok&&ip?.ok&&String(ip.image||"").startsWith("data:image/")){
      visualImage=ip.image;
@@ -344,7 +349,7 @@ export default function LivingEngine(){
    }
    const done={...pending,title:next.title,image:visualImage,stageFocus:imageStageFocus,stageFocusDiagnostics:imageStageFocusDiagnostics||measureStageFocus(imageStageFocus,next.steps),cameraStep:-1,imageDimensions:{width:imageUsage?.output_width||2048,height:imageUsage?.output_height||1280},result:next,model:visualModel,
     // Rejected QA images stay out of the scene but remain in the exportable local archive.
-    inspectionImage,imageUsage,imageRequestId,imageVerdict,
+    inspectionImage,imageUsage,imageRequestId,imageVerdict,imagePromptUsed,imageUnderstandingPlan,
     status:outcome.status,error:imageFailed?imageError:"",updatedAt:Date.now()};
    setHistory(h=>h.map(t=>t.id===pending.id?done:t));
    await persist(world,done);
