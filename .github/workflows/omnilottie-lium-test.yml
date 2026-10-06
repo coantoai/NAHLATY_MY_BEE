@@ -73,8 +73,8 @@ jobs:
           conda env remove -y -n omnilottie >/dev/null 2>&1 || true
           conda create -y -n omnilottie python=3.10 pip
           conda activate omnilottie
-          python -m pip install -q --upgrade pip
-          python -m pip install -q --no-cache-dir torch==2.3.0+cu121 torchvision==0.18.0+cu121 --index-url https://download.pytorch.org/whl/cu121
+          python -m pip install -q --upgrade "pip<25"
+          python -m pip install -q --no-cache-dir torch==2.3.0 torchvision==0.18.0 --index-url https://download.pytorch.org/whl/cu121
           python -m pip install -q --no-cache-dir -r requirements.txt
           python - <<'PY'
           import torch
