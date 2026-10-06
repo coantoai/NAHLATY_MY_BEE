@@ -47,6 +47,24 @@ jobs:
           set -euo pipefail
           echo "=== GPU ==="
           nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
+
+          echo "=== CONTAINER RUNTIME ==="
+          if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+            echo "DOCKER_OK $(docker --version)"
+            if docker run --rm --gpus all nvidia/cuda:12.1.1-base-ubuntu22.04 nvidia-smi >/tmp/docker-nvidia-smi.txt 2>&1; then
+              cat /tmp/docker-nvidia-smi.txt
+              echo "DOCKER_GPU_OK"
+              exit 0
+            else
+              echo "DOCKER_GPU_UNAVAILABLE"
+              cat /tmp/docker-nvidia-smi.txt || true
+            fi
+          else
+            echo "DOCKER_UNAVAILABLE"
+          fi
+
+          echo "CONTAINER_PREFLIGHT_COMPLETE"
+          exit 0
           apt-get update -qq
           apt-get install -y -qq git wget >/dev/null
           if [ -x /opt/conda/bin/conda ]; then
