@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NAHLATY — Engine Side-View Water Jacket v4</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b0f}
+#scene{border:0;width:100%;height:100%;display:block}
+#badge{position:fixed;right:12px;top:12px;z-index:20;padding:7px 10px;border-radius:999px;background:#071018e8;border:1px solid #ffffff24;color:#d9f7ff;font:700 11px system-ui}
+</style>
+</head>
+<body>
+<iframe id="scene" src="/engine-cinematic-science-lock.html" title="Engine side view"></iframe>
+<div id="badge">SIDE VIEW · WATER JACKET ONLY</div>
+<script>
+const frame=document.getElementById('scene');
+frame.addEventListener('load',()=>{
+  const d=frame.contentDocument;
+  if(!d) return;
+
+  const style=d.createElement('style');
+  style.textContent=`
+  #coolantOverlay{overflow:visible}
+  #coolantOverlay .wj{fill:rgba(35,155,235,.34);stroke:#9bdcff;stroke-width:2.4;filter:drop-shadow(0 0 7px rgba(50,170,255,.45))}
+  #coolantOverlay .wjHot{fill:rgba(255,122,72,.24);stroke:#ffc2aa;stroke-width:2.2}
+  #coolantOverlay .flow{fill:none;stroke:#e4fbff;stroke-width:5;stroke-linecap:round;stroke-dasharray:3 15;animation:coolantFlow 1.15s linear infinite;filter:drop-shadow(0 0 4px rgba(120,220,255,.9))}
+  #coolantOverlay .flowHot{stroke:#ffd2c2}
+  #coolantOverlay .label{font:800 18px system-ui,-apple-system,Segoe UI,Arial,sans-serif;fill:#fff;paint-order:stroke;stroke:#071018;stroke-width:5px}
+  #coolantOverlay .sub{font:700 13px system-ui,-apple-system,Segoe UI,Arial,sans-serif;fill:#d7f4ff;paint-order:stroke;stroke:#071018;stroke-width:4px}
+  #coolantOverlay .sub.hot{fill:#ffc8b5}
+  #coolantOverlay .dot{fill:#dff8ff;filter:drop-shadow(0 0 5px rgba(100,220,255,.95))}
+  #coolantOverlay .dot.hot{fill:#ffd0bd;filter:drop-shadow(0 0 5px rgba(255,110,72,.95))}
+  `;
+  d.head.appendChild(style);
+
+  let svg=d.getElementById('coolantOverlay');
+  if(!svg){
+    svg=d.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.id='coolantOverlay';
+    svg.setAttribute('viewBox','0 0 1024 1024');
+    svg.style.position='absolute';
+    svg.style.inset='0';
+    svg.style.width='100%';
+    svg.style.height='100%';
+    svg.style.pointerEvents='none';
+    const host=d.body;
+    host.appendChild(svg);
+  }
+
+  svg.innerHTML=`
+  <defs>
+    <marker id="arrCold" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#c8f2ff"/>
+    </marker>
+    <marker id="arrHot" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#ffc0a6"/>
+    </marker>
+  </defs>
+
+  <!-- Visible side-view cutaway only: no invented external coolant route -->
+  <path class="wj" d="M355 750
+    C348 676 351 584 360 514
+    C367 457 379 406 397 365
+    C405 346 416 329 430 315
+    L454 335
+    C443 352 435 375 430 406
+    C417 491 416 590 422 742
+    C401 751 378 755 355 750 Z"/>
+
+  <path class="wj" d="M669 750
+    C676 676 673 584 664 514
+    C657 457 645 406 627 365
+    C619 346 608 329 594 315
+    L570 335
+    C581 352 589 375 594 406
+    C607 491 608 590 602 742
+    C623 751 646 755 669 750 Z"/>
+
+  <path class="wjHot" d="M431 318
+    C446 286 468 263 496 247
+    C507 241 516 239 526 243
+    C553 252 579 277 593 312
+    L571 334
+    C557 310 541 294 522 285
+    C512 280 503 281 494 286
+    C474 298 459 314 451 338 Z"/>
+
+  <path class="flow" d="M384 724
+    C377 640 382 535 397 445
+    C405 398 416 358 438 326"
+    marker-end="url(#arrCold)"/>
+
+  <path class="flow" d="M640 724
+    C647 640 642 535 627 445
+    C619 398 608 358 586 326"
+    marker-end="url(#arrCold)"/>
+
+  <path class="flow flowHot" d="M442 320
+    C466 285 494 266 512 259
+    C535 267 562 287 584 320"
+    marker-end="url(#arrHot)"/>
+
+  <text class="label" x="198" y="544">VISIBLE WATER JACKET</text>
+  <text class="sub" x="198" y="566">coolant occupies the side cavities around the cylinder wall</text>
+
+  <text class="label" x="356" y="205">HEAD WATER JACKET</text>
+  <text class="sub hot" x="333" y="227">heat pickup continues around the combustion-chamber / valve-seat region</text>
+
+  <text class="sub" x="252" y="805">Side-view section only — hidden rear/front passages are intentionally not drawn here.</text>
+
+  <circle class="dot" r="6">
+    <animateMotion dur="2.7s" repeatCount="indefinite"
+      path="M384 724 C377 640 382 535 397 445 C405 398 416 358 438 326 C466 285 494 266 512 259"/>
+  </circle>
+  <circle class="dot" r="6">
+    <animateMotion begin=".9s" dur="2.7s" repeatCount="indefinite"
+      path="M640 724 C647 640 642 535 627 445 C619 398 608 358 586 326 C562 287 535 267 512 259"/>
+  </circle>
+  `;
+
+  const loop=d.getElementById('coolantLoop');
+  if(loop){
+    loop.innerHTML='<b>Side-view cooling explanation</b><div class="route">Only the water-jacket volume visible in this cutaway is highlighted. Coolant is shown moving upward through the side cavities around the cylinder wall and into the cylinder-head water jacket. Rear/front internal passages and the radiator loop are deliberately omitted from this view so the perspective does not imply false geometry.</div>';
+  }
+  const panel=d.getElementById('sciencePanel');
+  if(panel){
+    panel.innerHTML += '<br><span class="ok">SIDE-VIEW WATER JACKET</span> No external route is drawn in this view. Only the visible cutaway cavities around the cylinder and head are animated.';
+  }
+});
+</script>
+</body>
+</html>
