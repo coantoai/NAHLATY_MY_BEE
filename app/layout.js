@@ -1,3 +1,4 @@
+import "@copilotkit/react-core/v2/styles.css";
 import "./globals.css";
 import { BRAND } from "./lib/brand";
 
