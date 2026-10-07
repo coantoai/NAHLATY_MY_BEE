@@ -2,7 +2,7 @@ import { CopilotRuntime, createCopilotRuntimeHandler, BuiltInAgent } from "@copi
 
 const agent = new BuiltInAgent({
   model: "google:gemini-2.5-flash",
-  apiKey: process.env.GEMINI_API_KEY,
+  apiKey: process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY,
   prompt: "You are the NAHLATY visual-explainer test agent. Be concise. Help users understand scientific and technical topics visually and interactively."
 });
 
