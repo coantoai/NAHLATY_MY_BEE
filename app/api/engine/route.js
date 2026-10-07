@@ -5,6 +5,8 @@ import { compileVisualPlan } from "../../../lib/visual-director";
 import { getExperienceProfile } from "../../lib/experienceProfile";
 import { curatedKnowledgeResult, curatedKnowledgeResultById, listCuratedKnowledgePacks } from "../../../lib/knowledge-packs";
 import { internalRequestHeaders, rateLimitInfo, requestLimit } from "../../lib/requestGuard";
+import { curatedHeartLesson, scienceHeartResult } from "../../lib/heartScienceExperience";
+import { isClinicalHeartInput } from "../../lib/heartLessonScope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,7 +88,8 @@ function adaptGeneralExperience(experience,sourceKind="question"){
  return {...result,renderPlan:compileVisualPlan(result)};
 }
 
-function finalizeCurated(result,audience="عام"){
+async function finalizeCurated(result,audience="عام"){
+ if(result?.domain==="heart")return scienceHeartResult(result,audience);
  const profile=getExperienceProfile(audience);
  const experience=result?.experience?{...result.experience,audience,presentation:{...profile,profileId:profile.id}}:result?.experience;
  return {...result,experience,renderPlan:compileVisualPlan(result)};
@@ -147,12 +150,11 @@ export async function POST(request){
  if(sourceKind==="content"&&input.length>70000)return jsonError("المحتوى طويل جدًا لهذه النسخة.",422,"CONTENT_TOO_LONG");
 
  const directPack=sourceKind==="question"?curatedKnowledgeResult(input):null;
- const explicitHeartQuestion=/(قلب|heart|صمام|صمامات|أذين|اذين|بطين|تاجي|coronary)/i.test(input);
- const directHeart=sourceKind==="question"&&explicitHeartQuestion?localHeartResult(input):null;
+ const directHeart=sourceKind==="question"?curatedHeartLesson(input):null;
  const shortFollowUp=sourceKind==="question"&&(/^(ليش|لماذا|كيف|وضح|اشرح|وبعدين|ثم ماذا|شو يعني|ماذا يعني|what|why|how)/i.test(input)||input.length<24);
  const priorPack=shortFollowUp?curatedKnowledgeResultById(context?.previous?.topic,input):null;
  const hasPriorContext=Boolean(context?.previous&&typeof context.previous==="object");
- const heartContext=sourceKind==="question"&&hasPriorContext&&!priorPack?contextualHeartResult(input,context):null;
+ const heartContext=sourceKind==="question"&&hasPriorContext&&context.previous.domain==="heart"&&!priorPack&&!isClinicalHeartInput(input)?contextualHeartResult(input,context):null;
  const sourced=directPack||directHeart||priorPack||heartContext;
 
  if(sourced){
@@ -160,7 +162,7 @@ export async function POST(request){
    ok:true,
    provider:"sourced-knowledge",
    model:null,
-   result:finalizeCurated(sourced,context?.audience||"عام")
+   result:await finalizeCurated(sourced,context?.audience||"عام")
   });
  }
 

@@ -3,6 +3,7 @@ import { generateRecraftVector } from "../../lib/recraftVector";
 import { HEART_REFERENCE_ASSETS, HEART_REQUIRED_CONCEPT_IDS, HEART_SCENE_SPEC, HEART_SCIENTIFIC_SOURCES } from "../../lib/heartSemanticVector";
 
 import { loadNiaidHeart, NIAID_HEART_ASSET } from "../../lib/niaidHeartAsset";
+import { loadScienceHeart } from "../../lib/heartScienceAsset";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -33,7 +34,7 @@ function semanticEnvelope(){
 
 export async function GET(req){
  if(new URL(req.url).searchParams.get("preset")==="heart"){
-  try{return Response.json(await loadNiaidHeart(),{headers:{"cache-control":"public, max-age=3600"}})}
+  try{return Response.json(await (new URL(req.url).searchParams.get("view")==="cutaway"?loadScienceHeart():loadNiaidHeart()),{headers:{"cache-control":"no-store"}})}
   catch(error){console.error("[NAHLATY_VECTOR_ERROR]",String(error?.message||error));return Response.json({ok:false,error:"تعذر تحميل أصل القلب",code:"HEART_ASSET_UNAVAILABLE"},{status:503})}
  }
  return Response.json({

@@ -9,9 +9,9 @@ export async function POST(req){
  try{
   const {target,title,nodes=[],edges=[]}=await req.json();
   if(!cut(target).trim()) return Response.json({error:"اكتب الشيء المألوف الذي تريد التشبيه به"},{status:400});
-  const cleanNodes=(Array.isArray(nodes)?nodes:[]).slice(0,8).map(n=>({id:cut(n?.id,40),label:cut(n?.label,80),detail:cut(n?.detail,180)}));
+  const cleanNodes=(Array.isArray(nodes)?nodes:[]).slice(0,20).map(n=>({id:cut(n?.id,40),label:cut(n?.label,80),detail:cut(n?.detail,500)}));
   const ids=new Set(cleanNodes.map(n=>n.id));
-  const cleanEdges=(Array.isArray(edges)?edges:[]).slice(0,12).map(e=>({id:cut(e?.id,40),from:cut(e?.from,40),to:cut(e?.to,40),label:cut(e?.label,80)})).filter(e=>ids.has(e.from)&&ids.has(e.to));
+  const cleanEdges=(Array.isArray(edges)?edges:[]).slice(0,24).map(e=>({id:cut(e?.id,40),from:cut(e?.from,40),to:cut(e?.to,40),label:cut(e?.label,80)})).filter(e=>ids.has(e.from)&&ids.has(e.to));
   const edgeIds=new Set(cleanEdges.map(e=>e.id));
   const key=process.env.DASHSCOPE_API_KEY;
 

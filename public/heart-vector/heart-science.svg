@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" id="heart-root" viewBox="0 0 640 700" role="img" aria-labelledby="heart-science-title heart-science-description" data-geometry-knowledge="inference" data-science-lock="heart-science-lock/v1">
+<title id="heart-science-title">Human heart — original educational cutaway</title>
+<desc id="heart-science-description">Patient right is viewer left. Four chambers and four distinct valve ports model normal postnatal circulation. A thick left ventricular wall and continuous septum separate the ventricular cavities. Blue denotes oxygen-poor and carmine oxygen-rich blood as an educational convention. Geometry, vessel branches and timing are authored illustration, not measured or clinically certified anatomy. NIH NIAID BioArt is retained separately as an exterior reference and supplies no internal anatomy to this drawing.</desc>
+<defs>
+  <radialGradient id="muscle-depth" cx=".34" cy=".27" r=".78"><stop stop-color="#a64b59"/><stop offset=".32" stop-color="#772d40"/><stop offset=".72" stop-color="#49172b"/><stop offset="1" stop-color="#230e20"/></radialGradient>
+  <radialGradient id="cut-surface" cx=".47" cy=".26" r=".78"><stop stop-color="#b87878"/><stop offset=".22" stop-color="#92505f"/><stop offset=".5" stop-color="#74364b"/><stop offset=".79" stop-color="#4d1e36"/><stop offset="1" stop-color="#2b1026"/></radialGradient>
+  <radialGradient id="surface-glaze" cx=".66" cy=".3" r=".62"><stop stop-color="#eed0ab" stop-opacity=".3"/><stop offset=".35" stop-color="#b47877" stop-opacity=".05"/><stop offset="1" stop-color="#180d20" stop-opacity=".58"/></radialGradient>
+  <linearGradient id="blue-wall" x1="0" y1="0" x2="1" y2=".3"><stop stop-color="#243649"/><stop offset=".28" stop-color="#6e8c9c"/><stop offset=".5" stop-color="#50687d"/><stop offset=".82" stop-color="#24374f"/><stop offset="1" stop-color="#142536"/></linearGradient>
+  <linearGradient id="red-wall" x1="0" y1="0" x2="1" y2=".3"><stop stop-color="#3b1828"/><stop offset=".27" stop-color="#b97176"/><stop offset=".49" stop-color="#8f394b"/><stop offset=".82" stop-color="#562034"/><stop offset="1" stop-color="#301122"/></linearGradient>
+  <radialGradient id="blue-lumen" cx=".37" cy=".33" r=".83"><stop stop-color="#294e6b"/><stop offset=".42" stop-color="#17364e"/><stop offset="1" stop-color="#0b162b"/></radialGradient>
+  <radialGradient id="red-lumen" cx=".55" cy=".3" r=".8"><stop stop-color="#963f54"/><stop offset=".4" stop-color="#60243b"/><stop offset="1" stop-color="#250f27"/></radialGradient>
+  <linearGradient id="ivory-leaflet" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#c7a89e"/><stop offset=".35" stop-color="#b28884"/><stop offset=".8" stop-color="#82606b"/><stop offset="1" stop-color="#50374b"/></linearGradient>
+  <radialGradient id="septum-depth" cx=".44" cy=".2" r=".9"><stop stop-color="#aa6b71"/><stop offset=".35" stop-color="#844656"/><stop offset=".66" stop-color="#612a42"/><stop offset="1" stop-color="#33132c"/></radialGradient>
+<clipPath id="heart-lumen" clipPathUnits="userSpaceOnUse">
+<path d="M199 235 C236 218 267 237 279 271 C291 309 269 341 260 363 L253 388 L218 392 C194 373 160 355 155 321 C149 284 169 250 199 235Z" />
+<path d="M216 390 L253 389 C267 405 282 423 283 449 C288 492 309 543 338 581 C285 568 224 525 193 475 C171 440 165 407 186 386 C196 378 207 382 216 390Z" />
+<path d="M252 416 C269 396 279 374 280 346 L307 344 C310 387 303 416 281 446 L270 463Z" />
+<path d="M368 246 C397 227 440 235 460 255 C479 275 475 307 451 329 L421 359 L382 359 C360 338 341 308 347 280 C350 265 357 254 368 246Z" />
+<path d="M382 359 L420 359 C440 379 456 407 460 436 C467 477 453 517 431 550 C421 567 409 583 397 598 C385 580 373 565 365 544 C351 513 348 487 351 460 C351 422 364 389 382 359Z" />
+<path d="M378 403 C359 382 339 363 338 338 L363 335 C366 355 382 370 397 385Z" />
+<path d="M181 115 C181 159 182 209 185 244 L216 254 C211 206 211 158 213 116Z" />
+<path d="M136 478 C136 435 146 398 178 354 L198 373 C172 411 165 448 166 479Z" />
+<path d="M280 346 C279 291 279 246 299 219 C314 198 320 188 333 182 C360 167 401 172 468 166 L470 190 C407 196 376 187 350 198 C326 211 308 239 307 269 L307 345Z" />
+<path d="M334 184 C278 157 226 158 100 163 L101 188 C221 181 269 181 319 207Z" />
+<path d="M338 341 C337 291 333 246 331 211 C329 167 342 125 378 105 C421 80 470 107 492 144 C522 196 525 253 528 311 L499 314 C493 256 494 208 471 164 C455 132 426 115 397 130 C370 144 360 175 361 207 L365 341Z" />
+<path d="M323 222 C342 228 352 237 372 255 L359 271 C345 252 334 245 312 242Z" />
+<path d="M312 307 C333 300 347 301 368 296 L373 316 C350 320 337 322 315 329Z" />
+<path d="M545 222 C506 223 478 235 448 253 L456 273 C488 255 514 246 547 246Z" />
+<path d="M546 312 C507 318 485 310 454 296 L445 316 C481 334 507 341 549 336Z" />
+</clipPath>
+<mask id="front-wall-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="700">
+<path d="M190 222 C223 197 272 202 310 219 C350 201 408 207 448 231 C490 260 518 306 528 366 C542 449 514 523 468 580 C449 605 426 628 405 650 C387 668 369 645 345 625 C285 601 227 565 186 511 C148 462 130 411 129 358 C127 299 148 249 190 222Z" fill="white"/>
+<path d="M199 235 C236 218 267 237 279 271 C291 309 269 341 260 363 L253 388 L218 392 C194 373 160 355 155 321 C149 284 169 250 199 235Z" fill="black"/>
+<path d="M216 390 L253 389 C267 405 282 423 283 449 C288 492 309 543 338 581 C285 568 224 525 193 475 C171 440 165 407 186 386 C196 378 207 382 216 390Z" fill="black"/>
+<path d="M252 416 C269 396 279 374 280 346 L307 344 C310 387 303 416 281 446 L270 463Z" fill="black"/>
+<path d="M368 246 C397 227 440 235 460 255 C479 275 475 307 451 329 L421 359 L382 359 C360 338 341 308 347 280 C350 265 357 254 368 246Z" fill="black"/>
+<path d="M382 359 L420 359 C440 379 456 407 460 436 C467 477 453 517 431 550 C421 567 409 583 397 598 C385 580 373 565 365 544 C351 513 348 487 351 460 C351 422 364 389 382 359Z" fill="black"/>
+<path d="M378 403 C359 382 339 363 338 338 L363 335 C366 355 382 370 397 385Z" fill="black"/>
+<path d="M181 115 C181 159 182 209 185 244 L216 254 C211 206 211 158 213 116Z" fill="black"/>
+<path d="M136 478 C136 435 146 398 178 354 L198 373 C172 411 165 448 166 479Z" fill="black"/>
+<path d="M280 346 C279 291 279 246 299 219 C314 198 320 188 333 182 C360 167 401 172 468 166 L470 190 C407 196 376 187 350 198 C326 211 308 239 307 269 L307 345Z" fill="black"/>
+<path d="M334 184 C278 157 226 158 100 163 L101 188 C221 181 269 181 319 207Z" fill="black"/>
+<path d="M338 341 C337 291 333 246 331 211 C329 167 342 125 378 105 C421 80 470 107 492 144 C522 196 525 253 528 311 L499 314 C493 256 494 208 471 164 C455 132 426 115 397 130 C370 144 360 175 361 207 L365 341Z" fill="black"/>
+<path d="M323 222 C342 228 352 237 372 255 L359 271 C345 252 334 245 312 242Z" fill="black"/>
+<path d="M312 307 C333 300 347 301 368 296 L373 316 C350 320 337 322 315 329Z" fill="black"/>
+<path d="M545 222 C506 223 478 235 448 253 L456 273 C488 255 514 246 547 246Z" fill="black"/>
+<path d="M546 312 C507 318 485 310 454 296 L445 316 C481 334 507 341 549 336Z" fill="black"/>
+</mask>
+<mask id="aortic-flow-depth" maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="700"><rect width="640" height="700" fill="white"/><path d="M280 346 C279 291 279 246 299 219 C314 198 320 188 333 182 C360 167 401 172 468 166 L470 190 C407 196 376 187 350 198 C326 211 308 239 307 269 L307 345Z" fill="black" stroke="black" stroke-width="28"/><path d="M334 184 C278 157 226 158 100 163 L101 188 C221 181 269 181 319 207Z" fill="black" stroke="black" stroke-width="26"/></mask>
+<mask id="pulmonary-vein-flow-depth" maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="700"><rect width="640" height="700" fill="white"/><path d="M338 341 C337 291 333 246 331 211 C329 167 342 125 378 105 C421 80 470 107 492 144 C522 196 525 253 528 311 L499 314 C493 256 494 208 471 164 C455 132 426 115 397 130 C370 144 360 175 361 207 L365 341Z" fill="black" stroke="black" stroke-width="28"/></mask>
+</defs>
+<g id="back-heart" >
+<g id="myocardium" data-concept-id="heart.myocardium" data-heart-motion="myocardium">
+<path d="M190 222 C223 197 272 202 310 219 C350 201 408 207 448 231 C490 260 518 306 528 366 C542 449 514 523 468 580 C449 605 426 628 405 650 C387 668 369 645 345 625 C285 601 227 565 186 511 C148 462 130 411 129 358 C127 299 148 249 190 222Z" fill="url(#muscle-depth)" stroke="#210b1e" stroke-width="4"/>
+<path d="M144 332 C132 410 181 502 247 551 M479 306 C538 430 475 545 412 614 M181 247 C220 218 259 226 284 246" fill="none" stroke="#d79790" stroke-width="3" opacity=".23" stroke-linecap="round"/>
+</g>
+<g id="pulmonary-veins" data-concept-id="heart.pulmonaryVeins" >
+<path d="M323 222 C342 228 352 237 372 255 L359 271 C345 252 334 245 312 242Z" fill="url(#red-wall)" stroke="#281327" stroke-width="10" stroke-linejoin="round"/>
+<path d="M323 222 C342 228 352 237 372 255 L359 271 C345 252 334 245 312 242Z" fill="url(#red-lumen)" stroke="url(#red-wall)" stroke-width="9" stroke-linejoin="round"/>
+<path d="M323 222 C342 228 352 237 372 255 L359 271 C345 252 334 245 312 242Z" fill="none" stroke="#d0a9a3" stroke-width="1" opacity=".28"/>
+<path d="M312 307 C333 300 347 301 368 296 L373 316 C350 320 337 322 315 329Z" fill="url(#red-wall)" stroke="#281327" stroke-width="10" stroke-linejoin="round"/>
+<path d="M312 307 C333 300 347 301 368 296 L373 316 C350 320 337 322 315 329Z" fill="url(#red-lumen)" stroke="url(#red-wall)" stroke-width="9" stroke-linejoin="round"/>
+<path d="M312 307 C333 300 347 301 368 296 L373 316 C350 320 337 322 315 329Z" fill="none" stroke="#d0a9a3" stroke-width="1" opacity=".28"/>
+<path d="M545 222 C506 223 478 235 448 253 L456 273 C488 255 514 246 547 246Z" fill="url(#red-wall)" stroke="#281327" stroke-width="10" stroke-linejoin="round"/>
+<path d="M545 222 C506 223 478 235 448 253 L456 273 C488 255 514 246 547 246Z" fill="url(#red-lumen)" stroke="url(#red-wall)" stroke-width="9" stroke-linejoin="round"/>
+<path d="M545 222 C506 223 478 235 448 253 L456 273 C488 255 514 246 547 246Z" fill="none" stroke="#d0a9a3" stroke-width="1" opacity=".28"/>
+<path d="M546 312 C507 318 485 310 454 296 L445 316 C481 334 507 341 549 336Z" fill="url(#red-wall)" stroke="#281327" stroke-width="10" stroke-linejoin="round"/>
+<path d="M546 312 C507 318 485 310 454 296 L445 316 C481 334 507 341 549 336Z" fill="url(#red-lumen)" stroke="url(#red-wall)" stroke-width="9" stroke-linejoin="round"/>
+<path d="M546 312 C507 318 485 310 454 296 L445 316 C481 334 507 341 549 336Z" fill="none" stroke="#d0a9a3" stroke-width="1" opacity=".28"/>
+<ellipse cx="318" cy="232" rx="4" ry="14" transform="rotate(29 318 232)" fill="#371527" stroke="#a96c74" stroke-width="2.5"/><ellipse cx="313" cy="318" rx="4" ry="14" fill="#371527" stroke="#a96c74" stroke-width="2.5"/><ellipse cx="546" cy="234" rx="4" ry="15" fill="#371527" stroke="#a96c74" stroke-width="2.5"/><ellipse cx="548" cy="324" rx="4" ry="15" fill="#371527" stroke="#a96c74" stroke-width="2.5"/>
+</g>
+<g id="aorta" data-concept-id="heart.aorta" >
+<path d="M338 341 C337 291 333 246 331 211 C329 167 342 125 378 105 C421 80 470 107 492 144 C522 196 525 253 528 311 L499 314 C493 256 494 208 471 164 C455 132 426 115 397 130 C370 144 360 175 361 207 L365 341Z" fill="url(#red-wall)" stroke="#281327" stroke-width="15" stroke-linejoin="round"/>
+<path d="M338 341 C337 291 333 246 331 211 C329 167 342 125 378 105 C421 80 470 107 492 144 C522 196 525 253 528 311 L499 314 C493 256 494 208 471 164 C455 132 426 115 397 130 C370 144 360 175 361 207 L365 341Z" fill="url(#red-lumen)" stroke="url(#red-wall)" stroke-width="14" stroke-linejoin="round"/>
+<path d="M338 341 C337 291 333 246 331 211 C329 167 342 125 378 105 C421 80 470 107 492 144 C522 196 525 253 528 311 L499 314 C493 256 494 208 471 164 C455 132 426 115 397 130 C370 144 360 175 361 207 L365 341Z" fill="none" stroke="#d0a9a3" stroke-width="1" opacity=".28"/>
+<path d="M382 116 C379 84 378 64 372 42 L392 38 C398 59 400 82 401 106Z" fill="url(#red-wall)" stroke="#351325" stroke-width="3"/>
+<path d="M413 106 L413 40 L432 39 L436 109Z" fill="url(#red-wall)" stroke="#351325" stroke-width="3"/>
+<path d="M447 117 C452 89 461 70 473 47 L491 57 C479 82 472 104 470 134Z" fill="url(#red-wall)" stroke="#351325" stroke-width="3"/>
+<path d="M385 46 L390 83 M423 47 L425 79 M479 57 L463 97" fill="none" stroke="#dba6a1" stroke-width="3" opacity=".46" stroke-linecap="round"/>
+<ellipse cx="382" cy="41" rx="10" ry="3.5" transform="rotate(-11 382 41)" fill="#4e2131" stroke="#b57a7f" stroke-width="1.8"/><ellipse cx="423" cy="40" rx="9.5" ry="3.5" fill="#4e2131" stroke="#b57a7f" stroke-width="1.8"/><ellipse cx="482" cy="52" rx="10" ry="3.5" transform="rotate(27 482 52)" fill="#4e2131" stroke="#b57a7f" stroke-width="1.8"/><ellipse cx="514" cy="312" rx="21" ry="7.5" transform="rotate(-5 514 312)" fill="#432033" stroke="#a26b78" stroke-width="3"/>
+</g>
+<g id="vena-cava" data-concept-id="heart.venaCava" >
+<g id="superior-vena-cava" >
+<path d="M181 115 C181 159 182 209 185 244 L216 254 C211 206 211 158 213 116Z" fill="url(#blue-wall)" stroke="#281327" stroke-width="12" stroke-linejoin="round"/>
+<path d="M181 115 C181 159 182 209 185 244 L216 254 C211 206 211 158 213 116Z" fill="url(#blue-lumen)" stroke="url(#blue-wall)" stroke-width="11" stroke-linejoin="round"/>
+<path d="M181 115 C181 159 182 209 185 244 L216 254 C211 206 211 158 213 116Z" fill="none" stroke="#adc0ca" stroke-width="1" opacity=".28"/>
+<ellipse cx="197" cy="116" rx="23" ry="8" fill="#182d42" stroke="#7994a6" stroke-width="3"/>
+</g>
+<g id="inferior-vena-cava" >
+<path d="M136 478 C136 435 146 398 178 354 L198 373 C172 411 165 448 166 479Z" fill="url(#blue-wall)" stroke="#281327" stroke-width="11" stroke-linejoin="round"/>
+<path d="M136 478 C136 435 146 398 178 354 L198 373 C172 411 165 448 166 479Z" fill="url(#blue-lumen)" stroke="url(#blue-wall)" stroke-width="10" stroke-linejoin="round"/>
+<path d="M136 478 C136 435 146 398 178 354 L198 373 C172 411 165 448 166 479Z" fill="none" stroke="#adc0ca" stroke-width="1" opacity=".28"/>
+<ellipse cx="151" cy="479" rx="20" ry="8" fill="#172b40" stroke="#657f95" stroke-width="3"/>
+</g>
+</g>
+<g id="pulmonary-artery" data-concept-id="heart.pulmonaryArtery" >
+<path d="M334 184 C278 157 226 158 100 163 L101 188 C221 181 269 181 319 207Z" fill="url(#blue-wall)" stroke="#281327" stroke-width="14" stroke-linejoin="round"/>
+<path d="M334 184 C278 157 226 158 100 163 L101 188 C221 181 269 181 319 207Z" fill="url(#blue-lumen)" stroke="url(#blue-wall)" stroke-width="13" stroke-linejoin="round"/>
+<path d="M334 184 C278 157 226 158 100 163 L101 188 C221 181 269 181 319 207Z" fill="none" stroke="#adc0ca" stroke-width="1" opacity=".28"/>
+<path d="M280 346 C279 291 279 246 299 219 C314 198 320 188 333 182 C360 167 401 172 468 166 L470 190 C407 196 376 187 350 198 C326 211 308 239 307 269 L307 345Z" fill="url(#blue-wall)" stroke="#281327" stroke-width="15" stroke-linejoin="round"/>
+<path d="M280 346 C279 291 279 246 299 219 C314 198 320 188 333 182 C360 167 401 172 468 166 L470 190 C407 196 376 187 350 198 C326 211 308 239 307 269 L307 345Z" fill="url(#blue-lumen)" stroke="url(#blue-wall)" stroke-width="14" stroke-linejoin="round"/>
+<path d="M280 346 C279 291 279 246 299 219 C314 198 320 188 333 182 C360 167 401 172 468 166 L470 190 C407 196 376 187 350 198 C326 211 308 239 307 269 L307 345Z" fill="none" stroke="#adc0ca" stroke-width="1" opacity=".28"/>
+<path d="M289 308 C284 259 297 226 322 205 M114 168 C197 167 252 162 293 178 M367 181 C400 183 430 177 460 174" fill="none" stroke="#b5c9d0" stroke-width="3" opacity=".31" stroke-linecap="round"/>
+<ellipse cx="100" cy="175" rx="5" ry="19" fill="#183046" stroke="#819aa9" stroke-width="3"/><ellipse cx="469" cy="178" rx="5" ry="19" transform="rotate(-5 469 178)" fill="#183046" stroke="#819aa9" stroke-width="3"/>
+</g>
+<g id="chambers" >
+<g id="right-atrium" data-concept-id="heart.rightAtrium" >
+<path d="M199 235 C236 218 267 237 279 271 C291 309 269 341 260 363 L253 388 L218 392 C194 373 160 355 155 321 C149 284 169 250 199 235Z" fill="url(#blue-lumen)" stroke="#442437" stroke-width="1.5"/>
+</g>
+<g id="right-ventricle" data-concept-id="heart.rightVentricle" >
+<path d="M216 390 L253 389 C267 405 282 423 283 449 C288 492 309 543 338 581 C285 568 224 525 193 475 C171 440 165 407 186 386 C196 378 207 382 216 390Z" fill="url(#blue-lumen)" stroke="#442437" stroke-width="1.5"/>
+<path d="M252 416 C269 396 279 374 280 346 L307 344 C310 387 303 416 281 446 L270 463Z" fill="url(#blue-lumen)"/>
+<path d="M194 417 C208 450 215 468 237 491 M202 448 C221 467 226 485 252 510 M222 484 C247 512 273 531 294 548" fill="none" stroke="#66879b" stroke-width="3" opacity=".22" stroke-linecap="round"/>
+</g>
+<g id="left-atrium" data-concept-id="heart.leftAtrium" >
+<path d="M368 246 C397 227 440 235 460 255 C479 275 475 307 451 329 L421 359 L382 359 C360 338 341 308 347 280 C350 265 357 254 368 246Z" fill="url(#red-lumen)" stroke="#442437" stroke-width="1.5"/>
+</g>
+<g id="left-ventricle" data-concept-id="heart.leftVentricle" >
+<path d="M382 359 L420 359 C440 379 456 407 460 436 C467 477 453 517 431 550 C421 567 409 583 397 598 C385 580 373 565 365 544 C351 513 348 487 351 460 C351 422 364 389 382 359Z" fill="url(#red-lumen)" stroke="#442437" stroke-width="1.5"/>
+<path d="M378 403 C359 382 339 363 338 338 L363 335 C366 355 382 370 397 385Z" fill="url(#red-lumen)"/>
+<path d="M365 439 C375 458 369 489 383 520 M449 432 C432 453 438 485 423 518 M378 515 L398 562 L424 524" fill="none" stroke="#c88187" stroke-width="4" opacity=".24" stroke-linecap="round"/>
+</g>
+</g>
+</g>
+<g id="blood-interior" clip-path="url(#heart-lumen)">
+<g id="deoxygenated-flow" >
+<g id="flow-vena-cava" data-concept-id="heart.venaCava" >
+<path d="M198 118 L198 166" id="flow-vena-cava-path-1" data-from="circulation.body" data-to="heart.venaCava" data-oxygenation="deoxygenated" data-start="198,118" data-end="198,166" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M151 477 C151 457 157 439 164 423" id="flow-vena-cava-path-2" data-from="circulation.body" data-to="heart.venaCava" data-oxygenation="deoxygenated" data-start="151,477" data-end="164,423" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M198 166 C198 214 201 249 216 280" id="flow-vena-cava-path-3" data-from="heart.venaCava" data-to="heart.rightAtrium" data-oxygenation="deoxygenated" data-start="198,166" data-end="216,280" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M164 423 C176 382 195 352 218 326" id="flow-vena-cava-path-4" data-from="heart.venaCava" data-to="heart.rightAtrium" data-oxygenation="deoxygenated" data-start="164,423" data-end="218,326" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+<g id="flow-right-atrium" data-concept-id="heart.rightAtrium" >
+<g data-heart-motion="fill-flow">
+<path d="M216 280 C236 313 245 350 235 385" id="flow-right-atrium-path-1" data-from="heart.rightAtrium" data-to="heart.tricuspidValve" data-oxygenation="deoxygenated" data-start="216,280" data-end="235,385" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+<g id="flow-tricuspid-valve" data-concept-id="heart.tricuspidValve" >
+<g data-heart-motion="fill-flow">
+<path d="M235 385 C232 424 228 461 258 496" id="flow-tricuspid-valve-path-1" data-from="heart.tricuspidValve" data-to="heart.rightVentricle" data-oxygenation="deoxygenated" data-start="235,385" data-end="258,496" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+<g id="flow-right-ventricle" data-concept-id="heart.rightVentricle" >
+<g data-heart-motion="eject-flow">
+<path d="M258 496 C265 466 260 435 267 416 C274 398 280 371 294 347" id="flow-right-ventricle-path-1" data-from="heart.rightVentricle" data-to="heart.pulmonaryValve" data-oxygenation="deoxygenated" data-start="258,496" data-end="294,347" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+<g id="flow-pulmonary-valve" data-concept-id="heart.pulmonaryValve" >
+<g data-heart-motion="eject-flow">
+<path d="M294 347 L294 280 C294 244 307 223 325 204" id="flow-pulmonary-valve-path-1" data-from="heart.pulmonaryValve" data-to="heart.pulmonaryArtery" data-oxygenation="deoxygenated" data-start="294,347" data-end="325,204" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+<g id="flow-pulmonary-artery" data-concept-id="heart.pulmonaryArtery" >
+<g data-heart-motion="eject-flow">
+<path d="M325 204 C284 177 226 174 102 176" id="flow-pulmonary-artery-path-1" data-from="heart.pulmonaryArtery" data-to="circulation.lungs" data-oxygenation="deoxygenated" data-start="325,204" data-end="102,176" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M325 204 C355 177 406 187 468 178" id="flow-pulmonary-artery-path-2" data-from="heart.pulmonaryArtery" data-to="circulation.lungs" data-oxygenation="deoxygenated" data-start="325,204" data-end="468,178" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+</g>
+<g id="oxygenated-flow" >
+<g id="flow-pulmonary-veins" data-concept-id="heart.pulmonaryVeins" mask="url(#pulmonary-vein-flow-depth)">
+<path d="M545 234 C502 234 475 246 449 264" id="flow-pulmonary-veins-path-1" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="545,234" data-end="449,264" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M547 324 C503 331 478 319 449 306" id="flow-pulmonary-veins-path-2" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="547,324" data-end="449,306" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M321 232 C338 236 352 251 365 263" id="flow-pulmonary-veins-path-3" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="321,232" data-end="365,263" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M316 318 C333 312 349 312 368 307" id="flow-pulmonary-veins-path-4" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="316,318" data-end="368,307" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M449 264 C436 277 424 284 411 285" id="flow-pulmonary-veins-path-5" data-from="heart.pulmonaryVeins" data-to="heart.leftAtrium" data-oxygenation="oxygenated" data-start="449,264" data-end="411,285" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M449 306 C431 302 424 293 411 285" id="flow-pulmonary-veins-path-6" data-from="heart.pulmonaryVeins" data-to="heart.leftAtrium" data-oxygenation="oxygenated" data-start="449,306" data-end="411,285" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M365 263 C381 273 395 279 411 285" id="flow-pulmonary-veins-path-7" data-from="heart.pulmonaryVeins" data-to="heart.leftAtrium" data-oxygenation="oxygenated" data-start="365,263" data-end="411,285" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M368 307 C388 305 400 295 411 285" id="flow-pulmonary-veins-path-8" data-from="heart.pulmonaryVeins" data-to="heart.leftAtrium" data-oxygenation="oxygenated" data-start="368,307" data-end="411,285" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+<g id="flow-left-atrium" data-concept-id="heart.leftAtrium" >
+<g data-heart-motion="fill-flow">
+<path d="M411 285 C418 316 402 337 401 358" id="flow-left-atrium-path-1" data-from="heart.leftAtrium" data-to="heart.mitralValve" data-oxygenation="oxygenated" data-start="411,285" data-end="401,358" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+<g id="flow-mitral-valve" data-concept-id="heart.mitralValve" >
+<g data-heart-motion="fill-flow">
+<path d="M401 358 C395 397 391 441 402 481" id="flow-mitral-valve-path-1" data-from="heart.mitralValve" data-to="heart.leftVentricle" data-oxygenation="oxygenated" data-start="401,358" data-end="402,481" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+<g id="flow-left-ventricle" data-concept-id="heart.leftVentricle" >
+<g data-heart-motion="eject-flow">
+<path d="M402 481 C409 428 383 382 352 342" id="flow-left-ventricle-path-1" data-from="heart.leftVentricle" data-to="heart.aorticValve" data-oxygenation="oxygenated" data-start="402,481" data-end="352,342" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+<g id="flow-aortic-valve" data-concept-id="heart.aorticValve" mask="url(#aortic-flow-depth)">
+<g data-heart-motion="eject-flow">
+<path d="M352 342 L347 249 C339 203 346 159 383 131" id="flow-aortic-valve-path-1" data-from="heart.aorticValve" data-to="heart.aorta" data-oxygenation="oxygenated" data-start="352,342" data-end="383,131" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+<g id="flow-aorta" data-concept-id="heart.aorta" mask="url(#aortic-flow-depth)">
+<g data-heart-motion="eject-flow">
+<path d="M383 131 C419 109 458 127 483 168 C508 210 510 266 513 311" id="flow-aorta-path-1" data-from="heart.aorta" data-to="circulation.body" data-oxygenation="oxygenated" data-start="383,131" data-end="513,311" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+</g>
+</g>
+</g>
+</g>
+<g id="front-occlusion" >
+<g id="front-myocardium" data-concept-id="heart.myocardium" data-heart-motion="myocardium" pointer-events="none">
+<path d="M190 222 C223 197 272 202 310 219 C350 201 408 207 448 231 C490 260 518 306 528 366 C542 449 514 523 468 580 C449 605 426 628 405 650 C387 668 369 645 345 625 C285 601 227 565 186 511 C148 462 130 411 129 358 C127 299 148 249 190 222Z" fill="url(#cut-surface)" mask="url(#front-wall-mask)" stroke="#321429" stroke-width="1.5"/>
+<g mask="url(#front-wall-mask)"><path d="M190 222 C223 197 272 202 310 219 C350 201 408 207 448 231 C490 260 518 306 528 366 C542 449 514 523 468 580 C449 605 426 628 405 650 C387 668 369 645 345 625 C285 601 227 565 186 511 C148 462 130 411 129 358 C127 299 148 249 190 222Z" fill="url(#surface-glaze)"/>
+<path d="M456.00 321.00 C482.00 400.00 518.00 480.00 406.00 624.00" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M459.35 323.80 C485.35 402.80 516.20 482.40 406.60 622.90" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M462.70 326.60 C488.70 405.60 514.40 484.80 407.20 621.80" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M466.05 329.40 C492.05 408.40 512.60 487.20 407.80 620.70" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M469.40 332.20 C495.40 411.20 510.80 489.60 408.40 619.60" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M472.75 335.00 C498.75 414.00 509.00 492.00 409.00 618.50" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M476.10 337.80 C502.10 416.80 507.20 494.40 409.60 617.40" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M479.45 340.60 C505.45 419.60 505.40 496.80 410.20 616.30" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M482.80 343.40 C508.80 422.40 503.60 499.20 410.80 615.20" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M486.15 346.20 C512.15 425.20 501.80 501.60 411.40 614.10" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M489.50 349.00 C515.50 428.00 500.00 504.00 412.00 613.00" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M492.85 351.80 C518.85 430.80 498.20 506.40 412.60 611.90" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M496.20 354.60 C522.20 433.60 496.40 508.80 413.20 610.80" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M499.55 357.40 C525.55 436.40 494.60 511.20 413.80 609.70" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M502.90 360.20 C528.90 439.20 492.80 513.60 414.40 608.60" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M506.25 363.00 C532.25 442.00 491.00 516.00 415.00 607.50" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M509.60 365.80 C535.60 444.80 489.20 518.40 415.60 606.40" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M512.95 368.60 C538.95 447.60 487.40 520.80 416.20 605.30" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M516.30 371.40 C542.30 450.40 485.60 523.20 416.80 604.20" fill="none" stroke="#c99a90" stroke-width=".8" opacity=".11" stroke-linecap="round"/>
+<path d="M464 354 C484 346 506 360 524 372" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 367 C484 359 506 373 524 385" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 380 C484 372 506 386 524 398" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 393 C484 385 506 399 524 411" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 406 C484 398 506 412 524 424" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 419 C484 411 506 425 524 437" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 432 C484 424 506 438 524 450" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 445 C484 437 506 451 524 463" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 458 C484 450 506 464 524 476" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 471 C484 463 506 477 524 489" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 484 C484 476 506 490 524 502" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 497 C484 489 506 503 524 515" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 510 C484 502 506 516 524 528" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 523 C484 515 506 529 524 541" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M464 536 C484 528 506 542 524 554" fill="none" stroke="#270e26" stroke-width="1" opacity=".2" stroke-linecap="round"/>
+<path d="M143 315 C128 378 158 444 187 487 M148 315 C136 379 163 439 193 488 M155 321 C145 381 169 433 198 482 M165 335 C152 382 176 425 202 468" fill="none" stroke="#d6aaa0" stroke-width=".85" opacity=".14" stroke-linecap="round"/></g>
+</g>
+<g id="border-right-atrium" data-concept-id="heart.rightAtrium" >
+<path d="M218 391 C193 372 159 355 154 321 C148 283 168 249 199 235 C237 217 267 236 280 270 C291 308 270 341 260 363 L253 382" fill="none" stroke="#422238" stroke-width="7" opacity=".85" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M218 391 C193 372 159 355 154 321 C148 283 168 249 199 235 C237 217 267 236 280 270 C291 308 270 341 260 363 L253 382" fill="none" stroke="url(#cut-surface)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M218 391 C193 372 159 355 154 321 C148 283 168 249 199 235 C237 217 267 236 280 270 C291 308 270 341 260 363 L253 382" fill="none" stroke="#d9a29b" stroke-width=".85" opacity=".3" stroke-linecap="round"/>
+</g>
+<g id="border-right-ventricle" data-concept-id="heart.rightVentricle" >
+<path d="M216 390 C205 380 196 377 186 386 C165 407 171 441 193 475 C224 525 285 569 338 581 C309 543 288 492 283 449 M252 412 C269 395 279 373 280 351 M307 351 C309 385 303 416 282 445" fill="none" stroke="#422238" stroke-width="7" opacity=".85" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M216 390 C205 380 196 377 186 386 C165 407 171 441 193 475 C224 525 285 569 338 581 C309 543 288 492 283 449 M252 412 C269 395 279 373 280 351 M307 351 C309 385 303 416 282 445" fill="none" stroke="url(#cut-surface)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M216 390 C205 380 196 377 186 386 C165 407 171 441 193 475 C224 525 285 569 338 581 C309 543 288 492 283 449 M252 412 C269 395 279 373 280 351 M307 351 C309 385 303 416 282 445" fill="none" stroke="#d9a29b" stroke-width=".85" opacity=".3" stroke-linecap="round"/>
+</g>
+<g id="border-left-atrium" data-concept-id="heart.leftAtrium" >
+<path d="M382 356 C360 337 341 308 347 280 C350 265 357 254 368 246 C397 227 440 235 460 255 C479 275 475 307 451 329 L423 356" fill="none" stroke="#422238" stroke-width="7" opacity=".85" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M382 356 C360 337 341 308 347 280 C350 265 357 254 368 246 C397 227 440 235 460 255 C479 275 475 307 451 329 L423 356" fill="none" stroke="url(#cut-surface)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M382 356 C360 337 341 308 347 280 C350 265 357 254 368 246 C397 227 440 235 460 255 C479 275 475 307 451 329 L423 356" fill="none" stroke="#d9a29b" stroke-width=".85" opacity=".3" stroke-linecap="round"/>
+</g>
+<g id="border-left-ventricle" data-concept-id="heart.leftVentricle" >
+<path d="M379 365 C364 391 351 422 351 460 C348 487 351 513 365 544 C373 565 385 580 397 598 C409 583 421 567 431 550 C453 517 467 477 460 436 C456 407 440 379 423 364 M376 398 C358 378 339 362 338 346 M364 345 C368 360 382 373 395 386" fill="none" stroke="#422238" stroke-width="7" opacity=".85" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M379 365 C364 391 351 422 351 460 C348 487 351 513 365 544 C373 565 385 580 397 598 C409 583 421 567 431 550 C453 517 467 477 460 436 C456 407 440 379 423 364 M376 398 C358 378 339 362 338 346 M364 345 C368 360 382 373 395 386" fill="none" stroke="url(#cut-surface)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M379 365 C364 391 351 422 351 460 C348 487 351 513 365 544 C373 565 385 580 397 598 C409 583 421 567 431 550 C453 517 467 477 460 436 C456 407 440 379 423 364 M376 398 C358 378 339 362 338 346 M364 345 C368 360 382 373 395 386" fill="none" stroke="#d9a29b" stroke-width=".85" opacity=".3" stroke-linecap="round"/>
+</g>
+<g id="front-septum" data-concept-id="heart.myocardium" >
+<path d="M321 348 C339 343 352 355 360 374 C340 408 337 445 340 481 C344 536 369 580 397 611 L378 627 C347 594 321 554 309 508 C297 464 292 427 278 393 C296 379 308 363 321 348Z" fill="url(#septum-depth)" stroke="#432138" stroke-width="1.3"/>
+<path d="M321 382 C308 425 320 491 335 534 C347 569 365 596 380 610 M325 384 C315 430 327 495 341 533 C352 566 369 592 384 607 M331 383 C321 431 331 493 346 530" fill="none" stroke="#d0a097" stroke-width=".85" opacity=".2"/>
+</g>
+<g id="valves" >
+<g id="tricuspid-valve" data-concept-id="heart.tricuspidValve" >
+<path d="M207 381 Q215 378 221 378 L219 387 Q215 387 211 390Z M250 378 Q257 378 263 380 L260 388 Q256 386 251 387Z" fill="#a27479" stroke="#78515e" stroke-width=".9"/>
+<path d="M211 379 Q217 377 221 377 M250 377 Q256 377 259 379" fill="none" stroke="#d5b2a4" stroke-width="1" opacity=".6"/>
+<path d="M211 383 Q223 382 235 390 Q222 394 211 383Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="211,383" style="transform-box:view-box;transform-origin:211px 383px;--valve-open-angle:65deg"/>
+<path d="M260 383 Q248 382 235 390 Q249 394 260 383Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="260,383" style="transform-box:view-box;transform-origin:260px 383px;--valve-open-angle:-65deg"/>
+<path d="M225 382 Q235 379 244 382 L235 389Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="225,382" style="transform-box:view-box;transform-origin:225px 382px;--valve-open-angle:75deg"/>
+</g>
+<g id="pulmonary-valve" data-concept-id="heart.pulmonaryValve" >
+<path d="M277 345 Q282 341 287 341 L286 348 Q283 349 280 353Z M301 341 Q307 341 311 344 L309 351 Q305 348 301 348Z" fill="#8695a2" stroke="#343747" stroke-width="2"/>
+<path d="M280 346 Q286 343 294 347 Q287 354 280 346Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="280,346" style="transform-box:view-box;transform-origin:280px 346px;--valve-open-angle:-80deg"/>
+<path d="M305 346 Q299 343 294 347 Q299 354 305 346Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="305,346" style="transform-box:view-box;transform-origin:305px 346px;--valve-open-angle:80deg"/>
+<path d="M280 344 Q292 337 305 344 Q294 350 280 344Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="280,344" style="transform-box:view-box;transform-origin:280px 344px;--valve-open-angle:-80deg"/>
+</g>
+<g id="mitral-valve" data-concept-id="heart.mitralValve" >
+<path d="M373 354 Q380 351 387 351 L385 359 Q381 360 377 363Z M414 351 Q422 352 427 354 L424 362 Q420 359 414 359Z" fill="#a8777b" stroke="#79505d" stroke-width=".9"/>
+<path d="M377 352 Q382 350 387 350 M414 350 Q419 350 423 352" fill="none" stroke="#d5b2a4" stroke-width="1" opacity=".6"/>
+<path d="M377 357 Q389 356 401 363 Q390 368 377 357Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="377,357" style="transform-box:view-box;transform-origin:377px 357px;--valve-open-angle:65deg"/>
+<path d="M423 357 Q412 356 401 363 Q412 368 423 357Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="423,357" style="transform-box:view-box;transform-origin:423px 357px;--valve-open-angle:-65deg"/>
+</g>
+<g id="aortic-valve" data-concept-id="heart.aorticValve" >
+<path d="M335 340 Q340 337 345 337 L344 344 Q341 345 338 348Z M359 337 Q364 337 368 339 L365 346 Q362 344 359 344Z" fill="#bb7f81" stroke="#613141" stroke-width="2"/>
+<path d="M338 341 Q345 338 352 342 Q345 349 338 341Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="338,341" style="transform-box:view-box;transform-origin:338px 341px;--valve-open-angle:-80deg"/>
+<path d="M364 341 Q357 338 352 342 Q358 349 364 341Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="364,341" style="transform-box:view-box;transform-origin:364px 341px;--valve-open-angle:80deg"/>
+<path d="M338 339 Q351 332 364 339 Q352 345 338 339Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="338,339" style="transform-box:view-box;transform-origin:338px 339px;--valve-open-angle:-80deg"/>
+</g>
+</g>
+</g>
+</svg>

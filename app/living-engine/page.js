@@ -1,5 +1,6 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
+import Home from "../page";
 import {listTurns,listWorlds,makeId,storeTurn} from "../lib/livingHistory";
 import {initialVisualStep,resolveVisualOutcome,sceneCaption,visualGenerationNeeded} from "../lib/visualOutcome";
 
@@ -68,6 +69,7 @@ export default function LivingEngine(){
  const [saving,setSaving]=useState("loading");
  const [archiveError,setArchiveError]=useState("");
  const worldRef=useRef(null);
+ const nativeExperience=useMemo(()=>result?.sceneGraph?.nativeSvg?.scienceLock?{...result,initialStep:activeStep}:null,[result,activeStep]);
 
  useEffect(()=>{
   let active=true;
@@ -300,7 +302,7 @@ export default function LivingEngine(){
        </div>}
       </>
      :result
-      ?<SemanticFallback experience={result} activeStep={activeStep}/>
+      ?nativeExperience?<Home initialExperience={nativeExperience} showHeartControls/>:<SemanticFallback experience={result} activeStep={activeStep}/>
       :<div style={{height:"min(66vh,620px)",minHeight:460,display:"grid",placeItems:"center",textAlign:"center",padding:30}}><div><div style={{fontSize:64}}>✦</div><h1 style={{fontSize:"clamp(30px,5vw,54px)",margin:"10px 0"}}>اسأل عن أي شيء</h1><p style={{opacity:.65,fontSize:18}}>السؤال يبني عالمًا بصريًا جديدًا. والسؤال التالي يعيد البحث داخل نفس العالم.</p></div></div>}
 
     {loading&&<div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",background:"#050811bb",backdropFilter:"blur(8px)",zIndex:3}}><div style={{textAlign:"center"}}><div style={{fontSize:52,color:"#e8b84c"}}>✦</div><b style={{fontSize:20}}>{followUp?"أطوّر نفس البحث…":"أبني العالم البصري…"}</b><p style={{opacity:.65}}>فهم السؤال ← بناء المعنى ← توليد المشهد</p></div></div>}
