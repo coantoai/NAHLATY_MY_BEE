@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   CopilotKitProvider,
-  CopilotSidebar,
+  CopilotChat,
   useAgentContext,
   useFrontendTool
 } from "@copilotkit/react-core/v2";
@@ -68,9 +68,9 @@ function HeartAgentExperiment() {
   const active = STATES[activeState];
 
   return (
-    <>
-      <main style={{minHeight:"100vh",background:"#080b12",color:"#f7f8fb",padding:"48px 24px",fontFamily:"system-ui"}}>
-        <div style={{maxWidth:900,margin:"0 auto"}}>
+    <main style={{minHeight:"100vh",background:"#080b12",color:"#f7f8fb",padding:"32px 20px",fontFamily:"system-ui"}}>
+      <div style={{maxWidth:1180,margin:"0 auto",display:"grid",gridTemplateColumns:"minmax(0,1.25fr) minmax(340px,.75fr)",gap:24,alignItems:"start"}}>
+        <section>
           <div style={{fontSize:13,opacity:.65,letterSpacing:1}}>NAHLATY · COPILOTKIT REAL ACTION TEST</div>
           <h1 style={{fontSize:"clamp(34px,7vw,72px)",lineHeight:1.02,margin:"18px 0"}}>{active.title}</h1>
           <p style={{fontSize:20,lineHeight:1.7,opacity:.82,maxWidth:720}}>{active.detail}</p>
@@ -81,7 +81,7 @@ function HeartAgentExperiment() {
             <div style={{fontSize:13,opacity:.65,marginTop:10}}>Last AI action: {lastAction}</div>
           </div>
 
-          <div style={{display:"grid",gap:12,marginTop:34}}>
+          <div style={{display:"grid",gap:12,marginTop:28}}>
             {[
               "Show me how blood flows through the heart.",
               "Now focus only on the aorta.",
@@ -89,22 +89,26 @@ function HeartAgentExperiment() {
             ].map((x)=><div key={x} style={{padding:"16px 18px",border:"1px solid #29303d",borderRadius:16,background:"#0d121b"}}>{x}</div>)}
           </div>
 
-          <p style={{marginTop:26,opacity:.55}}>
+          <p style={{marginTop:22,opacity:.55}}>
             PASS requires CopilotKit to invoke set_heart_scene and visibly change CURRENT STATE.
           </p>
-        </div>
-      </main>
+        </section>
 
-      <CopilotSidebar
-        agentId="default"
-        defaultOpen={true}
-        labels={{
-          title: "NAHLATY Agent Action Test",
-          initial: "اختبرني: اطلب عرض تدفق الدم أو التركيز على الأبهر.",
-          placeholder: "اكتب أمرًا..."
-        }}
-      />
-    </>
+        <aside style={{position:"sticky",top:20,height:"calc(100vh - 40px)",minHeight:560,border:"1px solid #29303d",borderRadius:18,overflow:"hidden",background:"#0d121b"}}>
+          <div style={{padding:"14px 16px",borderBottom:"1px solid #29303d",fontWeight:700}}>
+            NAHLATY Agent Chat
+          </div>
+          <div style={{height:"calc(100% - 49px)"}}>
+            <CopilotChat
+              agentId="default"
+              labels={{
+                chatInputPlaceholder: "Type: Show me how blood flows through the heart."
+              }}
+            />
+          </div>
+        </aside>
+      </div>
+    </main>
   );
 }
 
