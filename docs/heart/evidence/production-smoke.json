@@ -1,1 +1,1 @@
-{"ok":true,"checks":{"root":200,"living":200,"health":"engine-v2","scienceConcepts":13,"scienceFlowEdges":14,"exteriorPaths":639,"heartSteps":10,"heartAssets":20,"valveInitialStep":3,"followUpScene":3}}
+{"ok":true,"checks":{"root":200,"living":200,"health":"engine-v2","scienceConcepts":13,"scienceFlowEdges":14,"exteriorPaths":639,"heartSteps":10,"heartRenderer":"heart-semantic-svg","explainHeartSteps":10,"heartAssets":20,"valveInitialStep":3,"followUpScene":3}}

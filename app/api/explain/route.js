@@ -3,6 +3,8 @@ import { getExperienceProfile } from "../../lib/experienceProfile";
 import { compileVisualSceneResult } from "../../lib/visualSceneCompiler";
 import { reconcilePreservedWorld } from "../../../lib/world-continuity";
 import { requestLimit } from "../../lib/requestGuard";
+import { curatedHeartLesson, scienceHeartResult } from "../../lib/heartScienceExperience";
+import { isHeartLessonQuestion } from "../../lib/heartLessonScope";
 
 const clamp=n=>Math.max(8,Math.min(92,Number(n)||50));
 function normalizeScene(data,audience="عام"){
@@ -116,6 +118,11 @@ export async function POST(req){
   const {content,audience="عام",preserve=null}=await req.json();
   if(!content) return Response.json({error:"المحتوى مطلوب"},{status:400});
   const cleanContent=String(content).slice(0,70000);
+  const heart=!preserve&&isHeartLessonQuestion(cleanContent)?curatedHeartLesson(cleanContent):null;
+  if(heart){
+   const result=await scienceHeartResult(heart,audience);
+   return Response.json({...result.experience,engineMeta:{provider:"sourced-knowledge",domain:"heart",topic:result.topic,scene:result.scene}});
+  }
   const audienceText=String(audience||"عام").toLowerCase();
   const audienceProfile=getExperienceProfile(audience);
   const presentation={...audienceProfile,profileId:audienceProfile.id};

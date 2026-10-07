@@ -84,7 +84,7 @@ export function validateScienceHeartSvg(source){
  return {...checked,elements};
 }
 
-const labelPositions=[[12,18],[12,33],[12,48],[12,65],[33,14],[49,7],[88,20],[88,35],[88,49],[88,66],[68,19],[72,7],[52,89],[88,8],[12,87]];
+const labelPositions=[[12,18],[12,33],[12,48],[12,65],[37,18],[49,7],[88,20],[88,35],[88,49],[88,66],[68,19],[72,7],[52,89],[88,8],[12,87]];
 
 export async function loadScienceHeart(){
  const source=await readFile(join(process.cwd(),"public","heart-vector","heart-science.svg"),"utf8");
@@ -95,15 +95,18 @@ export async function loadScienceHeart(){
  const nodes=HEART_SCENE_SPEC.concepts.map((concept,index)=>({
   id:concept.conceptId,label:concept.label.ar,labelEn:concept.label.en,x:labelPositions[index][0],y:labelPositions[index][1],
   type:"structure",visual:"generic",glyph:"◉",knowledge:concept.knowledge,
-  sourceRef:HEART_SCIENTIFIC_SOURCES[0].url,
-  detail:concept.label.en+" — بنية تعليمية؛ الرسم والمقياس تقريبيان."
+  sourceIds:[...concept.sourceIds],
+  sourceRef:HEART_SCIENTIFIC_SOURCES.find(source=>source.id===concept.sourceIds[0]).url,
+  detail:concept.label.en+" — بنية تعليمية؛ الرسم والمقياس تقريبيان."+(concept.kind==="valve"?
+   " وريقات الصمام تستجيب لفرق الضغط؛ الحركة المرسومة تقريبية."+(["heart.tricuspidValve","heart.mitralValve"].includes(concept.conceptId)?
+    " الحبال الوترية والعضلات الحليمية تمنع انقلاب الوريقات نحو الأذين؛ حُذفت من الرسم للتبسيط.":""):"")
  }));
  const allIds=nodes.map(n=>n.id);
  const sections=[
   ["تشريح القلب", "حجرات وصمامات مستقلة؛ يمين الجسم يظهر في يسار الرسم.",HEART_REQUIRED_CONCEPT_IDS],
   ["الامتلاء", "الدم الوريدي يعود إلى الأذين الأيمن؛ الأوردة الرئوية تعيد الدم المؤكسج إلى الأذين الأيسر.",["heart.venaCava","heart.rightAtrium","heart.pulmonaryVeins","heart.leftAtrium"]],
-  ["الصمامات الأذينية البطينية", "ثلاثي الشرفات إلى البطين الأيمن؛ التاجي إلى البطين الأيسر أثناء الامتلاء.",["heart.tricuspidValve","heart.rightVentricle","heart.mitralValve","heart.leftVentricle"]],
-  ["القذف إلى الرئتين والجسم", "البطينان يضخان في الدورة نفسها؛ الرئوي نحو الرئتين والأبهري نحو الجسم.",["heart.pulmonaryValve","heart.pulmonaryArtery","heart.aorticValve","heart.aorta"]],
+  ["الصمامات الأذينية البطينية", "فرق الضغط يفتح الصمامات ويغلقها؛ ثلاثي الشرفات والتاجي يسمحان بامتلاء البطينين أثناء الانبساط. معظم الامتلاء سلبي، ويضيف انقباض الأذينين الدم في نهايته.",["heart.tricuspidValve","heart.rightVentricle","heart.mitralValve","heart.leftVentricle"]],
+  ["القذف إلى الرئتين والجسم", "البطينان يضخان في الدورة نفسها؛ ثلاثي الشرفات والتاجي مغلقان، والرئوي والأبهري مفتوحان أثناء القذف. الجذع الرئوي يتفرع نحو الرئتين؛ الأبهر يوصل الدم إلى الجسم.",["heart.pulmonaryValve","heart.pulmonaryArtery","heart.aorticValve","heart.aorta"]],
   ["عودة الدم المؤكسج", "من الرئتين عبر الأوردة الرئوية إلى الأذين الأيسر. اللون الأحمر والأزرق اصطلاح بصري.",["circulation.lungs","heart.pulmonaryVeins","heart.leftAtrium"]]
  ];
  const semantic={ready:true,coverage:"educational-cutaway",boundConceptIds:HEART_REQUIRED_CONCEPT_IDS,missingConceptIds:[],clinicalValidation:false,

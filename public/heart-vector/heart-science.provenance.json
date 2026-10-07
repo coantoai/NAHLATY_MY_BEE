@@ -10,9 +10,9 @@
     "certified": false
   },
   "viewBox": "0 0 640 700",
-  "svgSha256": "3b03acc66dd172ae5ecd243413d8a7b3b6f723bf9be8b54e6d8be3e4c7fbfd67",
+  "svgSha256": "6f877b6aaf49ceef9b2cd79d0f7c6d7c684216fb4522407354c9349d27cfe0c2",
   "generator": "scripts/prepare-heart-science.py",
-  "generatorSha256": "89c6fca89a91ab1e79a04258115335882abc44d60c54ae0cccccaf4a3f0476b0",
+  "generatorSha256": "78ee0cf986f9f83f6fd42ae15523fe3656ebc52027371e4ff093a12f8e836d88",
   "referenceAssets": [
     {
       "path": "/heart-vector/niaid-heart.svg",
@@ -35,6 +35,11 @@
       "id": "nhlbi-blood-flow",
       "title": "NHLBI — Blood flow through the heart",
       "url": "https://www.nhlbi.nih.gov/health/heart/blood-flow"
+    },
+    {
+      "id": "openstax-heart-anatomy",
+      "title": "OpenStax — Heart Anatomy (publisher source)",
+      "url": "https://github.com/openstax/osbooks-anatomy-physiology/blob/5ae32b3f4bc24ed003e91dc38bf47dba80751044/modules/m46676/index.cnxml"
     }
   ],
   "disclosures": [

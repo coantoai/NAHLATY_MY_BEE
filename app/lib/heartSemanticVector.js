@@ -33,7 +33,7 @@ const labels={
  "heart.tricuspidValve":["الصمام ثلاثي الشرفات","Tricuspid valve"],
  "heart.rightVentricle":["البطين الأيمن","Right ventricle"],
  "heart.pulmonaryValve":["الصمام الرئوي","Pulmonary valve"],
- "heart.pulmonaryArtery":["الشريان الرئوي","Pulmonary artery"],
+ "heart.pulmonaryArtery":["الجذع والشرايين الرئوية","Pulmonary trunk and arteries"],
  "heart.pulmonaryVeins":["الأوردة الرئوية","Pulmonary veins"],
  "heart.leftAtrium":["الأذين الأيسر","Left atrium"],
  "heart.mitralValve":["الصمام التاجي","Mitral valve"],
@@ -94,16 +94,18 @@ export const HEART_SCIENCE_LOCK=Object.freeze({
  scope:"Simplified normal postnatal human circulation; educational cutaway, not patient-specific anatomy or a clinical simulation.",
  claims:Object.freeze([
   {id:"four-chambers-four-valves",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-anatomy","nhlbi-blood-flow"],statement:"The heart has right and left atria, right and left ventricles, and tricuspid, pulmonary, mitral and aortic valves."},
-  {id:"normal-directed-flow",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow"],statement:"Body → venae cavae → right atrium → tricuspid valve → right ventricle → pulmonary valve → pulmonary artery → lungs → pulmonary veins → left atrium → mitral valve → left ventricle → aortic valve → aorta → body."},
+  {id:"normal-directed-flow",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow","openstax-heart-anatomy"],statement:"Body → venae cavae → right atrium → tricuspid valve → right ventricle → pulmonary valve → pulmonary trunk and arteries → lungs → pulmonary veins → left atrium → mitral valve → left ventricle → aortic valve → aorta → body."},
   {id:"pulmonary-oxygenation",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow"],statement:"Pulmonary arteries carry oxygen-poor blood toward the lungs; pulmonary veins return oxygen-rich blood to the left atrium."},
   {id:"vessel-direction",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow"],statement:"Artery and vein names describe flow away from and toward the heart, not blood oxygen content."},
   {id:"vena-cava-return",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow"],statement:"Superior and inferior vena cava return systemic venous blood to the right atrium."},
   {id:"ventricular-separation",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-anatomy"],statement:"The septum separates the right and left sides; no direct right-to-left chamber connection is modeled in normal postnatal circulation."},
   {id:"left-ventricular-wall",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["openstax-heart-anatomy","nhlbi-blood-flow"],statement:"The left ventricle has a thicker muscular wall than the right ventricle and ejects through the aortic valve into the aorta."},
   {id:"paired-ventricular-pumping",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-heart-beats"],statement:"The two ventricles pump in the same cardiac cycle; a sequential route highlight does not mean the chambers pump one after another."},
+  {id:"pressure-driven-valves",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["openstax-heart-anatomy"],statement:"Heart valve leaflets move passively in response to pressure differences. During ventricular ejection, atrioventricular valves are closed and semilunar valves are open. Papillary muscles tension the chordae tendineae to prevent atrioventricular leaflet prolapse into the atria; they do not actively pull the valves open."},
+  {id:"valve-support-simplification",knowledge:"inference",sourceIds:[],statement:"Leaflets are schematic; chordae tendineae and papillary muscles are omitted from this cutaway. Valve poses and transitions illustrate filling and ejection, not measured kinetics or a complete pressure-based cardiac cycle."},
   {id:"red-blue-convention",knowledge:"inference",sourceIds:[],statement:"Red denotes oxygen-rich and blue oxygen-poor blood in the diagram. Blood is red; blue is an educational color convention, not the physical color of venous blood."},
   {id:"illustrative-geometry",knowledge:"inference",sourceIds:[],statement:"Paths, scale, cutaway arrangement and simplified vessel branches are authored educational geometry, not measured or clinically certified anatomy."},
-  {id:"illustrative-timing",knowledge:"inference",sourceIds:[],statement:"Cycle phases and flow animation are illustrative. They do not measure transit time, pressures, valve kinetics or individual physiology."},
+  {id:"illustrative-timing",knowledge:"inference",sourceIds:[],statement:"Cycle phases and flow animation are illustrative. They do not measure transit time, pressures, valve kinetics or individual physiology; normalized filling and ejection fractions are not measured phase durations or a model of how those durations vary with heart rate."},
   {id:"fixed-stroke-volume",knowledge:"inference",sourceIds:[],statement:"A fixed 70 mL per beat is an educational assumption for the cardiac-output calculation, not an invariant human stroke volume."},
   {id:"individual-stroke-volume",knowledge:"unknown",sourceIds:[],statement:"Individual stroke volume, ejection fraction, cardiac output, pathology, coronary flow and exercise responses are not estimated by this scene."}
  ].map(Object.freeze)),
@@ -116,7 +118,7 @@ const heartConcepts=HEART_REQUIRED_CONCEPT_IDS.map(conceptId=>({
  kind:chambers.has(conceptId)?"chamber":valves.has(conceptId)?"valve":conceptId==="heart.myocardium"?"tissue":"vessel",
  assetRequired:true,
  knowledge:"fact",
- sourceIds:["nhlbi-anatomy"],
+ sourceIds:[chambers.has(conceptId)||conceptId==="heart.myocardium"?"nhlbi-anatomy":"nhlbi-blood-flow"],
  geometryKnowledge:"inference"
 }));
 

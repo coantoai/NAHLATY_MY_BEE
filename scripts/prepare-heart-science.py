@@ -126,7 +126,7 @@ flow("flow-vena-cava", "venaCava", D, [
 ])
 flow("flow-right-atrium", "rightAtrium", D, [("heart.rightAtrium","heart.tricuspidValve","M216 280 C236 313 245 350 235 385","216,280","235,385")], "fill-flow")
 flow("flow-tricuspid-valve", "tricuspidValve", D, [("heart.tricuspidValve","heart.rightVentricle","M235 385 C232 424 228 461 258 496","235,385","258,496")], "fill-flow")
-flow("flow-right-ventricle", "rightVentricle", D, [("heart.rightVentricle","heart.pulmonaryValve","M258 496 C285 479 293 418 294 347","258,496","294,347")], "eject-flow")
+flow("flow-right-ventricle", "rightVentricle", D, [("heart.rightVentricle","heart.pulmonaryValve","M258 496 C265 466 260 435 267 416 C274 398 280 371 294 347","258,496","294,347")], "eject-flow")
 flow("flow-pulmonary-valve", "pulmonaryValve", D, [("heart.pulmonaryValve","heart.pulmonaryArtery","M294 347 L294 280 C294 244 307 223 325 204","294,347","325,204")], "eject-flow")
 flow("flow-pulmonary-artery", "pulmonaryArtery", D, [
  ("heart.pulmonaryArtery","circulation.lungs","M325 204 C284 177 226 174 102 176","325,204","102,176"),
@@ -135,8 +135,8 @@ flow("flow-pulmonary-artery", "pulmonaryArtery", D, [
 flow("flow-pulmonary-veins", "pulmonaryVeins", O, [
  ("circulation.lungs","heart.pulmonaryVeins","M545 234 C502 234 475 246 449 264","545,234","449,264"),
  ("circulation.lungs","heart.pulmonaryVeins","M547 324 C503 331 478 319 449 306","547,324","449,306"),
- ("circulation.lungs","heart.pulmonaryVeins","M318 232 C338 236 352 251 365 263","318,232","365,263"),
- ("circulation.lungs","heart.pulmonaryVeins","M313 318 C333 312 349 312 368 307","313,318","368,307"),
+ ("circulation.lungs","heart.pulmonaryVeins","M321 232 C338 236 352 251 365 263","321,232","365,263"),
+ ("circulation.lungs","heart.pulmonaryVeins","M316 318 C333 312 349 312 368 307","316,318","368,307"),
  ("heart.pulmonaryVeins","heart.leftAtrium","M449 264 C436 277 424 284 411 285","449,264","411,285"),
  ("heart.pulmonaryVeins","heart.leftAtrium","M449 306 C431 302 424 293 411 285","449,306","411,285"),
  ("heart.pulmonaryVeins","heart.leftAtrium","M365 263 C381 273 395 279 411 285","365,263","411,285"),
@@ -176,13 +176,20 @@ for id, concept, d in rims:
 
 septum = group("front-septum", "myocardium", path("M321 348 C339 343 352 355 360 374 C340 408 337 445 340 481 C344 536 369 580 397 611 L378 627 C347 594 321 554 309 508 C297 464 292 427 278 393 C296 379 308 363 321 348Z", fill="url(#septum-depth)", stroke="#432138", stroke_width="1.3") + "\n" + path("M321 382 C308 425 320 491 335 534 C347 569 365 596 380 610 M325 384 C315 430 327 495 341 533 C352 566 369 592 384 607 M331 383 C321 431 331 493 346 530", fill="none", stroke="#d0a097", stroke_width=".85", opacity=".2"))
 
-def leaflet(d, motion, hinge):
-    return path(d, fill="url(#ivory-leaflet)", stroke="#795b66", stroke_width=".7", class_="valve-leaflet", data_heart_motion=motion, data_hinge=hinge, style="transform-box:fill-box;transform-origin:50% 0%")
+def leaflet(d, motion, hinge, open_angle):
+    # Absolute authored hinge coordinates are the actual CSS rotation origin.
+    # Rotating cusp tips toward the sidewall exposes the central valve port;
+    # scaling leaflet height leaves that port obstructed.
+    x, y = hinge.split(",")
+    return path(d, fill="url(#ivory-leaflet)", stroke="#795b66", stroke_width=".7",
+        class_="valve-leaflet", data_heart_motion=motion, data_hinge=hinge,
+        style=f"transform-box:view-box;transform-origin:{x}px {y}px;--valve-open-angle:{open_angle}deg")
 
-tv = group("tricuspid-valve", "tricuspidValve", path("M207 381 Q235 369 263 380 L260 388 Q233 382 211 390Z", fill="#a27479", stroke="#78515e", stroke_width=".9") + "\n" + path("M211 379 Q235 373 259 379", fill="none", stroke="#d5b2a4", stroke_width="1", opacity=".6") + "\n" + leaflet("M211 383 C222 383 230 386 235 390 C235 397 232 404 227 402 C219 398 213 389 211 383Z", "av-valve", "211,383") + "\n" + leaflet("M260 383 C249 383 241 386 235 390 C237 397 241 403 246 400 C254 395 258 388 260 383Z", "av-valve", "260,383") + "\n" + leaflet("M231 384 Q237 381 243 384 C243 391 240 397 237 398 C233 393 231 388 231 384Z", "av-valve", "237,384"))
-mv = group("mitral-valve", "mitralValve", path("M373 354 Q400 343 427 354 L424 362 Q401 354 377 363Z", fill="#a8777b", stroke="#79505d", stroke_width=".9") + "\n" + path("M377 352 Q400 347 423 352", fill="none", stroke="#d5b2a4", stroke_width="1", opacity=".6") + "\n" + leaflet("M377 357 C388 356 397 359 401 363 C402 371 400 380 395 379 C386 374 380 365 377 357Z", "av-valve", "377,357") + "\n" + leaflet("M423 357 C413 355 405 358 401 363 C401 370 404 380 409 377 C417 370 421 363 423 357Z", "av-valve", "423,357"))
-pv = group("pulmonary-valve", "pulmonaryValve", path("M277 345 Q294 337 311 344 L309 351 Q294 345 280 353Z", fill="#8695a2", stroke="#343747", stroke_width="2") + "\n" + leaflet("M280 346 Q286 353 292 346 Q290 358 283 357Z", "semilunar-valve", "280,346") + "\n" + leaflet("M292 346 Q298 353 305 346 Q302 358 296 357Z", "semilunar-valve", "305,346") + "\n" + leaflet("M286 344 Q294 352 302 344 Q295 340 286 344Z", "semilunar-valve", "294,344"))
-av = group("aortic-valve", "aorticValve", path("M335 340 Q352 332 368 339 L365 346 Q352 340 338 348Z", fill="#bb7f81", stroke="#613141", stroke_width="2") + "\n" + leaflet("M338 341 Q344 348 351 341 Q348 353 342 353Z", "semilunar-valve", "338,341") + "\n" + leaflet("M351 341 Q357 348 364 341 Q361 353 355 353Z", "semilunar-valve", "364,341") + "\n" + leaflet("M343 339 Q351 347 359 339 Q351 335 343 339Z", "semilunar-valve", "351,339"))
+tv = group("tricuspid-valve", "tricuspidValve", path("M207 381 Q215 378 221 378 L219 387 Q215 387 211 390Z M250 378 Q257 378 263 380 L260 388 Q256 386 251 387Z", fill="#a27479", stroke="#78515e", stroke_width=".9") + "\n" + path("M211 379 Q217 377 221 377 M250 377 Q256 377 259 379", fill="none", stroke="#d5b2a4", stroke_width="1", opacity=".6") + "\n" + leaflet("M211 383 Q223 382 235 390 Q222 394 211 383Z", "av-valve", "211,383", 65) + "\n" + leaflet("M260 383 Q248 382 235 390 Q249 394 260 383Z", "av-valve", "260,383", -65) + "\n" + leaflet("M225 382 Q235 379 244 382 L235 389Z", "av-valve", "225,382", 75))
+mv = group("mitral-valve", "mitralValve", path("M373 354 Q380 351 387 351 L385 359 Q381 360 377 363Z M414 351 Q422 352 427 354 L424 362 Q420 359 414 359Z", fill="#a8777b", stroke="#79505d", stroke_width=".9") + "\n" + path("M377 352 Q382 350 387 350 M414 350 Q419 350 423 352", fill="none", stroke="#d5b2a4", stroke_width="1", opacity=".6") + "\n" + leaflet("M377 357 Q389 356 401 363 Q390 368 377 357Z", "av-valve", "377,357", 65) + "\n" + leaflet("M423 357 Q412 356 401 363 Q412 368 423 357Z", "av-valve", "423,357", -65))
+pv = group("pulmonary-valve", "pulmonaryValve", path("M277 345 Q282 341 287 341 L286 348 Q283 349 280 353Z M301 341 Q307 341 311 344 L309 351 Q305 348 301 348Z", fill="#8695a2", stroke="#343747", stroke_width="2") + "\n" + leaflet("M280 346 Q286 343 294 347 Q287 354 280 346Z", "semilunar-valve", "280,346", -80) + "\n" + leaflet("M305 346 Q299 343 294 347 Q299 354 305 346Z", "semilunar-valve", "305,346", 80) + "\n" + leaflet("M280 344 Q292 337 305 344 Q294 350 280 344Z", "semilunar-valve", "280,344", -80))
+av = group("aortic-valve", "aorticValve", path("M335 340 Q340 337 345 337 L344 344 Q341 345 338 348Z M359 337 Q364 337 368 339 L365 346 Q362 344 359 344Z", fill="#bb7f81", stroke="#613141", stroke_width="2") + "\n" + leaflet("M338 341 Q345 338 352 342 Q345 349 338 341Z", "semilunar-valve", "338,341", -80) + "\n" + leaflet("M364 341 Q357 338 352 342 Q358 349 364 341Z", "semilunar-valve", "364,341", 80) + "\n" + leaflet("M338 339 Q351 332 364 339 Q352 345 338 339Z", "semilunar-valve", "338,339", -80))
+
 valves = group("valves", None, "\n".join([tv, pv, mv, av]))
 front = group("front-occlusion", None, "\n".join([front_muscle, *border_parts, septum, valves]))
 
@@ -222,6 +229,7 @@ provenance = {
  "scientificSources": [
    {"id": "nhlbi-anatomy", "title": "NHLBI — Heart anatomy", "url": "https://www.nhlbi.nih.gov/health/heart/anatomy"},
    {"id": "nhlbi-blood-flow", "title": "NHLBI — Blood flow through the heart", "url": "https://www.nhlbi.nih.gov/health/heart/blood-flow"},
+   {"id": "openstax-heart-anatomy", "title": "OpenStax — Heart Anatomy (publisher source)", "url": "https://github.com/openstax/osbooks-anatomy-physiology/blob/5ae32b3f4bc24ed003e91dc38bf47dba80751044/modules/m46676/index.cnxml"},
  ],
  "disclosures": [
    "The NIH exterior reference and this original internal cutaway are distinct assets; no positional NIH group is relabeled as an internal chamber or valve.",

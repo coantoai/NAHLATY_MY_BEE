@@ -137,6 +137,23 @@ test("science loader exposes complete semantic coverage using the existing conce
  }
 });
 
+// Runtime node construction must not replace the concept's supporting reference
+// with a single default anatomy URL, including for external circulation context.
+test("science runtime retains the supporting sources for each displayed concept",async()=>{
+ const {loadScienceHeart}=await assetModule();
+ const {experience}=await loadScienceHeart();
+ for(const concept of HEART_SCENE_SPEC.concepts){
+  const node=experience.sceneGraph.nodes.find(x=>x.id===concept.conceptId);
+  const anatomy=concept.kind==="chamber"||concept.conceptId==="heart.myocardium";
+  const sourceId=anatomy?"nhlbi-anatomy":"nhlbi-blood-flow";
+  assert.deepEqual(node.sourceIds,[sourceId],concept.conceptId);
+  assert.equal(node.sourceRef,experience.scientificSources.find(x=>x.id===sourceId).url,concept.conceptId);
+  assert.equal(node.labelEn,concept.label.en);
+ }
+ assert.match(experience.steps.map(x=>x.text).join(" "),/فرق الضغط/);
+ assert.match(experience.sceneGraph.nodes.find(x=>x.id==="heart.mitralValve").detail,/الحبال الوترية.*العضلات الحليمية/);
+});
+
 test("science experience retains canonical facts, authoritative sources, and illustrative geometry/timing",async()=>{
  const {loadScienceHeart}=await assetModule();
  const {experience}=await loadScienceHeart();

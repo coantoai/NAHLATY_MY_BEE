@@ -143,7 +143,7 @@
 </g>
 <g id="flow-right-ventricle" data-concept-id="heart.rightVentricle" >
 <g data-heart-motion="eject-flow">
-<path d="M258 496 C285 479 293 418 294 347" id="flow-right-ventricle-path-1" data-from="heart.rightVentricle" data-to="heart.pulmonaryValve" data-oxygenation="deoxygenated" data-start="258,496" data-end="294,347" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M258 496 C265 466 260 435 267 416 C274 398 280 371 294 347" id="flow-right-ventricle-path-1" data-from="heart.rightVentricle" data-to="heart.pulmonaryValve" data-oxygenation="deoxygenated" data-start="258,496" data-end="294,347" fill="none" stroke="#8fbdd5" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
 </g>
 </g>
 <g id="flow-pulmonary-valve" data-concept-id="heart.pulmonaryValve" >
@@ -162,8 +162,8 @@
 <g id="flow-pulmonary-veins" data-concept-id="heart.pulmonaryVeins" mask="url(#pulmonary-vein-flow-depth)">
 <path d="M545 234 C502 234 475 246 449 264" id="flow-pulmonary-veins-path-1" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="545,234" data-end="449,264" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
 <path d="M547 324 C503 331 478 319 449 306" id="flow-pulmonary-veins-path-2" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="547,324" data-end="449,306" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
-<path d="M318 232 C338 236 352 251 365 263" id="flow-pulmonary-veins-path-3" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="318,232" data-end="365,263" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
-<path d="M313 318 C333 312 349 312 368 307" id="flow-pulmonary-veins-path-4" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="313,318" data-end="368,307" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M321 232 C338 236 352 251 365 263" id="flow-pulmonary-veins-path-3" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="321,232" data-end="365,263" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
+<path d="M316 318 C333 312 349 312 368 307" id="flow-pulmonary-veins-path-4" data-from="circulation.lungs" data-to="heart.pulmonaryVeins" data-oxygenation="oxygenated" data-start="316,318" data-end="368,307" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
 <path d="M449 264 C436 277 424 284 411 285" id="flow-pulmonary-veins-path-5" data-from="heart.pulmonaryVeins" data-to="heart.leftAtrium" data-oxygenation="oxygenated" data-start="449,264" data-end="411,285" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
 <path d="M449 306 C431 302 424 293 411 285" id="flow-pulmonary-veins-path-6" data-from="heart.pulmonaryVeins" data-to="heart.leftAtrium" data-oxygenation="oxygenated" data-start="449,306" data-end="411,285" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
 <path d="M365 263 C381 273 395 279 411 285" id="flow-pulmonary-veins-path-7" data-from="heart.pulmonaryVeins" data-to="heart.leftAtrium" data-oxygenation="oxygenated" data-start="365,263" data-end="411,285" fill="none" stroke="#ed9498" stroke-width="3.5" stroke-dasharray="3.5 15" stroke-linecap="round" opacity=".72" class="blood" data-heart-motion="blood"/>
@@ -262,29 +262,29 @@
 </g>
 <g id="valves" >
 <g id="tricuspid-valve" data-concept-id="heart.tricuspidValve" >
-<path d="M207 381 Q235 369 263 380 L260 388 Q233 382 211 390Z" fill="#a27479" stroke="#78515e" stroke-width=".9"/>
-<path d="M211 379 Q235 373 259 379" fill="none" stroke="#d5b2a4" stroke-width="1" opacity=".6"/>
-<path d="M211 383 C222 383 230 386 235 390 C235 397 232 404 227 402 C219 398 213 389 211 383Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="211,383" style="transform-box:fill-box;transform-origin:50% 0%"/>
-<path d="M260 383 C249 383 241 386 235 390 C237 397 241 403 246 400 C254 395 258 388 260 383Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="260,383" style="transform-box:fill-box;transform-origin:50% 0%"/>
-<path d="M231 384 Q237 381 243 384 C243 391 240 397 237 398 C233 393 231 388 231 384Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="237,384" style="transform-box:fill-box;transform-origin:50% 0%"/>
+<path d="M207 381 Q215 378 221 378 L219 387 Q215 387 211 390Z M250 378 Q257 378 263 380 L260 388 Q256 386 251 387Z" fill="#a27479" stroke="#78515e" stroke-width=".9"/>
+<path d="M211 379 Q217 377 221 377 M250 377 Q256 377 259 379" fill="none" stroke="#d5b2a4" stroke-width="1" opacity=".6"/>
+<path d="M211 383 Q223 382 235 390 Q222 394 211 383Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="211,383" style="transform-box:view-box;transform-origin:211px 383px;--valve-open-angle:65deg"/>
+<path d="M260 383 Q248 382 235 390 Q249 394 260 383Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="260,383" style="transform-box:view-box;transform-origin:260px 383px;--valve-open-angle:-65deg"/>
+<path d="M225 382 Q235 379 244 382 L235 389Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="225,382" style="transform-box:view-box;transform-origin:225px 382px;--valve-open-angle:75deg"/>
 </g>
 <g id="pulmonary-valve" data-concept-id="heart.pulmonaryValve" >
-<path d="M277 345 Q294 337 311 344 L309 351 Q294 345 280 353Z" fill="#8695a2" stroke="#343747" stroke-width="2"/>
-<path d="M280 346 Q286 353 292 346 Q290 358 283 357Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="280,346" style="transform-box:fill-box;transform-origin:50% 0%"/>
-<path d="M292 346 Q298 353 305 346 Q302 358 296 357Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="305,346" style="transform-box:fill-box;transform-origin:50% 0%"/>
-<path d="M286 344 Q294 352 302 344 Q295 340 286 344Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="294,344" style="transform-box:fill-box;transform-origin:50% 0%"/>
+<path d="M277 345 Q282 341 287 341 L286 348 Q283 349 280 353Z M301 341 Q307 341 311 344 L309 351 Q305 348 301 348Z" fill="#8695a2" stroke="#343747" stroke-width="2"/>
+<path d="M280 346 Q286 343 294 347 Q287 354 280 346Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="280,346" style="transform-box:view-box;transform-origin:280px 346px;--valve-open-angle:-80deg"/>
+<path d="M305 346 Q299 343 294 347 Q299 354 305 346Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="305,346" style="transform-box:view-box;transform-origin:305px 346px;--valve-open-angle:80deg"/>
+<path d="M280 344 Q292 337 305 344 Q294 350 280 344Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="280,344" style="transform-box:view-box;transform-origin:280px 344px;--valve-open-angle:-80deg"/>
 </g>
 <g id="mitral-valve" data-concept-id="heart.mitralValve" >
-<path d="M373 354 Q400 343 427 354 L424 362 Q401 354 377 363Z" fill="#a8777b" stroke="#79505d" stroke-width=".9"/>
-<path d="M377 352 Q400 347 423 352" fill="none" stroke="#d5b2a4" stroke-width="1" opacity=".6"/>
-<path d="M377 357 C388 356 397 359 401 363 C402 371 400 380 395 379 C386 374 380 365 377 357Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="377,357" style="transform-box:fill-box;transform-origin:50% 0%"/>
-<path d="M423 357 C413 355 405 358 401 363 C401 370 404 380 409 377 C417 370 421 363 423 357Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="423,357" style="transform-box:fill-box;transform-origin:50% 0%"/>
+<path d="M373 354 Q380 351 387 351 L385 359 Q381 360 377 363Z M414 351 Q422 352 427 354 L424 362 Q420 359 414 359Z" fill="#a8777b" stroke="#79505d" stroke-width=".9"/>
+<path d="M377 352 Q382 350 387 350 M414 350 Q419 350 423 352" fill="none" stroke="#d5b2a4" stroke-width="1" opacity=".6"/>
+<path d="M377 357 Q389 356 401 363 Q390 368 377 357Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="377,357" style="transform-box:view-box;transform-origin:377px 357px;--valve-open-angle:65deg"/>
+<path d="M423 357 Q412 356 401 363 Q412 368 423 357Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="av-valve" data-hinge="423,357" style="transform-box:view-box;transform-origin:423px 357px;--valve-open-angle:-65deg"/>
 </g>
 <g id="aortic-valve" data-concept-id="heart.aorticValve" >
-<path d="M335 340 Q352 332 368 339 L365 346 Q352 340 338 348Z" fill="#bb7f81" stroke="#613141" stroke-width="2"/>
-<path d="M338 341 Q344 348 351 341 Q348 353 342 353Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="338,341" style="transform-box:fill-box;transform-origin:50% 0%"/>
-<path d="M351 341 Q357 348 364 341 Q361 353 355 353Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="364,341" style="transform-box:fill-box;transform-origin:50% 0%"/>
-<path d="M343 339 Q351 347 359 339 Q351 335 343 339Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="351,339" style="transform-box:fill-box;transform-origin:50% 0%"/>
+<path d="M335 340 Q340 337 345 337 L344 344 Q341 345 338 348Z M359 337 Q364 337 368 339 L365 346 Q362 344 359 344Z" fill="#bb7f81" stroke="#613141" stroke-width="2"/>
+<path d="M338 341 Q345 338 352 342 Q345 349 338 341Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="338,341" style="transform-box:view-box;transform-origin:338px 341px;--valve-open-angle:-80deg"/>
+<path d="M364 341 Q357 338 352 342 Q358 349 364 341Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="364,341" style="transform-box:view-box;transform-origin:364px 341px;--valve-open-angle:80deg"/>
+<path d="M338 339 Q351 332 364 339 Q352 345 338 339Z" fill="url(#ivory-leaflet)" stroke="#795b66" stroke-width=".7" class="valve-leaflet" data-heart-motion="semilunar-valve" data-hinge="338,339" style="transform-box:view-box;transform-origin:338px 339px;--valve-open-angle:-80deg"/>
 </g>
 </g>
 </g>

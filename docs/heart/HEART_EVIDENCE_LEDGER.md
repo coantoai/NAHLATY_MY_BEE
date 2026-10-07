@@ -9,7 +9,7 @@ Recorded on 2026-10-07 for Issue #23. This ledger distinguishes established phys
 | `nhlbi-anatomy` | [NHLBI — Heart anatomy](https://www.nhlbi.nih.gov/health/heart/anatomy) | Four chambers, septum and myocardium | Official HTML retrieved with TLS verification on 2026-10-07; supporting text inspected |
 | `nhlbi-blood-flow` | [NHLBI — Blood flow through the heart](https://www.nhlbi.nih.gov/health/heart/blood-flow) | Four valves and their locations, venae cavae, normal directed circuit and oxygenation | Official HTML retrieved with TLS verification on 2026-10-07; supporting text inspected |
 | `nhlbi-heart-beats` | [NHLBI — How the Heart Beats](https://www.nhlbi.nih.gov/health/heart/heart-beats) | Ventricular contraction within the described heartbeat cycle | Verified HTTPS GET returned 200 on 2026-10-07; supporting text inspected |
-| `openstax-heart-anatomy` | [OpenStax — Heart Anatomy, official publisher source](https://github.com/openstax/osbooks-anatomy-physiology/blob/5ae32b3f4bc24ed003e91dc38bf47dba80751044/modules/m46676/index.cnxml) | Left ventricular muscle thicker than right ventricular muscle | Official OpenStax repository XML retrieved with TLS verification on 2026-10-07 at pinned revision; paragraph `fs-id2183171` inspected |
+| `openstax-heart-anatomy` | [OpenStax — Heart Anatomy, official publisher source](https://github.com/openstax/osbooks-anatomy-physiology/blob/5ae32b3f4bc24ed003e91dc38bf47dba80751044/modules/m46676/index.cnxml) | Relative ventricular wall muscle; pulmonary trunk branching; passive ventricular filling; pressure-related valve motion and AV-valve support | Official OpenStax repository XML retrieved with TLS verification on 2026-10-07 at pinned revision; paragraphs `fs-id2183171`, `fs-id2151950`, `fs-id2769216`, `fs-id1435292`, `fs-id1291612`, `fs-id2795451` inspected |
 | `openstax-cardiac-physiology` | [OpenStax — Cardiac Physiology, official publisher source](https://github.com/openstax/osbooks-anatomy-physiology/blob/5ae32b3f4bc24ed003e91dc38bf47dba80751044/modules/m46672/index.cnxml) | Cardiac output identity and variability of stroke volume | Official OpenStax repository XML retrieved with TLS verification on 2026-10-07 at pinned revision; paragraphs `fs-id2068372`, `fs-id1505346` and `fs-id1862411` inspected |
 | `niaid-bioart-228` | [NIH/NIAID BioArt — Human Heart](https://bioart.niaid.nih.gov/bioart/228) | Credited exterior illustration and asset provenance | Official HTML retrieved with TLS verification on 2026-10-07; Public Domain, creator and credit inspected |
 
@@ -63,6 +63,32 @@ From OpenStax Heart Anatomy, paragraph `fs-id2183171` at the pinned publisher re
 
 This explicitly verifies the relative wall-muscle comparison missing from the retrieved NHLBI pages. It does not establish a numeric thickness ratio for the authored SVG.
 
+From the same OpenStax anatomy module, paragraph `fs-id2151950`:
+
+> When the right ventricle contracts, it ejects blood into the pulmonary trunk, which branches into the left and right pulmonary arteries that carry it to each lung.
+
+This supports the more precise aggregate label “Pulmonary trunk and arteries” while preserving the existing `heart.pulmonaryArtery` concept ID and route.
+
+Paragraph `fs-id2769216` describes filling:
+
+> Most blood flows passively into the heart while both the atria and ventricles are relaxed, but toward the end of the ventricular relaxation period, the left atrium will contract, pumping blood into the ventricle.
+
+Paragraph `fs-id1435292` describes the valve relationship during ejection:
+
+> a shows the atrioventricular valves closed while the two semilunar valves are open. This occurs when the ventricles contract to eject blood into the pulmonary trunk and aorta.
+
+Paragraph `fs-id1291612` describes AV-valve closure and support:
+
+> This backflow causes the cusps of the tricuspid and mitral (bicuspid) valves to close.
+
+> This creates tension on the chordae tendineae (see b), helping to hold the cusps of the atrioventricular valves in place and preventing them from being blown back into the atria.
+
+Paragraph `fs-id2795451` describes pulmonary-valve closure:
+
+> When the ventricle relaxes, the pressure differential causes blood to flow back into the ventricle from the pulmonary trunk. This flow of blood fills the pocket-like flaps of the pulmonary valve, causing the valve to close and producing an audible sound.
+
+These passages support pressure-related passive leaflet motion, AV support against prolapse and the opposing valve states during ventricular ejection. The animation does not measure pressures, full phase durations or valve kinetics; its chordae tendineae and papillary muscles are omitted. The sources do not certify the authored valve paths or normalized timing fractions.
+
 From OpenStax Cardiac Physiology, paragraph `fs-id2068372`:
 
 > To calculate this value, multiply stroke volume (SV), the amount of blood pumped by each ventricle, by heart rate (HR), in contractions per minute (or beats per minute, bpm).
@@ -94,20 +120,24 @@ These identifiers match `HEART_SCIENCE_LOCK.claims` in `app/lib/heartSemanticVec
 | Claim ID | Knowledge | Evidence or limit |
 | --- | --- | --- |
 | `four-chambers-four-valves` | `fact` | Source-supported: NHLBI anatomy establishes four chambers; NHLBI blood flow establishes four valves and their exact locations |
-| `normal-directed-flow` | `fact` | NHLBI blood flow; closed body → right heart → lungs → left heart → body circuit |
+| `normal-directed-flow` | `fact` | NHLBI blood flow establishes the closed body → right heart → lungs → left heart → body circuit; OpenStax anatomy identifies pulmonary trunk branching into left/right arteries |
 | `pulmonary-oxygenation` | `fact` | NHLBI blood flow; pulmonary artery oxygen-poor, pulmonary veins oxygen-rich |
 | `vessel-direction` | `fact` | NHLBI blood flow; artery/vein naming follows direction relative to the heart |
 | `vena-cava-return` | `fact` | Source-supported: NHLBI blood flow names superior and inferior vena cava and right atrial return; separate geometry remains authored |
 | `ventricular-separation` | `fact` | NHLBI anatomy; no direct right-to-left chamber route in this normal postnatal scene |
 | `left-ventricular-wall` | `fact` | Source-supported: OpenStax Heart Anatomy explicitly compares left/right ventricular muscle thickness; NHLBI blood flow supports left ventricular/aortic outflow. No numeric SVG thickness ratio is verified |
 | `paired-ventricular-pumping` | `fact` | Source-supported: NHLBI heartbeat describes the ventricular contraction phase; precise simultaneity and depicted timing are not measured |
+| `pressure-driven-valves` | `fact` | OpenStax anatomy describes pressure/backflow-driven closure, open semilunar and closed AV valves during ejection, and chordal support against AV prolapse |
+| `valve-support-simplification` | `inference` | Schematic leaflets omit chordae tendineae and papillary muscles; valve poses illustrate filling/ejection rather than measured kinetics or the complete pressure-based cycle |
 | `red-blue-convention` | `inference` | Diagram encoding only; blood itself is red, including oxygen-poor venous blood |
 | `illustrative-geometry` | `inference` | Original authored educational paths and layout; not a measured or clinically certified reconstruction |
-| `illustrative-timing` | `inference` | Normalized timeline and animation pacing; no measured hemodynamics, pressure or transit time |
+| `illustrative-timing` | `inference` | Normalized timeline and animation pacing; no measured hemodynamics, pressure, transit time or physiological phase-duration response to changing heart rate |
 | `fixed-stroke-volume` | `inference` | Explicit 70 mL/beat assumption for deterministic educational cardiac-output arithmetic |
 | `individual-stroke-volume` | `unknown` | Individual physiology, pathology, ejection fraction, coronary perfusion and exercise response are not estimated |
 
 The cardiac-output parameter separately records `formulaKnowledge: "fact"` and `formulaSourceIds: ["openstax-cardiac-physiology"]`. Its displayed estimate remains `knowledge: "inference"` because the scene fixes stroke volume at 70 mL.
+
+Per-concept source IDs and runtime primary URLs now distinguish the inspected evidence: NHLBI anatomy for chambers/myocardium, NHLBI blood flow for named valves/great vessels and lung/body context. OpenStax supplies the supplementary trunk-branching, wall comparison and valve-mechanism evidence above. A general anatomy URL alone is not evidence for every displayed structure or physiology claim.
 
 ## Preserved exterior asset provenance
 

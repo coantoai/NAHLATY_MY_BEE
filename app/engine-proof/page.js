@@ -1,5 +1,6 @@
 "use client";
-import {useState} from "react";
+import {useEffect,useState} from "react";
+import Home from "../page";
 
 // VISUAL ENGINE PROOF V1: planner -> structured plan -> renderer -> context
 const visualPlans=[
@@ -129,6 +130,13 @@ export default function Page(){
  const [engineLoading,setEngineLoading]=useState(false);
  const [engineProvider,setEngineProvider]=useState("");
  const [dynamicStep,setDynamicStep]=useState(0);
+ useEffect(()=>{
+  const controller=new AbortController();
+  fetch("/api/engine",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({question:"كيف يعمل القلب؟"}),signal:controller.signal})
+   .then(async response=>{const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload?.error?.message||"تعذر تحميل القلب");setEngineResult(payload.result);setEngineProvider(payload.provider);})
+   .catch(error=>{if(error.name!=="AbortError")setEngineResult({error:error.message});});
+  return()=>controller.abort();
+ },[]);
  const scene=scenes[active];
  const renderPlan=engineResult?.renderPlan||null;
  const dynamicMode=Boolean(engineResult&&!engineResult.error&&engineResult.scene==null);
@@ -179,6 +187,9 @@ export default function Page(){
    setEngineLoading(false);
   }
  }
+ if(engineResult?.experience?.sceneGraph?.nativeSvg?.scienceLock)return <Home initialExperience={engineResult.experience} showHeartControls/>;
+ if(!engineResult)return <main dir="rtl"><p role="status">يتم تحميل القلب العلمي…</p></main>;
+ if(engineResult.error)return <main dir="rtl"><p role="alert">{engineResult.error}</p><a href="/lab/premium-heart-vector">افتح القلب العلمي</a></main>;
  return <main className="heartPlatform" dir="rtl">
   <section className="heartScreen" aria-label="رحلة القلب">
    <div className="referenceUI fastShell" aria-hidden="true"><div className="shellBrand">MY BEE</div><div className="shellSide"/><div className="shellAsk"/><div className="shellCards"/></div>

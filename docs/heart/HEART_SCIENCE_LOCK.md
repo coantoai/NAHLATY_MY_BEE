@@ -8,7 +8,7 @@ The scientific references are NHLBI heart anatomy, blood flow and heartbeat, sup
 
 ```text
 body tissues → venae cavae → right atrium → tricuspid valve
-→ right ventricle → pulmonary valve → pulmonary artery → lungs
+→ right ventricle → pulmonary valve → pulmonary trunk and arteries → lungs
 → pulmonary veins → left atrium → mitral valve → left ventricle
 → aortic valve → aorta → body tissues
 ```
@@ -28,7 +28,7 @@ Systemic venous return, right-heart flow and pulmonary arterial flow are oxygen-
 | `heart.tricuspidValve` | `tricuspid-valve` | Between right atrium and right ventricle |
 | `heart.rightVentricle` | `right-ventricle` | Ejects toward the pulmonary artery |
 | `heart.pulmonaryValve` | `pulmonary-valve` | Between right ventricle and pulmonary artery |
-| `heart.pulmonaryArtery` | `pulmonary-artery` | Carries oxygen-poor blood toward the lungs |
+| `heart.pulmonaryArtery` | `pulmonary-artery` | Aggregate pulmonary trunk and left/right pulmonary arteries; carries oxygen-poor blood toward the lungs |
 | `heart.pulmonaryVeins` | `pulmonary-veins` | Carries oxygen-rich blood from lungs to left atrium |
 | `heart.leftAtrium` | `left-atrium` | Receives pulmonary venous return |
 | `heart.mitralValve` | `mitral-valve` | Between left atrium and left ventricle |
@@ -43,6 +43,10 @@ The cutaway must visibly distinguish all four chambers and all four valves. The 
 
 Bindings are a contract for authored geometry, not proof that a path is anatomically correct. SVG uniqueness, source/license checks, correct topology and visual inspection remain separate requirements. The exterior NIH asset retains its own `semantic.ready: false` status because it does not expose the required internal anatomy.
 
+Concept citations follow the inspected source text: chambers and myocardium cite NHLBI anatomy; named valves, great vessels, lungs and systemic context cite NHLBI blood flow. Runtime nodes retain those source IDs and the corresponding primary URL. The aggregate `heart.pulmonaryArtery` ID remains stable; the more precise label describes the trunk and its arterial branches, supported by the supplementary OpenStax anatomy text. The separate left-ventricular wall comparison continues to cite OpenStax rather than being attributed to the NHLBI anatomy page.
+
+Valve leaflets move passively in response to pressure differences. During ventricular ejection, the tricuspid and mitral valves are closed while the pulmonary and aortic valves are open. Papillary muscles tighten the chordae tendineae to prevent atrioventricular leaflet prolapse into the atria; they do not actively pull the valves open. The cutaway omits chordae tendineae and papillary muscles and simplifies leaflet shapes. Its visible valve poses explain the normal direction of flow rather than reconstructing the complete valve apparatus. These physiology facts and geometry limits are separately recorded as `pressure-driven-valves` and `valve-support-simplification`.
+
 ## Knowledge labels and simulation limits
 
 `HEART_SCIENCE_LOCK` exports `heart-science-lock/v1` with claims using the existing knowledge vocabulary:
@@ -55,7 +59,7 @@ Bindings are a contract for authored geometry, not proof that a path is anatomic
 
 Every relation records physiological `oxygenation` separately from illustrative `bloodColor` and `colorKnowledge: "inference"`. Blood is red; venous blood is darker red. Blue is a diagram convention and must never be taught as the actual color of oxygen-poor blood.
 
-The two ventricles pump during the same cardiac cycle. Sequentially highlighting a route explains circulation order; it does not imply that chambers pump serially or measure the transit time of a blood particle. The exported timeline marks all normalized phase positions as `inference`. The animation is educational, with no measured pressure, valve kinetics or clinical accuracy claim.
+The two ventricles pump during the same cardiac cycle. Sequentially highlighting a route explains circulation order; it does not imply that chambers pump serially or measure the transit time of a blood particle. Most ventricular filling is passive while the atria and ventricles are relaxed, with atrial contraction adding blood near the end of filling. The exported timeline marks all normalized phase positions as `inference`. Its fixed filling/ejection fractions are illustrative, not measured durations or a model of their variation with heart rate. The simplified animation does not represent all cardiac-cycle phases or measured pressures, valve kinetics or clinical accuracy.
 
 `cardiacOutputLitersPerMinute(heartRate, strokeVolume = 70)` retains its existing API. The arithmetic is:
 

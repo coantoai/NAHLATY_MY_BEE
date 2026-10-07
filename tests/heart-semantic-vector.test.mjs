@@ -68,6 +68,31 @@ test("the anatomy contract distinguishes four chambers and four valves",()=>{
  assert.ok(concepts.filter(x=>x.assetRequired).every(x=>x.knowledge==="fact"));
 });
 
+// A blanket anatomy-page citation loses the inspected evidence for named valves
+// and great vessels; pulmonary trunk precision must retain the existing ID.
+test("each heart concept cites the inspected page supporting that structure",()=>{
+ for(const concept of HEART_SCENE_SPEC.concepts){
+  const anatomy=concept.kind==="chamber"||concept.conceptId==="heart.myocardium";
+  assert.deepEqual(concept.sourceIds,[anatomy?"nhlbi-anatomy":"nhlbi-blood-flow"],concept.conceptId);
+ }
+ const pulmonary=HEART_SCENE_SPEC.concepts.find(x=>x.conceptId==="heart.pulmonaryArtery");
+ assert.deepEqual(pulmonary.label,{ar:"الجذع والشرايين الرئوية",en:"Pulmonary trunk and arteries"});
+});
+
+test("pressure-driven valve function is a sourced fact separate from omitted support geometry",()=>{
+ const claim=id=>heart.HEART_SCIENCE_LOCK.claims.find(x=>x.id===id);
+ const mechanism=claim("pressure-driven-valves");
+ assert.equal(mechanism?.knowledge,"fact");
+ assert.equal(mechanism.evidenceStatus,"source-supported");
+ assert.deepEqual(mechanism.sourceIds,["openstax-heart-anatomy"]);
+ assert.match(mechanism.statement,/pressure differences/i);
+ assert.match(mechanism.statement,/passiv/i);
+ assert.match(mechanism.statement,/papillary muscles.*chordae tendineae.*prolapse/i);
+ const simplification=claim("valve-support-simplification");
+ assert.equal(simplification?.knowledge,"inference");
+ assert.match(simplification.statement,/chordae tendineae.*papillary muscles.*omitted/i);
+});
+
 test("canonical cutaway bindings retain stable concept IDs with distinct geometry",()=>{
  assert.ok(Array.isArray(heart.HEART_ANATOMY_BINDINGS));
  assert.deepEqual(heart.HEART_ANATOMY_BINDINGS.map(x=>[x.conceptId,x.elementId]),[
@@ -120,6 +145,7 @@ test("scientific claims identify the precise official source text that supports 
   assert.ok(claim(id).sourceIds.length>0,id);
  }
  assert.deepEqual(claim("four-chambers-four-valves").sourceIds,["nhlbi-anatomy","nhlbi-blood-flow"]);
+ assert.deepEqual(claim("normal-directed-flow").sourceIds,["nhlbi-blood-flow","openstax-heart-anatomy"]);
  assert.deepEqual(claim("vena-cava-return").sourceIds,["nhlbi-blood-flow"]);
  assert.deepEqual(claim("paired-ventricular-pumping").sourceIds,["nhlbi-heart-beats"]);
  assert.deepEqual(claim("left-ventricular-wall").sourceIds,["openstax-heart-anatomy","nhlbi-blood-flow"]);

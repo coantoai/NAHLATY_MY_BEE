@@ -9,9 +9,9 @@ export async function POST(req){
  try{
   const {response,title,nodes=[],edges=[],experience={}}=await req.json();
   if(!safeText(response).trim()) return Response.json({error:"اكتب شرحك أولاً"},{status:400});
-  const cleanNodes=(Array.isArray(nodes)?nodes:[]).slice(0,8).map(n=>({id:safeText(n?.id,40),label:safeText(n?.label,80),detail:safeText(n?.detail,180)}));
+  const cleanNodes=(Array.isArray(nodes)?nodes:[]).slice(0,20).map(n=>({id:safeText(n?.id,40),label:safeText(n?.label,80),detail:safeText(n?.detail,500)}));
   const ids=new Set(cleanNodes.map(n=>n.id));
-  const cleanEdges=(Array.isArray(edges)?edges:[]).slice(0,12).map(e=>({from:safeText(e?.from,40),to:safeText(e?.to,40),label:safeText(e?.label,80)})).filter(e=>ids.has(e.from)&&ids.has(e.to));
+  const cleanEdges=(Array.isArray(edges)?edges:[]).slice(0,24).map(e=>({from:safeText(e?.from,40),to:safeText(e?.to,40),label:safeText(e?.label,80)})).filter(e=>ids.has(e.from)&&ids.has(e.to));
   const key=process.env.DASHSCOPE_API_KEY;
 
   if(!key){

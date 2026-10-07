@@ -67,6 +67,123 @@ ANIMATION_SNAPSHOT = """() => {
 }"""
 
 
+PHYSICAL_SNAPSHOT = """() => {
+ const root=document.querySelector('#heart-root');
+ const cavities=[...root.querySelectorAll('#heart-lumen path')];
+ const septum=root.querySelector('#front-septum path');
+ const path=root.querySelector('#flow-right-ventricle-path-1');
+ const containment=[],allContainment=[];
+ for(const route of root.querySelectorAll('path[data-from]')) {
+  const total=route.getTotalLength();
+  for(let s=0;s<total;s+=.5) {
+   const p=route.getPointAtLength(s),n=route.getPointAtLength(Math.min(total,s+.1));
+   const norm=Math.hypot(n.x-p.x,n.y-p.y)||1;
+   for(const offset of [-1.75,0,1.75]) {
+    const point=new DOMPoint(p.x-offset*(n.y-p.y)/norm,p.y+offset*(n.x-p.x)/norm);
+    if(!cavities.some(l=>l.isPointInFill(point)))allContainment.push({id:route.id,s,offset,x:point.x,y:point.y});
+   }
+  }
+ }
+ const length=path.getTotalLength();
+ for(let s=0;s<length;s+=.5) {
+  const p=path.getPointAtLength(s),n=path.getPointAtLength(Math.min(length,s+.1));
+  const norm=Math.hypot(n.x-p.x,n.y-p.y)||1;
+  for(const offset of [-1.75,0,1.75]) {
+   const point=new DOMPoint(p.x-offset*(n.y-p.y)/norm,p.y+offset*(n.x-p.x)/norm);
+   if(![cavities[1],cavities[2]].some(l=>l.isPointInFill(point))||septum.isPointInFill(point))
+    containment.push({s,offset,x:point.x,y:point.y});
+  }
+ }
+ const animations=root.getAnimations({subtree:true}).filter(a=>a.effect.target.dataset.heartMotion);
+ const saved=animations.map(a=>({a,time:a.currentTime,state:a.playState}));
+ const phases=[];
+ const pairs=[['mitral-valve','flow-mitral-valve-path-1','fill-flow'],
+  ['tricuspid-valve','flow-tricuspid-valve-path-1','fill-flow'],
+  ['aortic-valve','flow-aortic-valve-path-1','eject-flow'],
+  ['pulmonary-valve','flow-pulmonary-valve-path-1','eject-flow']];
+ for(const phase of [.4,.575,.6,.75,.95]) {
+  for(const a of animations){a.pause();a.currentTime=Number(a.effect.getTiming().duration)*phase;}
+  const valves=pairs.map(([id,flowId,motion])=>{
+   const leaves=[...root.querySelectorAll('#'+id+' [data-heart-motion]')];
+   const flow=root.querySelector('#'+flowId);const blocked=[],paintedBlocked=[],hingeErrors=[];
+   const painted=[...root.querySelectorAll('#'+id+' path')];
+   for(const l of leaves){
+    const [x,y]=l.dataset.hinge.split(',').map(Number);
+    const actual=new DOMPoint(x,y).matrixTransform(l.getScreenCTM());
+    const expected=new DOMPoint(x,y).matrixTransform(l.parentElement.getScreenCTM());
+    if(Math.hypot(actual.x-expected.x,actual.y-expected.y)>.01)hingeErrors.push({x,y,actual,expected});
+   }
+   for(let s=0;s<=12;s+=.25) {
+    const p=flow.getPointAtLength(s),screen=new DOMPoint(p.x,p.y).matrixTransform(flow.getScreenCTM());
+    if(leaves.some(l=>l.isPointInFill(screen.matrixTransform(l.getScreenCTM().inverse()))))blocked.push(s);
+    const n=flow.getPointAtLength(s+.1),norm=Math.hypot(n.x-p.x,n.y-p.y)||1;
+    for(const offset of [-1.75,0,1.75]) {
+     const point=new DOMPoint(p.x-offset*(n.y-p.y)/norm,p.y+offset*(n.x-p.x)/norm).matrixTransform(flow.getScreenCTM());
+     if(painted.some(l=>{const q=point.matrixTransform(l.getScreenCTM().inverse());
+      const style=getComputedStyle(l);return (style.fill!=='none'&&l.isPointInFill(q))||(style.stroke!=='none'&&l.isPointInStroke(q));
+     }))paintedBlocked.push({s,offset});
+    }
+   }
+   return {id,motion,opacity:Number(getComputedStyle(flow.parentElement).opacity),blocked,paintedBlocked,hingeErrors};
+  });phases.push({phase,valves});
+ }
+ // Sample all transition instants: opposing through-valve streams must never coexist.
+ const overlap=[],activeGeometryDrift=[];
+ const openTransforms=new Map();
+ for(const sample of phases)for(const valve of sample.valves)if(valve.opacity>0) {
+  for(const leaf of root.querySelectorAll('#'+valve.id+' [data-heart-motion]')) {
+   const a=animations.find(a=>a.effect.target===leaf);a.currentTime=Number(a.effect.getTiming().duration)*sample.phase;
+   openTransforms.set(leaf,getComputedStyle(leaf).transform);
+  }
+ }
+ for(let phase=0;phase<1;phase+=.005){
+  for(const a of animations){a.currentTime=Number(a.effect.getTiming().duration)*phase;}
+  const fill=Number(getComputedStyle(root.querySelector('[data-heart-motion="fill-flow"]')).opacity);
+  const eject=Number(getComputedStyle(root.querySelector('[data-heart-motion="eject-flow"]')).opacity);
+  if(fill>.0001&&eject>.0001)overlap.push({phase,fill,eject});
+  for(const [leaf,transform] of openTransforms) {
+   const active=leaf.dataset.heartMotion==='av-valve'?fill:eject;
+   if(active>.0001&&getComputedStyle(leaf).transform!==transform)
+    activeGeometryDrift.push({phase,motion:leaf.dataset.heartMotion});
+  }
+ }
+ for(const {a,time,state} of saved){a.currentTime=time;if(state==='running')a.play();else a.pause();}
+ return {containment,allContainment,phases,overlap,activeGeometryDrift};
+}"""
+
+
+DEPTH_SNAPSHOT = """async () => {
+ const root=document.querySelector('#heart-root'),results=[];
+ for(const [ids,frontId] of [[['flow-aortic-valve-path-1'],'pulmonary-artery'],
+  [['flow-pulmonary-veins-path-3','flow-pulmonary-veins-path-7'],'aorta']]) {
+  const routes=ids.map(id=>root.querySelector('#'+id)),foreground=[...root.querySelectorAll('#'+frontId+' path')];
+  const clone=root.cloneNode(true);clone.setAttribute('width','640');clone.setAttribute('height','700');
+  clone.querySelector('#back-heart').remove();clone.querySelector('#front-occlusion').remove();
+  for(const e of clone.querySelectorAll('#blood-interior path'))if(!ids.includes(e.id))e.remove();
+  for(const e of clone.querySelectorAll('#blood-interior,#blood-interior g')) {
+   e.style.opacity='1';e.style.display='';e.style.animation='none';
+  }
+  for(const id of ids){const painted=clone.querySelector('#'+id);
+   painted.style.stroke='#fff';painted.style.strokeWidth='4';painted.style.strokeDasharray='none';
+   painted.style.opacity='1';painted.style.animation='none';}
+  const image=new Image();image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(clone));
+  await image.decode();const canvas=document.createElement('canvas');canvas.width=640;canvas.height=700;
+  const context=canvas.getContext('2d');context.drawImage(image,0,0);
+  const hidden=[],visible=[];
+  for(const flow of routes)for(let s=3;s<flow.getTotalLength()-3;s+=3) {
+   const p=flow.getPointAtLength(s),inside=foreground.some(l=>{
+    const style=getComputedStyle(l);return style.fill!=='none'&&l.isPointInFill(p);
+   });
+   const alpha=context.getImageData(Math.round(p.x),Math.round(p.y),1,1).data[3];
+   if(inside)hidden.push(alpha);
+   else if(alpha>200)visible.push(alpha);
+  }
+  results.push({ids,hidden,visible});
+ }
+ return results;
+}"""
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", default="http://127.0.0.1:3019")
@@ -245,6 +362,33 @@ def main():
         assert any(f["end"]["y"] < f["start"]["y"] for f in cava_paths), "IVC must ascend toward the right atrium"
         report["flowStructure"] = structure
         passed("back, blood, and front layers contain clipped canonical blue/red blood-flow paths")
+
+        physical=page.evaluate(PHYSICAL_SNAPSHOT)
+        report["physicalFlow"]=physical
+        assert not physical["allContainment"], physical["allContainment"][:10]
+        passed("every authored blood-flow stroke fits within the vessel and chamber lumen union")
+        assert not physical["containment"], physical["containment"][:10]
+        passed("full RV outlet stroke remains in the RV and RVOT cavities without crossing the septum")
+        depth=page.evaluate(DEPTH_SNAPSHOT)
+        report["renderedDepth"]=depth
+        for route in depth:
+            assert len(route["hidden"])>=3 and len(route["visible"])>=3, route
+            assert all(alpha==0 for alpha in route["hidden"]), route
+        passed("rasterized rear aortic and pulmonary-vein flow is actually occluded at foreground vessel crossings and visible elsewhere")
+
+        assert not physical["overlap"], physical["overlap"]
+        assert not physical["activeGeometryDrift"], physical["activeGeometryDrift"]
+        for sample in physical["phases"]:
+            if sample["phase"] in [.575,.6,.95]:
+                assert all(v["opacity"]==0 for v in sample["valves"]), sample
+            for valve in sample["valves"]:
+                assert not valve["hingeErrors"], sample
+                if valve["opacity"]>0:
+                    assert not valve["paintedBlocked"], sample
+                elif sample["phase"] in [.4,.75]:
+                    assert valve["blocked"], sample
+        passed("open valve ports pass forward flow while closed valves block it and isovolumic intervals carry no through-valve flow")
+
 
         reset_scene()
         page.locator("#heart-root").scroll_into_view_if_needed()
@@ -609,6 +753,12 @@ def main():
         reduced_page.wait_for_timeout(160)
         reduced_animations = reduced_page.evaluate(ANIMATION_SNAPSHOT)
         assert not [a for a in reduced_animations if a["state"] == "running"], reduced_animations
+        reduced_flow=reduced_page.evaluate("""() => [...document.querySelectorAll(
+          '#heart-root [data-heart-motion="fill-flow"],#heart-root [data-heart-motion="eject-flow"]')]
+          .map(e=>Number(getComputedStyle(e).opacity))""")
+        assert reduced_flow and all(opacity==0 for opacity in reduced_flow), reduced_flow
+        passed("reduced motion hides phase-specific valve flow rather than showing flow through every closed valve")
+
         reduced_part = reduced_page.locator('#heart-root #left-ventricle[data-native-node-id="heart.leftVentricle"]')
         assert reduced_part.is_visible()
         reduced_part.focus()
