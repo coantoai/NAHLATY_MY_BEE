@@ -1,0 +1,26 @@
+name: Engine engineering QA
+
+on:
+  pull_request:
+  push:
+    branches:
+      - codex/issue-22-zz4-science-lock
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+      # The existing repository has no lockfile; preserve its dependency declarations.
+      - run: npm install --package-lock=false --no-audit --no-fund
+      - run: npm test
+      - run: npm run build

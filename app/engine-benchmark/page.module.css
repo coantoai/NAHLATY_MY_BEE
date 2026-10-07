@@ -1,0 +1,62 @@
+.page{max-width:1180px;margin:auto;padding:28px 30px 38px;color:#e5eee8;background:#070b09;min-height:100vh;font-family:system-ui,sans-serif}
+.header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 0 28px;border-bottom:1px solid #25322b;color:#84978b;font-size:10px;letter-spacing:1.5px}
+.brand{display:flex;align-items:center;gap:9px;color:#e8eee9;text-decoration:none;font-size:22px;font-weight:800;letter-spacing:0}
+.brand span{color:#93a89b;font-size:9px;letter-spacing:1.2px;font-weight:500}
+.intro{padding:54px 0 38px;max-width:720px}
+.eyebrow{font-size:10px;letter-spacing:1.8px;color:#bb9864}
+.intro h1{font-size:clamp(35px,5.7vw,64px);line-height:1.17;letter-spacing:-1.5px;margin:19px 0 18px;font-weight:600}
+.intro h1 em{font-style:normal;color:#b9d0bf}
+.intro p{max-width:560px;margin:0;color:#98aa9f;font-size:15px;line-height:1.9}
+.cutaway{overflow:hidden;border:1px solid #2b3830;border-radius:18px;background:#0c120e;box-shadow:0 24px 80px #0003}
+.sceneHeading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:17px 22px;border-bottom:1px solid #28342c;font-size:11px;color:#a6b7aa;flex-wrap:wrap}
+.educational{color:#caaa78;font-size:10px}
+.stage{position:relative;min-height:360px;background:#070b09;overflow:hidden}
+.stage canvas{display:block;width:100%;height:auto}
+.sceneBadge{position:absolute;bottom:18px;left:20px;right:20px;text-align:center;font-size:10px;line-height:1.6;color:#91a395;pointer-events:none;text-shadow:0 2px 8px #000}
+.sceneMessage{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#070b09;z-index:2;padding:30px;text-align:center;color:#d7e2da;line-height:1.8}
+.sceneMessage span{color:#98aa9f;font-size:13px}
+.threeLabel{position:absolute;top:0;left:0;padding:5px 8px;border:1px solid #56664e66;border-radius:7px;background:#0c150edf;color:#d3dfd5;white-space:nowrap;pointer-events:none;font-size:9px;letter-spacing:.15px;backdrop-filter:blur(5px)}
+.telemetry{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #243029;border-bottom:1px solid #243029;background:#101913}
+.telemetry>div{padding:18px 22px}
+.telemetry>div+div{border-right:1px solid #29362e}
+.telemetry small{display:block;color:#8da394;font-size:10px;margin-bottom:6px}
+.telemetry strong{display:block;font-size:18px;font-weight:500;text-align:right;color:#dce9df}
+.telemetry strong span{font-size:11px;color:#8da394}
+.phases{list-style:none;margin:0;padding:20px 22px 16px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.phases li{display:grid;grid-template-columns:auto 1fr;gap:4px 9px;border-top:2px solid #2d3c32;padding-top:10px;color:#718777}
+.phases li>span{grid-row:span 2;font-size:10px;padding-top:3px;letter-spacing:1px}
+.phases b{font-size:13px;font-weight:500}
+.phases small{font-size:9px;color:#82998a}
+.phases .phaseActive{color:#d7e8db;border-color:#c6a366}
+.phases .phaseActive>span{color:#c6a366}
+.controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px 22px 0}
+.controls button{border:1px solid #3a4e3f;border-radius:8px;background:#122017;padding:10px 15px;color:#b6c9bc;font:inherit;font-size:11px;cursor:pointer;transition:background .15s,border-color .15s}
+.controls button[aria-pressed=true]{background:#bacdbb;color:#152019;border-color:#bacdbb}
+.controls button:hover:not(:disabled){border-color:#9ab29e}
+.controls button:disabled{opacity:.4;cursor:default}
+.controls button:focus-visible,.sourceDetails summary:focus-visible,.page a:focus-visible{outline:2px solid #dbbc84;outline-offset:4px}
+.controlNote{font-size:10px;line-height:1.8;color:#849b8b;padding:0 22px;margin:14px 0 9px}
+.timingNote{font-size:10px;line-height:1.7;color:#c3a377;padding:0 22px 20px;margin:0;text-align:right}
+.reference{padding-top:42px}
+.referenceHeading h2{margin:0;font-size:22px;font-weight:500}
+.referenceHeading>p{margin:9px 0 20px;color:#8da394;font-size:12px;line-height:1.8}
+.dimensions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.dimension{border:1px solid #2b3b30;border-radius:12px;padding:18px;background:#0c140f;min-width:0}
+.parameterHeading{display:flex;justify-content:space-between;align-items:center;gap:9px}
+.parameterHeading b{font-size:12px;font-weight:500}
+.status{font-size:8px;letter-spacing:.4px;color:#9ed7b4;border:1px solid #31543d;border-radius:4px;padding:3px 5px}
+.status[data-status=UNKNOWN],.status[data-status=INFERRED]{color:#d9b984;border-color:#685132}
+.dimension>small{display:block;margin-top:6px;color:#869c8c;font-size:10px}
+.dimension>strong{display:block;margin-top:17px;text-align:right;font-size:28px;font-weight:400;color:#e2eee5}
+.dimension>strong span{font-size:11px;color:#92a697}
+.dimension>p{font-size:10px;line-height:1.7;color:#849b8b;margin:12px 0 0;overflow-wrap:anywhere}
+.dimension .candidateNote{color:#c3a377}
+.referenceNotes{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin:23px 0 20px}
+.referenceNotes h3{font-size:12px;font-weight:500;color:#b8cbbf;margin:0 0 8px}
+.referenceNotes p{font-size:12px;line-height:1.9;color:#8ea494;margin:0}
+.sourceDetails{border-top:1px solid #2b3a30;border-bottom:1px solid #2b3a30;padding:16px 0;color:#98ae9f;font-size:11px;line-height:1.9}
+.sourceDetails summary{cursor:pointer;color:#c0d2c5;width:fit-content}
+.sourceDetails p{max-width:850px;overflow-wrap:anywhere}
+.sourceDetails a{color:#d0b180;text-underline-offset:4px}
+.footer{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:30px;color:#728879;font-size:10px}
+@media(max-width:700px){.page{padding:22px 16px 28px}.header{font-size:8px;letter-spacing:1px}.brand{font-size:19px}.brand span{font-size:8px}.intro{padding:38px 0 28px}.intro h1{font-size:39px}.intro p{font-size:13px}.sceneHeading{padding:15px 16px;font-size:9px}.telemetry>div{padding:15px 12px}.telemetry strong{font-size:12px}.telemetry small{font-size:8px}.telemetry strong span{font-size:9px}.phases{padding:17px 16px 12px;gap:8px}.phases li{gap:4px 6px}.phases b{font-size:12px}.phases small{font-size:8px}.controls{padding:12px 16px 0;gap:6px}.controls button{padding:9px 10px;font-size:10px}.controlNote{padding:0 16px}.timingNote{padding:0 16px 17px;font-size:9px}.dimensions{grid-template-columns:1fr}.dimension{padding:16px}.dimension>strong{font-size:25px;margin-top:10px}.referenceNotes{grid-template-columns:1fr;gap:19px}.sceneBadge{font-size:9px}.threeLabel{font-size:8px;padding:4px 6px}.referenceHeading h2{font-size:19px}}
