@@ -15,6 +15,7 @@
     "three": "^0.186.0",
     "@google/genai": "^2.23.0",
     "@copilotkit/react-core": "^1.76.0",
-    "@copilotkit/react-ui": "^1.76.0"
+    "@copilotkit/react-ui": "^1.76.0",
+    "@copilotkit/runtime": "^1.73.3"
   }
 }
