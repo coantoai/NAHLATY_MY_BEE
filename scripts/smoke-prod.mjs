@@ -27,6 +27,24 @@ assert.equal(health.body?.ok,true);
 assert.equal(health.body?.engine,"nahlaty");
 assert.equal(health.body?.selfTest?.passed,true);
 
+const science=await json("/api/generate-vector?preset=heart&view=cutaway");
+assert.equal(science.response.status,200);
+assert.equal(science.body?.semantic?.ready,true);
+assert.equal(science.body?.semantic?.clinicalValidation,false);
+assert.equal(science.body?.semantic?.boundConceptIds.length,13);
+assert.deepEqual(science.body?.semantic?.missingConceptIds,[]);
+const circuit=["circulation.body","heart.venaCava","heart.rightAtrium","heart.tricuspidValve","heart.rightVentricle","heart.pulmonaryValve","heart.pulmonaryArtery","circulation.lungs","heart.pulmonaryVeins","heart.leftAtrium","heart.mitralValve","heart.leftVentricle","heart.aorticValve","heart.aorta","circulation.body"];
+assert.deepEqual(science.body.experience.sceneGraph.edges.map(e=>[e.from,e.to]),circuit.slice(0,-1).map((id,index)=>[id,circuit[index+1]]));
+assert.equal(science.body.experience.sceneGraph.edges.find(e=>e.from==="heart.pulmonaryVeins").oxygenation,"oxygenated");
+const cutawaySvg=await text("/heart-vector/heart-science.svg");
+assert.equal(cutawaySvg.response.status,200);
+assert.match(cutawaySvg.body,/id="heart-root"/);
+assert.doesNotMatch(cutawaySvg.body,/<image\b|data:image\//i);
+const exterior=await json("/api/generate-vector?preset=heart&view=exterior");
+assert.equal(exterior.response.status,200);
+assert.equal(exterior.body?.semantic?.ready,false);
+assert.equal(exterior.body?.metrics?.pathCount,639);
+
 const heart=await json("/api/engine",{
  method:"POST",
  headers:{"content-type":"application/json"},
@@ -87,6 +105,9 @@ console.log(JSON.stringify({
   root:root.response.status,
   living:living.response.status,
   health:health.body?.version,
+  scienceConcepts:science.body.semantic.boundConceptIds.length,
+  scienceFlowEdges:science.body.experience.sceneGraph.edges.length,
+  exteriorPaths:exterior.body.metrics.pathCount,
   heartSteps:heart.body?.result?.experience?.steps?.length,
   heartAssets:20,
   valveInitialStep:valve.body?.result?.experience?.initialStep,

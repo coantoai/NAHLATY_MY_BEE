@@ -1,5 +1,6 @@
 .layer{position:absolute;inset:0;z-index:1}
 .layer>svg{display:block;width:100%;height:100%;overflow:visible}
+.layer[data-panning="true"]{cursor:grabbing;user-select:none}
 .layer [data-native-node-id]{cursor:pointer;transition:opacity .2s ease,stroke .2s ease}
 .layer [data-native-state="selected"]{stroke:#f5d77c;stroke-width:1.4;vector-effect:non-scaling-stroke}
 .layer [data-native-state="focused"]{stroke:#72d9ee;stroke-width:.8;vector-effect:non-scaling-stroke}
@@ -7,10 +8,25 @@
 .layer [data-node-action="pulse"],.layer [data-node-action="activate"]{animation:partPulse var(--native-motion-speed,2.6s) ease-in-out infinite}
 .layer[data-playing="false"] [data-node-action]{animation-play-state:paused}
 .scene :global(.edgeLayer){display:none}
-.scene :global(.graphNode){z-index:3;min-width:0;max-width:150px;padding:7px 9px;background:#07131be8;border-radius:10px;box-shadow:0 4px 18px #0004}
+.scene :global(.dynamicStage){transform:scale(var(--manual-zoom,1))!important}
+.scene :global(.graphNode){z-index:3;min-width:0;max-width:min(150px,22%);padding:7px 9px;background:#07131be8;border-radius:10px;box-shadow:0 4px 18px #0004}
 .scene :global(.graphNode) :global(.actorVisual){display:none}
 .scene :global(.graphNode)>small,.scene :global(.nodeKnowledgeBadge){display:none}
 .scene :global(.graphNode)>b{font-size:10px;line-height:1.35}
 @keyframes partPulse{50%{opacity:.86}}
-@media(max-width:650px){.scene :global(.graphNode){max-width:100px;padding:5px 6px}.scene :global(.graphNode)>b{font-size:8px}}
+@media(max-width:650px){.scene :global(.graphNode){max-width:min(100px,22%);padding:5px 6px}.scene :global(.graphNode)>b{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.layer [data-native-node-id]{animation:none!important;transition:none}}
+.layer [data-heart-motion="blood"]{stroke-dasharray:3 17;animation:heartBloodTravel var(--native-motion-speed,1s) linear infinite;pointer-events:none}
+.layer [data-heart-motion="fill-flow"]{animation:heartFilling var(--native-motion-speed,1s) linear infinite}
+.layer [data-heart-motion="eject-flow"]{animation:heartEjection var(--native-motion-speed,1s) linear infinite}
+.layer [data-heart-motion="av-valve"]{animation:heartAvValve var(--native-motion-speed,1s) linear infinite;transform-box:fill-box;transform-origin:50% 0}
+.layer [data-heart-motion="semilunar-valve"]{animation:heartSemilunarValve var(--native-motion-speed,1s) linear infinite;transform-box:fill-box;transform-origin:50% 100%}
+.layer [data-heart-motion="myocardium"]{animation:heartWallPulse var(--native-motion-speed,1s) linear infinite}
+.layer[data-playing="false"] [data-heart-motion]{animation-play-state:paused}
+@keyframes heartBloodTravel{from{stroke-dashoffset:20}to{stroke-dashoffset:0}}
+@keyframes heartFilling{0%,55%{opacity:1}60%,100%{opacity:0}}
+@keyframes heartEjection{0%,57%{opacity:0}62%,90%{opacity:1}96%,100%{opacity:0}}
+@keyframes heartAvValve{0%,53%{transform:scaleY(.45)}62%,100%{transform:scaleY(1)}}
+@keyframes heartSemilunarValve{0%,57%{transform:scaleY(1)}62%,90%{transform:scaleY(.35)}100%{transform:scaleY(1)}}
+@keyframes heartWallPulse{0%,55%,100%{opacity:.8}70%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.layer [data-heart-motion]{animation:none!important}.layer [data-heart-motion="blood"]{stroke-dasharray:none}}

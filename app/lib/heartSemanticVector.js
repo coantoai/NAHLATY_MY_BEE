@@ -4,8 +4,11 @@ export const HEART_REFERENCE_ASSETS=Object.freeze([
 ]);
 
 export const HEART_SCIENTIFIC_SOURCES=Object.freeze([
- {title:"NHLBI — Heart anatomy",url:"https://www.nhlbi.nih.gov/health/heart/anatomy"},
- {title:"NHLBI — Blood flow through the heart",url:"https://www.nhlbi.nih.gov/health/heart/blood-flow"}
+ {id:"nhlbi-anatomy",title:"NHLBI — Heart anatomy",url:"https://www.nhlbi.nih.gov/health/heart/anatomy"},
+ {id:"nhlbi-blood-flow",title:"NHLBI — Blood flow through the heart",url:"https://www.nhlbi.nih.gov/health/heart/blood-flow"},
+ {id:"nhlbi-heart-beats",title:"NHLBI — How the Heart Beats",url:"https://www.nhlbi.nih.gov/health/heart/heart-beats"},
+ {id:"openstax-heart-anatomy",title:"OpenStax — Heart Anatomy (publisher source)",url:"https://github.com/openstax/osbooks-anatomy-physiology/blob/5ae32b3f4bc24ed003e91dc38bf47dba80751044/modules/m46676/index.cnxml"},
+ {id:"openstax-cardiac-physiology",title:"OpenStax — Cardiac Physiology (publisher source)",url:"https://github.com/openstax/osbooks-anatomy-physiology/blob/5ae32b3f4bc24ed003e91dc38bf47dba80751044/modules/m46672/index.cnxml"}
 ]);
 
 export const HEART_REQUIRED_CONCEPT_IDS=Object.freeze([
@@ -38,13 +41,15 @@ const labels={
  "heart.aorticValve":["الصمام الأبهري","Aortic valve"],
  "heart.aorta":["الأبهر","Aorta"],
  "heart.myocardium":["عضلة القلب","Myocardium"],
- "circulation.lungs":["الرئتان","Lungs"]
+ "circulation.lungs":["الرئتان","Lungs"],
+ "circulation.body":["أنسجة الجسم","Body tissues"]
 };
 
 const chambers=new Set(["heart.rightAtrium","heart.rightVentricle","heart.leftAtrium","heart.leftVentricle"]);
 const valves=new Set(["heart.tricuspidValve","heart.pulmonaryValve","heart.mitralValve","heart.aorticValve"]);
 
 export const HEART_FLOW_PATH=Object.freeze([
+ "circulation.body",
  "heart.venaCava",
  "heart.rightAtrium",
  "heart.tricuspidValve",
@@ -57,14 +62,62 @@ export const HEART_FLOW_PATH=Object.freeze([
  "heart.mitralValve",
  "heart.leftVentricle",
  "heart.aorticValve",
- "heart.aorta"
+ "heart.aorta",
+ "circulation.body"
 ]);
+
+// These bindings describe the original educational cutaway. They must never
+// be applied to the NIAID exterior's positional vessel groups by inference.
+export const HEART_ANATOMY_BINDINGS=Object.freeze([
+ ["heart.venaCava","vena-cava"],
+ ["heart.rightAtrium","right-atrium"],
+ ["heart.tricuspidValve","tricuspid-valve"],
+ ["heart.rightVentricle","right-ventricle"],
+ ["heart.pulmonaryValve","pulmonary-valve"],
+ ["heart.pulmonaryArtery","pulmonary-artery"],
+ ["heart.pulmonaryVeins","pulmonary-veins"],
+ ["heart.leftAtrium","left-atrium"],
+ ["heart.mitralValve","mitral-valve"],
+ ["heart.leftVentricle","left-ventricle"],
+ ["heart.aorticValve","aortic-valve"],
+ ["heart.aorta","aorta"],
+ ["heart.myocardium","myocardium"]
+].map(([conceptId,elementId])=>Object.freeze({conceptId,elementId})));
+
+export const HEART_VENA_CAVA_SUBPARTS=Object.freeze([
+ {parentConceptId:"heart.venaCava",elementId:"superior-vena-cava",label:{ar:"الوريد الأجوف العلوي",en:"Superior vena cava"},knowledge:"fact"},
+ {parentConceptId:"heart.venaCava",elementId:"inferior-vena-cava",label:{ar:"الوريد الأجوف السفلي",en:"Inferior vena cava"},knowledge:"fact"}
+].map(Object.freeze));
+
+export const HEART_SCIENCE_LOCK=Object.freeze({
+ version:"heart-science-lock/v1",
+ scope:"Simplified normal postnatal human circulation; educational cutaway, not patient-specific anatomy or a clinical simulation.",
+ claims:Object.freeze([
+  {id:"four-chambers-four-valves",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-anatomy","nhlbi-blood-flow"],statement:"The heart has right and left atria, right and left ventricles, and tricuspid, pulmonary, mitral and aortic valves."},
+  {id:"normal-directed-flow",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow"],statement:"Body → venae cavae → right atrium → tricuspid valve → right ventricle → pulmonary valve → pulmonary artery → lungs → pulmonary veins → left atrium → mitral valve → left ventricle → aortic valve → aorta → body."},
+  {id:"pulmonary-oxygenation",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow"],statement:"Pulmonary arteries carry oxygen-poor blood toward the lungs; pulmonary veins return oxygen-rich blood to the left atrium."},
+  {id:"vessel-direction",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow"],statement:"Artery and vein names describe flow away from and toward the heart, not blood oxygen content."},
+  {id:"vena-cava-return",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-blood-flow"],statement:"Superior and inferior vena cava return systemic venous blood to the right atrium."},
+  {id:"ventricular-separation",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-anatomy"],statement:"The septum separates the right and left sides; no direct right-to-left chamber connection is modeled in normal postnatal circulation."},
+  {id:"left-ventricular-wall",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["openstax-heart-anatomy","nhlbi-blood-flow"],statement:"The left ventricle has a thicker muscular wall than the right ventricle and ejects through the aortic valve into the aorta."},
+  {id:"paired-ventricular-pumping",knowledge:"fact",evidenceStatus:"source-supported",sourceIds:["nhlbi-heart-beats"],statement:"The two ventricles pump in the same cardiac cycle; a sequential route highlight does not mean the chambers pump one after another."},
+  {id:"red-blue-convention",knowledge:"inference",sourceIds:[],statement:"Red denotes oxygen-rich and blue oxygen-poor blood in the diagram. Blood is red; blue is an educational color convention, not the physical color of venous blood."},
+  {id:"illustrative-geometry",knowledge:"inference",sourceIds:[],statement:"Paths, scale, cutaway arrangement and simplified vessel branches are authored educational geometry, not measured or clinically certified anatomy."},
+  {id:"illustrative-timing",knowledge:"inference",sourceIds:[],statement:"Cycle phases and flow animation are illustrative. They do not measure transit time, pressures, valve kinetics or individual physiology."},
+  {id:"fixed-stroke-volume",knowledge:"inference",sourceIds:[],statement:"A fixed 70 mL per beat is an educational assumption for the cardiac-output calculation, not an invariant human stroke volume."},
+  {id:"individual-stroke-volume",knowledge:"unknown",sourceIds:[],statement:"Individual stroke volume, ejection fraction, cardiac output, pathology, coronary flow and exercise responses are not estimated by this scene."}
+ ].map(Object.freeze)),
+ scientificSources:HEART_SCIENTIFIC_SOURCES
+});
 
 const heartConcepts=HEART_REQUIRED_CONCEPT_IDS.map(conceptId=>({
  conceptId,
  label:{ar:labels[conceptId][0],en:labels[conceptId][1]},
  kind:chambers.has(conceptId)?"chamber":valves.has(conceptId)?"valve":conceptId==="heart.myocardium"?"tissue":"vessel",
- assetRequired:true
+ assetRequired:true,
+ knowledge:"fact",
+ sourceIds:["nhlbi-anatomy"],
+ geometryKnowledge:"inference"
 }));
 
 export const HEART_SCENE_SPEC=Object.freeze({
@@ -73,7 +126,8 @@ export const HEART_SCENE_SPEC=Object.freeze({
  title:{ar:"كيف يعمل القلب؟",en:"How does the heart work?"},
  concepts:[
   ...heartConcepts,
-  {conceptId:"circulation.lungs",label:{ar:labels["circulation.lungs"][0],en:labels["circulation.lungs"][1]},kind:"externalContext",assetRequired:false}
+  {conceptId:"circulation.lungs",label:{ar:labels["circulation.lungs"][0],en:labels["circulation.lungs"][1]},kind:"externalContext",assetRequired:false,knowledge:"fact",sourceIds:["nhlbi-blood-flow"]},
+  {conceptId:"circulation.body",label:{ar:labels["circulation.body"][0],en:labels["circulation.body"][1]},kind:"externalContext",assetRequired:false,knowledge:"fact",sourceIds:["nhlbi-blood-flow"]}
  ],
  layers:[
   {id:"heart.layer.anatomy",label:{ar:"التشريح",en:"Anatomy"},defaultVisible:true},
@@ -81,31 +135,37 @@ export const HEART_SCENE_SPEC=Object.freeze({
   {id:"heart.layer.labels",label:{ar:"التسميات",en:"Labels"},defaultVisible:true}
  ],
  relations:HEART_FLOW_PATH.slice(0,-1).map((from,index)=>({
-  id:"heart.flow."+(index+1),
+  // Preserve the prior twelve intracardiac/pulmonary relation IDs.
+  id:index===0?"heart.flow.body-return":index===HEART_FLOW_PATH.length-2?"heart.flow.body-delivery":"heart.flow."+index,
   from,
   to:HEART_FLOW_PATH[index+1],
   relation:"flow",
   direction:"forward",
-  knowledge:"fact"
+  knowledge:"fact",
+  sourceIds:["nhlbi-blood-flow"],
+  oxygenation:index<HEART_FLOW_PATH.indexOf("circulation.lungs")?"deoxygenated":"oxygenated",
+  bloodColor:index<HEART_FLOW_PATH.indexOf("circulation.lungs")?"blue":"red",
+  colorKnowledge:"inference"
  })),
  parameters:[
-  {id:"heart.heartRate",label:{ar:"معدل النبض",en:"Heart rate"},unit:"bpm",min:40,max:180,step:1,default:60},
-  {id:"heart.strokeVolume",label:{ar:"حجم الضربة",en:"Stroke volume"},unit:"mL/beat",fixed:70},
-  {id:"heart.cardiacOutput",label:{ar:"النتاج القلبي",en:"Cardiac output"},unit:"L/min",formula:"heartRate*strokeVolume/1000",educationalAssumption:true}
+  {id:"heart.heartRate",label:{ar:"معدل النبض",en:"Heart rate"},unit:"bpm",min:40,max:180,step:1,default:60,knowledge:"inference",educationalAssumption:true},
+  {id:"heart.strokeVolume",label:{ar:"حجم الضربة",en:"Stroke volume"},unit:"mL/beat",fixed:70,knowledge:"inference",educationalAssumption:true},
+  {id:"heart.cardiacOutput",label:{ar:"النتاج القلبي",en:"Cardiac output"},unit:"L/min",formula:"heartRate*strokeVolume/1000",formulaKnowledge:"fact",formulaSourceIds:["openstax-cardiac-physiology"],knowledge:"inference",educationalAssumption:true}
  ],
  states:[
   {id:"heart.filling",label:{ar:"الامتلاء",en:"Filling"}},
   {id:"heart.ejection",label:{ar:"القذف",en:"Ejection"}}
  ],
  timeline:[
-  {at:0,state:"heart.filling",focus:["heart.rightAtrium","heart.leftAtrium"],action:"fill"},
-  {at:.35,state:"heart.filling",focus:["heart.rightVentricle","heart.leftVentricle"],action:"fill"},
-  {at:.62,state:"heart.ejection",focus:["heart.pulmonaryValve","heart.aorticValve"],action:"open"},
-  {at:.72,state:"heart.ejection",focus:["heart.pulmonaryArtery","heart.aorta"],action:"flow"},
-  {at:1,state:"heart.filling",focus:["heart.rightAtrium","heart.leftAtrium"],action:"reset"}
+  {at:0,state:"heart.filling",focus:["heart.rightAtrium","heart.leftAtrium"],action:"fill",knowledge:"inference"},
+  {at:.35,state:"heart.filling",focus:["heart.rightVentricle","heart.leftVentricle"],action:"fill",knowledge:"inference"},
+  {at:.62,state:"heart.ejection",focus:["heart.pulmonaryValve","heart.aorticValve"],action:"open",knowledge:"inference"},
+  {at:.72,state:"heart.ejection",focus:["heart.pulmonaryArtery","heart.aorta"],action:"flow",knowledge:"inference"},
+  {at:1,state:"heart.filling",focus:["heart.rightAtrium","heart.leftAtrium"],action:"reset",knowledge:"inference"}
  ],
  scientificSources:HEART_SCIENTIFIC_SOURCES,
  referenceAssets:HEART_REFERENCE_ASSETS,
+ scienceLock:HEART_SCIENCE_LOCK,
  sourceLicense:[]
 });
 

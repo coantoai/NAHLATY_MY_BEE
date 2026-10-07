@@ -1,0 +1,68 @@
+{
+  "assetId": "nahlati-original-heart-science-cutaway-v1",
+  "title": "Human heart — original educational cutaway",
+  "creator": "Original vector illustration authored for Nahlati My Bee",
+  "assetRole": "authored-educational-cutaway",
+  "geometryKnowledge": "inference",
+  "anatomyFactsKnowledge": "fact",
+  "clinicalReview": {
+    "status": "unknown",
+    "certified": false
+  },
+  "viewBox": "0 0 640 700",
+  "svgSha256": "3b03acc66dd172ae5ecd243413d8a7b3b6f723bf9be8b54e6d8be3e4c7fbfd67",
+  "generator": "scripts/prepare-heart-science.py",
+  "generatorSha256": "89c6fca89a91ab1e79a04258115335882abc44d60c54ae0cccccaf4a3f0476b0",
+  "referenceAssets": [
+    {
+      "path": "/heart-vector/niaid-heart.svg",
+      "role": "separate-exterior-reference",
+      "provider": "NIH/NIAID BioArt",
+      "creator": "Ryan Kissinger",
+      "credit": "Courtesy of NIAID",
+      "sourcePage": "https://bioart.niaid.nih.gov/bioart/228",
+      "originalGeometryReusedInCutaway": false,
+      "sha256": "a8d968b2239391333156180456a4b022920b0cd8971756f7d1c4d8cc132b5f1c"
+    }
+  ],
+  "scientificSources": [
+    {
+      "id": "nhlbi-anatomy",
+      "title": "NHLBI — Heart anatomy",
+      "url": "https://www.nhlbi.nih.gov/health/heart/anatomy"
+    },
+    {
+      "id": "nhlbi-blood-flow",
+      "title": "NHLBI — Blood flow through the heart",
+      "url": "https://www.nhlbi.nih.gov/health/heart/blood-flow"
+    }
+  ],
+  "disclosures": [
+    "The NIH exterior reference and this original internal cutaway are distinct assets; no positional NIH group is relabeled as an internal chamber or valve.",
+    "Native paths and gradients are authored educational geometry, not patient measurements or a clinically certified anatomical reconstruction.",
+    "Normal postnatal circulation is simplified. The heart's own coronary circulation and pathology are not modeled.",
+    "Blue is an educational convention for oxygen-poor blood; human blood is red.",
+    "Chamber scale, cut plane, vessel branches, shading, cycle phase and transit speed are illustrative inferences."
+  ],
+  "ports": {
+    "tricuspidValve": [
+      235,
+      385
+    ],
+    "pulmonaryValve": [
+      294,
+      347
+    ],
+    "mitralValve": [
+      401,
+      358
+    ],
+    "aorticValve": [
+      352,
+      342
+    ]
+  },
+  "orientation": "Patient right on viewer left; atria superior; ventricles inferior",
+  "rasterPayloads": 0,
+  "pathCount": 167
+}
