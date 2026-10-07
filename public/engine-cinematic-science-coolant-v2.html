@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NAHLATY — ZZ4 350 Coolant Science View</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b0f}
+#scene{border:0;width:100%;height:100%;display:block}
+#status{position:fixed;right:12px;top:12px;z-index:10;padding:7px 10px;border-radius:999px;background:#071018d9;border:1px solid #ffffff20;color:#d9f7ff;font:700 11px system-ui}
+</style>
+</head>
+<body>
+<iframe id="scene" src="/engine-cinematic-science-lock.html" title="ZZ4 cinematic science lock"></iframe>
+<div id="status">COOLANT · SCIENCE VIEW</div>
+<script>
+const frame=document.getElementById('scene');
+frame.addEventListener('load',()=>{
+  const d=frame.contentDocument,w=frame.contentWindow;
+  if(!d)return;
+  const style=d.createElement('style');
+  style.textContent=`
+  #coolantOverlay .jacket{fill:url(#coolantThermal);stroke:#b9edff;stroke-width:2;opacity:.58;filter:drop-shadow(0 0 8px rgba(67,188,255,.45))}
+  #coolantOverlay .jacket.hotZone{fill:url(#headThermal);opacity:.64}
+  #coolantOverlay .flowCore{fill:none;stroke:#d8f7ff;stroke-width:5;stroke-linecap:round;stroke-dasharray:2 17;opacity:.95;animation:coolantFlow 1.15s linear infinite;filter:drop-shadow(0 0 4px rgba(116,218,255,.95))}
+  #coolantOverlay .flowCore.hot{stroke:#ffd0bd;filter:drop-shadow(0 0 4px rgba(255,112,79,.95))}
+  #coolantOverlay .portCold{fill:#178fe8;stroke:#bdeaff;stroke-width:3}
+  #coolantOverlay .portHot{fill:#e84d32;stroke:#ffd0bd;stroke-width:3}
+  #coolantOverlay .stepBadge{font:800 20px system-ui,-apple-system,Segoe UI,Arial,sans-serif;fill:#fff;paint-order:stroke;stroke:#071018;stroke-width:5px}
+  #coolantOverlay .stepSub{font:700 15px system-ui,-apple-system,Segoe UI,Arial,sans-serif;fill:#d8f7ff;paint-order:stroke;stroke:#071018;stroke-width:4px}
+  #coolantOverlay .stepSub.hot{fill:#ffc1ad}
+  #coolantOverlay .depthHint{fill:none;stroke:#b9edff;stroke-width:3;stroke-dasharray:8 10;opacity:.75;marker-end:url(#coolArrow)}
+  #coolantOverlay .particle{fill:#d9f8ff;filter:drop-shadow(0 0 5px rgba(104,220,255,.95))}
+  #coolantOverlay .particle.hot{fill:#ffd2c3;filter:drop-shadow(0 0 5px rgba(255,102,72,.95))}
+  `;
+  d.head.appendChild(style);
+  const svg=d.getElementById('coolantOverlay');
+  if(svg){
+    svg.innerHTML=`
+    <defs>
+      <linearGradient id="coolantThermal" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#168fe9"/><stop offset="52%" stop-color="#35c7ff"/>
+        <stop offset="78%" stop-color="#73d8ff"/><stop offset="100%" stop-color="#ff7a4e"/>
+      </linearGradient>
+      <linearGradient id="headThermal" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0%" stop-color="#50cfff"/><stop offset="55%" stop-color="#ff985e"/><stop offset="100%" stop-color="#e84d32"/>
+      </linearGradient>
+      <marker id="coolArrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9edff"/></marker>
+      <marker id="hotArrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#ff8b69"/></marker>
+    </defs>
+
+    <path class="coolantGlow" d="M188 786 C244 786 304 774 357 748" stroke="#178fe8" stroke-width="50"/>
+    <path class="coolantTube" d="M188 786 C244 786 304 774 357 748" stroke="#208fe0" stroke-width="25"/>
+    <path class="flowCore" d="M188 786 C244 786 304 774 357 748" marker-end="url(#coolArrow)"/>
+    <circle class="portCold" cx="184" cy="786" r="15"/>
+    <text class="stepBadge" x="72" y="740">1 · COLD IN</text>
+    <text class="stepSub" x="72" y="764">radiator → water pump</text>
+
+    <path class="jacket" d="M350 752 C344 676 347 574 359 493 C368 432 383 382 409 337 C418 321 430 308 442 298 L466 322 C447 351 435 389 428 438 C414 536 414 645 421 744 C398 754 375 758 350 752 Z"/>
+    <path class="jacket" d="M674 752 C680 676 677 574 665 493 C656 432 641 382 615 337 C606 321 594 308 582 298 L558 322 C577 351 589 389 596 438 C610 536 610 645 603 744 C626 754 649 758 674 752 Z"/>
+    <path class="flowCore" d="M382 735 C376 640 380 520 399 420 C408 370 425 335 451 312" marker-end="url(#coolArrow)"/>
+    <path class="flowCore" d="M642 735 C648 640 644 520 625 420 C616 370 599 335 573 312" marker-end="url(#coolArrow)"/>
+    <text class="stepBadge" x="204" y="545">2 · BLOCK WATER JACKET</text>
+    <text class="stepSub" x="204" y="569">coolant volume around cylinder walls</text>
+    <path class="depthHint" d="M390 704 C458 680 566 680 634 704"/>
+    <text class="stepSub" x="415" y="674">3D block circulation</text>
+
+    <path class="jacket hotZone" d="M438 320 C451 282 477 254 507 239 C519 233 527 233 540 239 C569 253 593 280 606 316 L578 337 C564 312 547 297 526 286 C515 280 507 280 497 286 C476 298 459 315 447 340 Z"/>
+    <path class="flowCore" d="M451 312 C466 284 483 266 503 255" marker-end="url(#coolArrow)"/>
+    <path class="flowCore" d="M573 312 C558 284 541 266 521 255" marker-end="url(#coolArrow)"/>
+    <text class="stepBadge" x="356" y="202">3 · HEAD WATER JACKET</text>
+    <text class="stepSub" x="318" y="226">around chamber + valve-seat zones</text>
+
+    <path class="coolantGlow" d="M532 252 C572 248 612 246 648 259 C684 272 716 283 760 280" stroke="#e84d32" stroke-width="50"/>
+    <path class="coolantTube" d="M532 252 C572 248 612 246 648 259 C684 272 716 283 760 280" stroke="#f0603d" stroke-width="25"/>
+    <path class="flowCore hot" d="M532 252 C572 248 612 246 648 259 C684 272 716 283 760 280" marker-end="url(#hotArrow)"/>
+    <circle class="portHot" cx="764" cy="280" r="15"/>
+    <text class="stepBadge" x="702" y="208">4 · HOT OUT</text>
+    <text class="stepSub hot" x="702" y="232">thermostat → upper hose → radiator</text>
+
+    <circle class="particle" r="7"><animateMotion dur="2.6s" repeatCount="indefinite" path="M188 786 C244 786 304 774 357 748 C360 650 372 500 399 420 C408 370 425 335 451 312 C466 284 483 266 503 255"/></circle>
+    <circle class="particle" r="7"><animateMotion begin=".85s" dur="2.6s" repeatCount="indefinite" path="M188 786 C244 786 304 774 357 748 C360 650 372 500 399 420 C408 370 425 335 451 312 C466 284 483 266 503 255"/></circle>
+    <circle class="particle" r="7"><animateMotion begin=".35s" dur="2.6s" repeatCount="indefinite" path="M188 786 C250 790 314 774 667 748 C664 650 652 500 625 420 C616 370 599 335 573 312 C558 284 541 266 521 255"/></circle>
+    <circle class="particle hot" r="7"><animateMotion begin=".2s" dur="1.7s" repeatCount="indefinite" path="M520 255 C572 248 612 246 648 259 C684 272 716 283 760 280"/></circle>
+    `;
+  }
+  const loop=d.getElementById('coolantLoop');
+  if(loop) loop.innerHTML='<b>Coolant flow — ZZ4 / Gen-I SBC</b><div class="route"><b>1 COLD IN</b> radiator lower outlet → water pump → block.<br><b>2 BLOCK WATER JACKET</b> coolant surrounds the cylinder walls and absorbs heat.<br><b>3 HEAD WATER JACKET</b> coolant crosses deck openings and cools chamber/valve-seat zones.<br><b>4 HOT OUT</b> cylinder head → thermostat → upper hose → radiator.</div><div class="note">Normal operating-temperature view with thermostat open. The colored areas represent coolant volume, not decorative arrows. Blue→red shows heat pickup. Hidden 3D casting paths are shown only as a sectional teaching projection.</div>';
+  const panel=d.getElementById('sciencePanel');
+  if(panel) panel.innerHTML += '<br><span class="ok">COOLANT VIEW</span> follows Chevrolet cooling-cycle sequence: pump → block water jackets around cylinders → head-gasket/deck openings → cylinder-head water jackets around combustion chambers/valve seats → thermostat → radiator. The ZZ4-specific installation guide confirms long-style water pump and 180°F thermostat.';
+});
+</script>
+</body>
+</html>
