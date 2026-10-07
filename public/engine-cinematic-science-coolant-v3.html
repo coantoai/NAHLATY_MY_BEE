@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NAHLATY — ZZ4 350 Cooling System Science Lock v3</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b0f}
+#scene{border:0;width:100%;height:100%;display:block}
+#status{position:fixed;right:12px;top:12px;z-index:20;padding:7px 10px;border-radius:999px;background:#071018e8;border:1px solid #ffffff24;color:#d9f7ff;font:700 11px system-ui}
+#modebar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:20;display:flex;gap:6px;padding:6px;border-radius:14px;background:#071018e8;border:1px solid #ffffff24;backdrop-filter:blur(8px)}
+#modebar button{border:1px solid #ffffff20;background:#101923;color:#cfefff;padding:8px 11px;border-radius:9px;font:700 11px system-ui;cursor:pointer}
+#modebar button.active{background:#d8f7ff;color:#071018}
+</style>
+</head>
+<body>
+<iframe id="scene" src="/engine-cinematic-science-lock.html" title="ZZ4 cinematic science lock"></iframe>
+<div id="status">COOLING · SCIENCE LOCK v3</div>
+<div id="modebar">
+  <button id="operatingBtn" class="active">OPERATING · thermostat open</button>
+  <button id="warmupBtn">WARM-UP · thermostat closed</button>
+</div>
+<script>
+const frame=document.getElementById('scene');
+const operatingBtn=document.getElementById('operatingBtn');
+const warmupBtn=document.getElementById('warmupBtn');
+let currentMode='operating';
+
+frame.addEventListener('load',()=>{
+  const d=frame.contentDocument;
+  if(!d)return;
+
+  const style=d.createElement('style');
+  style.textContent=`
+  #coolantOverlay{overflow:visible}
+  #coolantOverlay .jacket{fill:url(#coolantThermal);stroke:#b9edff;stroke-width:2;opacity:.57;filter:drop-shadow(0 0 8px rgba(67,188,255,.45))}
+  #coolantOverlay .jacket.head{fill:url(#headThermal);opacity:.64}
+  #coolantOverlay .flow{fill:none;stroke:#d8f7ff;stroke-width:5;stroke-linecap:round;stroke-dasharray:3 16;opacity:.96;animation:coolantFlow 1.12s linear infinite;filter:drop-shadow(0 0 4px rgba(116,218,255,.9))}
+  #coolantOverlay .flow.hot{stroke:#ffd0bd;filter:drop-shadow(0 0 4px rgba(255,112,79,.95))}
+  #coolantOverlay .flow.bypass{stroke:#b7eaff;stroke-dasharray:8 11;opacity:.9}
+  #coolantOverlay .tubeCold{fill:none;stroke:#208fe0;stroke-width:25;stroke-linecap:round;opacity:.8}
+  #coolantOverlay .tubeHot{fill:none;stroke:#f0603d;stroke-width:25;stroke-linecap:round;opacity:.82}
+  #coolantOverlay .glowCold{fill:none;stroke:#178fe8;stroke-width:50;stroke-linecap:round;opacity:.2}
+  #coolantOverlay .glowHot{fill:none;stroke:#e84d32;stroke-width:50;stroke-linecap:round;opacity:.2}
+  #coolantOverlay .portCold{fill:#178fe8;stroke:#bdeaff;stroke-width:3}
+  #coolantOverlay .portHot{fill:#e84d32;stroke:#ffd0bd;stroke-width:3}
+  #coolantOverlay .label{font:800 19px system-ui,-apple-system,Segoe UI,Arial,sans-serif;fill:#fff;paint-order:stroke;stroke:#071018;stroke-width:5px}
+  #coolantOverlay .sub{font:700 14px system-ui,-apple-system,Segoe UI,Arial,sans-serif;fill:#d8f7ff;paint-order:stroke;stroke:#071018;stroke-width:4px}
+  #coolantOverlay .sub.hot{fill:#ffc1ad}
+  #coolantOverlay .sub.dim{fill:#a9b8c4}
+  #coolantOverlay .particle{fill:#d9f8ff;filter:drop-shadow(0 0 5px rgba(104,220,255,.95))}
+  #coolantOverlay .particle.hot{fill:#ffd2c3;filter:drop-shadow(0 0 5px rgba(255,102,72,.95))}
+  #coolantOverlay .operatingOnly,#coolantOverlay .warmupOnly{transition:opacity .25s ease}
+  #coolantOverlay[data-mode="operating"] .warmupOnly{opacity:.08;pointer-events:none}
+  #coolantOverlay[data-mode="warmup"] .operatingOnly{opacity:.10;pointer-events:none}
+  #coolantOverlay[data-mode="warmup"] .warmupOnly{opacity:1}
+  #coolantOverlay[data-mode="operating"] .operatingOnly{opacity:1}
+  `;
+  d.head.appendChild(style);
+
+  const svg=d.getElementById('coolantOverlay');
+  if(!svg)return;
+  svg.setAttribute('data-mode','operating');
+  svg.innerHTML=`
+  <defs>
+    <linearGradient id="coolantThermal" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#168fe9"/>
+      <stop offset="58%" stop-color="#35c7ff"/>
+      <stop offset="84%" stop-color="#73d8ff"/>
+      <stop offset="100%" stop-color="#ff8158"/>
+    </linearGradient>
+    <linearGradient id="headThermal" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4bc9ff"/>
+      <stop offset="52%" stop-color="#ff9a61"/>
+      <stop offset="100%" stop-color="#e84d32"/>
+    </linearGradient>
+    <marker id="coolArrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9edff"/></marker>
+    <marker id="hotArrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#ff8b69"/></marker>
+  </defs>
+
+  <!-- 1: radiator lower outlet feeds the crank-driven water pump -->
+  <g>
+    <path class="glowCold" d="M188 786 C245 786 304 774 357 748"/>
+    <path class="tubeCold" d="M188 786 C245 786 304 774 357 748"/>
+    <path class="flow" d="M188 786 C245 786 304 774 357 748" marker-end="url(#coolArrow)"/>
+    <circle class="portCold" cx="184" cy="786" r="15"/>
+    <text class="label" x="64" y="738">1 · RADIATOR → PUMP</text>
+    <text class="sub" x="64" y="761">cooled coolant enters water pump inlet</text>
+  </g>
+
+  <!-- 2: pump discharge is split into both cylinder-block banks -->
+  <g>
+    <path class="jacket" d="M350 752 C344 676 347 574 359 493 C368 432 383 382 409 337 C418 321 430 308 442 298 L466 322 C447 351 435 389 428 438 C414 536 414 645 421 744 C398 754 375 758 350 752 Z"/>
+    <path class="jacket" d="M674 752 C680 676 677 574 665 493 C656 432 641 382 615 337 C606 321 594 308 582 298 L558 322 C577 351 589 389 596 438 C610 536 610 645 603 744 C626 754 649 758 674 752 Z"/>
+    <path class="flow" d="M357 748 C366 720 373 675 376 620 C379 548 386 478 399 420 C408 370 425 335 451 312" marker-end="url(#coolArrow)"/>
+    <path class="flow" d="M357 748 C440 766 584 766 667 748 C658 720 651 675 648 620 C645 548 638 478 625 420 C616 370 599 335 573 312" marker-end="url(#coolArrow)"/>
+    <text class="label" x="200" y="548">2 · BLOCK WATER JACKETS</text>
+    <text class="sub" x="200" y="571">pump discharge splits to both banks and surrounds cylinder walls</text>
+  </g>
+
+  <!-- 3: coolant crosses deck/head-gasket openings into head water jackets -->
+  <g>
+    <path class="jacket head" d="M438 320 C451 282 477 254 507 239 C519 233 527 233 540 239 C569 253 593 280 606 316 L578 337 C564 312 547 297 526 286 C515 280 507 280 497 286 C476 298 459 315 447 340 Z"/>
+    <path class="flow" d="M451 312 C465 285 483 266 503 255" marker-end="url(#coolArrow)"/>
+    <path class="flow" d="M573 312 C559 285 541 266 521 255" marker-end="url(#coolArrow)"/>
+    <text class="label" x="333" y="202">3 · CYLINDER-HEAD WATER JACKETS</text>
+    <text class="sub" x="310" y="225">through deck openings; high heat rejection near chambers and exhaust-valve areas</text>
+  </g>
+
+  <!-- 4: Gen-I SBC returns forward through head/intake-manifold coolant crossover to thermostat -->
+  <g class="operatingOnly">
+    <path class="glowHot" d="M520 255 C572 248 615 246 651 259 C687 272 719 282 762 280"/>
+    <path class="tubeHot" d="M520 255 C572 248 615 246 651 259 C687 272 719 282 762 280"/>
+    <path class="flow hot" d="M520 255 C572 248 615 246 651 259 C687 272 719 282 762 280" marker-end="url(#hotArrow)"/>
+    <circle class="portHot" cx="764" cy="280" r="15"/>
+    <text class="label" x="684" y="188">4 · CROSSOVER → THERMOSTAT</text>
+    <text class="sub hot" x="684" y="211">thermostat open: upper hose returns hot coolant to radiator</text>
+  </g>
+
+  <!-- warm-up concept: internal bypass recirculates with radiator isolated; exact hidden casting route intentionally not fabricated -->
+  <g class="warmupOnly">
+    <path class="flow bypass" d="M548 268 C622 320 650 410 628 501 C606 590 530 655 424 684 C384 695 353 714 345 748" marker-end="url(#coolArrow)"/>
+    <text class="label" x="590" y="390">WARM-UP BYPASS</text>
+    <text class="sub" x="590" y="414">thermostat closed: internal recirculation continues</text>
+    <text class="sub dim" x="590" y="437">hidden casting path shown schematically, not as literal geometry</text>
+  </g>
+
+  <g class="operatingOnly">
+    <circle class="particle" r="7"><animateMotion dur="2.7s" repeatCount="indefinite" path="M188 786 C245 786 304 774 357 748 C366 720 373 675 376 620 C379 548 386 478 399 420 C408 370 425 335 451 312 C465 285 483 266 503 255"/></circle>
+    <circle class="particle" r="7"><animateMotion begin=".85s" dur="2.7s" repeatCount="indefinite" path="M188 786 C245 786 304 774 357 748 C440 766 584 766 667 748 C658 720 651 675 648 620 C645 548 638 478 625 420 C616 370 599 335 573 312 C559 285 541 266 521 255"/></circle>
+    <circle class="particle hot" r="7"><animateMotion begin=".25s" dur="1.8s" repeatCount="indefinite" path="M520 255 C572 248 615 246 651 259 C687 272 719 282 762 280"/></circle>
+  </g>
+  `;
+
+  const loop=d.getElementById('coolantLoop');
+  if(loop) loop.innerHTML=
+    '<b>Cooling system — Chevrolet ZZ4 / Gen-I Small-Block</b>'+
+    '<div class="route"><b>OPERATING TEMPERATURE:</b> radiator lower outlet → water pump → both block water jackets → deck/head-gasket coolant openings → cylinder-head water jackets → front coolant crossover/intake-manifold thermostat housing → upper hose → radiator.</div>'+
+    '<div class="note">The 180°F thermostat regulates radiator flow; it is not a pump. During warm-up, with the thermostat closed, coolant still recirculates through an internal bypass. Hidden internal casting passages are represented schematically and are not claimed as literal 3D geometry.</div>';
+
+  const panel=d.getElementById('sciencePanel');
+  if(panel) panel.innerHTML +=
+    '<br><span class="ok">COOLING SCIENCE LOCK v3</span> ZZ4-specific: long-style cast-iron water pump and 180°F thermostat. Gen-I SBC architecture: pump distributes coolant to both block banks, coolant rises through deck passages into the heads, then returns forward through the coolant crossover/thermostat outlet to the radiator when the thermostat is open. Warm-up bypass is identified separately so the animation does not falsely imply zero circulation with a closed thermostat.';
+
+  function setMode(mode){
+    currentMode=mode;
+    svg.setAttribute('data-mode',mode);
+    operatingBtn.classList.toggle('active',mode==='operating');
+    warmupBtn.classList.toggle('active',mode==='warmup');
+    const status=document.getElementById('status');
+    status.textContent=mode==='operating'?'COOLING · OPERATING / THERMOSTAT OPEN':'COOLING · WARM-UP / THERMOSTAT CLOSED';
+  }
+  operatingBtn.onclick=()=>setMode('operating');
+  warmupBtn.onclick=()=>setMode('warmup');
+});
+</script>
+</body>
+</html>
