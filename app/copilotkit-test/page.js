@@ -4,7 +4,7 @@ import { CopilotKitProvider, CopilotSidebar } from "@copilotkit/react-core/v2";
 
 export default function CopilotKitTestPage() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit">
+    <CopilotKitProvider runtimeUrl="/api/copilotkit" agentId="default">
       <main style={{minHeight:"100vh",background:"#080b12",color:"#f7f8fb",padding:"48px 24px",fontFamily:"system-ui"}}>
         <div style={{maxWidth:900,margin:"0 auto"}}>
           <div style={{fontSize:13,opacity:.65,letterSpacing:1}}>NAHLATY · COPILOTKIT TEST</div>
@@ -23,6 +23,7 @@ export default function CopilotKitTestPage() {
         </div>
       </main>
       <CopilotSidebar
+        agentId="default"
         defaultOpen={true}
         labels={{
           title: "NAHLATY Agent Test",
