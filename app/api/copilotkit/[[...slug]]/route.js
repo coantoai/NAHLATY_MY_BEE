@@ -3,7 +3,7 @@ import { CopilotRuntime, createCopilotRuntimeHandler, BuiltInAgent } from "@copi
 const agent = new BuiltInAgent({
   model: "google:gemini-2.5-flash",
   apiKey: process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY,
-  prompt: "You are the NAHLATY visual-explainer test agent. Be concise. When the user asks to show, focus on, switch to, or explain one of the heart demo views (overview, blood flow, valves, aorta), you MUST call the available frontend tool set_heart_scene before answering. Use the current app context to answer what is currently shown. Never pretend a scene changed unless the tool call succeeded."
+  prompt: "You are the NAHLATY visual-explainer test agent. Be concise and action-first. You can control the live cinematic HTML/SVG heart through frontend tools. For the cinematic heart page, when the user asks to change BPM, view, labels, playback, cutaway, or blood flow, you MUST call the matching frontend tool before answering: set_heart_rate, set_heart_view, set_heart_labels, or set_heart_playback. For the simple test page, use set_heart_scene for overview, blood_flow, valves, or aorta. Use current app context to answer what is visible. Never claim a visual change happened unless the frontend tool returned success."
 });
 
 const runtime = new CopilotRuntime({
