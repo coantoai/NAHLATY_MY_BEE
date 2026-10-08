@@ -1,6 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  CopilotKitProvider,
+  CopilotChat,
+  useAgentContext,
+  useFrontendTool
+} from "@copilotkit/react-core/v2";
+import { z } from "zod";
 
 const FLOW = {
   venous: "M150 86 C190 112 217 150 238 206 C252 244 266 284 310 318 C344 345 378 352 414 336",
@@ -31,12 +38,90 @@ function FlowDots({ pathId, color, count = 7, duration = 4.2, reverse = false, r
   );
 }
 
-export default function CinematicHeartHTML() {
+function CinematicHeartExperience() {
   const [running, setRunning] = useState(true);
   const [bpm, setBpm] = useState(72);
   const [labels, setLabels] = useState(true);
   const [cutaway, setCutaway] = useState(false);
+  const [lastAIAction, setLastAIAction] = useState("none");
   const beatSeconds = useMemo(() => Math.max(0.45, 60 / bpm), [bpm]);
+
+  useAgentContext({
+    description: "Live state of the cinematic NAHLATY HTML/SVG heart scene. Use this context before answering what is visible or running.",
+    value: {
+      running,
+      bpm,
+      labels,
+      cutaway,
+      mode: cutaway ? "cutaway" : "anatomy",
+      bloodFlowAnimated: running,
+      lastAIAction
+    }
+  });
+
+  useFrontendTool({
+    name: "set_heart_rate",
+    description: "Set the live heart rate for the HTML/SVG heart. Use when the user asks for a BPM or faster/slower heartbeat.",
+    parameters: z.object({
+      bpm: z.number().min(45).max(140).describe("Heart rate in beats per minute, between 45 and 140.")
+    }),
+    handler: async ({ bpm: nextBpm }) => {
+      const safeBpm = Math.max(45, Math.min(140, Math.round(nextBpm)));
+      setBpm(safeBpm);
+      setRunning(true);
+      setLastAIAction(`set_heart_rate(${safeBpm})`);
+      return { status: "success", bpm: safeBpm, running: true };
+    }
+  }, []);
+
+  useFrontendTool({
+    name: "set_heart_view",
+    description: "Change the live HTML/SVG heart view. anatomy shows the normal heart; cutaway reveals internal chambers; blood_flow emphasizes the moving circulation.",
+    parameters: z.object({
+      view: z.enum(["anatomy", "cutaway", "blood_flow"]).describe("The heart view to show.")
+    }),
+    handler: async ({ view }) => {
+      if (view === "anatomy") {
+        setCutaway(false);
+        setLabels(true);
+      } else if (view === "cutaway") {
+        setCutaway(true);
+        setLabels(true);
+      } else {
+        setCutaway(true);
+        setLabels(false);
+        setRunning(true);
+      }
+      setLastAIAction(`set_heart_view(${view})`);
+      return { status: "success", view };
+    }
+  }, []);
+
+  useFrontendTool({
+    name: "set_heart_labels",
+    description: "Show or hide anatomical labels on the live HTML/SVG heart.",
+    parameters: z.object({
+      visible: z.boolean().describe("Whether labels should be visible.")
+    }),
+    handler: async ({ visible }) => {
+      setLabels(visible);
+      setLastAIAction(`set_heart_labels(${visible})`);
+      return { status: "success", labels: visible };
+    }
+  }, []);
+
+  useFrontendTool({
+    name: "set_heart_playback",
+    description: "Start or pause the heartbeat and blood-flow animation in the live HTML/SVG heart.",
+    parameters: z.object({
+      running: z.boolean().describe("True to animate, false to pause.")
+    }),
+    handler: async ({ running: shouldRun }) => {
+      setRunning(shouldRun);
+      setLastAIAction(`set_heart_playback(${shouldRun})`);
+      return { status: "success", running: shouldRun };
+    }
+  }, []);
 
   return (
     <main
@@ -50,9 +135,9 @@ export default function CinematicHeartHTML() {
 
         <header className="topbar">
           <div>
-            <span className="eyebrow">NAHLATY · LIVE HTML HEART</span>
+            <span className="eyebrow">NAHLATY · COPILOTKIT × LIVE HTML HEART</span>
             <h1>قلب حيّ — HTML / SVG</h1>
-            <p>نبض حقيقي بصريًا + مسارات دم متحركة + Cutaway + تحكم بالسرعة.</p>
+            <p>CopilotKit يتحكم فعليًا بقلب HTML/SVG: النبض، BPM، تدفق الدم، Cutaway والـLabels.</p>
           </div>
           <div className="statusPill">
             <span className="liveDot" />
@@ -264,8 +349,25 @@ export default function CinematicHeartHTML() {
         <div className="legend">
           <div><i className="blue" />دم غير مؤكسج</div>
           <div><i className="red" />دم مؤكسج</div>
-          <div className="note">كل الحركة SVG/HTML مباشرة — لا فيديو ولا صورة ثابتة.</div>
+          <div className="note">المشهد HTML/SVG مباشر، وCopilotKit ينفّذ تغييرات حقيقية على الحالة.</div>
         </div>
+
+        <section className="copilotPanel">
+          <div className="copilotSummary">
+            <span className="eyebrow">COPILOTKIT E2E TEST</span>
+            <h2>اطلب من الوكيل تغيير القلب</h2>
+            <p>جرّب: “Show blood flow, set the heart to 96 BPM, turn labels on, then pause it.”</p>
+            <div className="aiAction">Last AI action: <b>{lastAIAction}</b></div>
+          </div>
+          <div className="copilotChatBox">
+            <CopilotChat
+              agentId="default"
+              labels={{
+                chatInputPlaceholder: "مثال: Show blood flow at 96 BPM"
+              }}
+            />
+          </div>
+        </section>
       </section>
 
       <style jsx global>{`
@@ -321,6 +423,13 @@ export default function CinematicHeartHTML() {
         .legend .blue{background:#68b7ff;box-shadow:0 0 12px rgba(104,183,255,.65)}
         .legend .red{background:#ff6678;box-shadow:0 0 12px rgba(255,102,120,.65)}
         .legend .note{margin-right:auto;color:#6f7987}
+        .copilotPanel{position:relative;z-index:4;display:grid;grid-template-columns:minmax(260px,.7fr) minmax(360px,1.3fr);gap:14px;margin-top:18px}
+        .copilotSummary,.copilotChatBox{border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(8,12,18,.82);backdrop-filter:blur(14px)}
+        .copilotSummary{padding:18px}
+        .copilotSummary h2{margin:8px 0 10px;font-size:24px}
+        .copilotSummary p{margin:0;color:#aab2be;line-height:1.7}
+        .aiAction{margin-top:16px;padding:12px;border-radius:12px;background:#0c121b;color:#9aa4b3;font-size:13px;overflow-wrap:anywhere}
+        .copilotChatBox{height:390px;overflow:hidden}
         @keyframes beat{
           0%,100%{transform:scale(1)}
           10%{transform:scale(1.025)}
@@ -344,6 +453,8 @@ export default function CinematicHeartHTML() {
           .controls input[type=range]{flex:1;min-width:0}
           .legend{gap:12px}
           .legend .note{width:100%;margin:0}
+          .copilotPanel{grid-template-columns:1fr}
+          .copilotChatBox{height:420px}
         }
         @media(prefers-reduced-motion:reduce){
           .heartBody,.heartbeatRing circle,.liveDot{animation:none!important}
@@ -351,5 +462,14 @@ export default function CinematicHeartHTML() {
         }
       `}</style>
     </main>
+  );
+}
+
+
+export default function CopilotKitCinematicHeartPage() {
+  return (
+    <CopilotKitProvider runtimeUrl="/api/copilotkit" agentId="default">
+      <CinematicHeartExperience />
+    </CopilotKitProvider>
   );
 }
