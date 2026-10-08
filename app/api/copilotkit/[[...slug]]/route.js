@@ -162,8 +162,9 @@ WORKFLOW — MANDATORY:
 1) Design one constrained HeartSceneSpec matching the frontend schema.
 2) Call scientific_validate_heart_scene.
 3) If it returns FAIL, repair every issue and validate again.
-4) Only after PASS, call the frontend tool apply_validated_heart_scene with the exact validated spec and validationToken NAHLATY_HEART_SCIENCE_PASS_V1.
-5) If a frontend tool named submit_generated_heart_html is available, you MUST generate a complete self-contained browser-ready HTML/SVG/CSS/JS heart artifact and call submit_generated_heart_html after apply_validated_heart_scene. Do not merely return a SceneSpec.\n6) Then give one short completion message. Never claim success if required frontend tool calls do not return success.
+4) Only after PASS, if a frontend tool named submit_generated_heart_html is available, FIRST generate a complete self-contained browser-ready HTML/SVG/CSS/JS heart artifact and call submit_generated_heart_html. Do not merely return a SceneSpec. This must happen before any other frontend tool because client-side tool execution may pause the run.
+5) If submit_generated_heart_html is not available, call apply_validated_heart_scene with the exact validated spec and validationToken NAHLATY_HEART_SCIENCE_PASS_V1.
+6) Then give one short completion message. Never claim success if a required tool call was not emitted.
 
 QUALITY TARGET:
 - premium scientific cinematic
