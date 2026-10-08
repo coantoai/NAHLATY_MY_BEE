@@ -9,6 +9,30 @@ import {
 } from "@copilotkit/react-core/v2";
 import { z } from "zod";
 
+const VALIDATION_TOKEN = "NAHLATY_HEART_SCIENCE_PASS_V1";
+
+const HeartSceneSpecSchema = z.object({
+  conceptId: z.literal("human-heart-circulation"),
+  visualStyle: z.literal("premium_scientific_cinematic"),
+  view: z.enum(["anterior_cutaway", "blood_flow_focus"]),
+  bpm: z.number().int().min(45).max(140),
+  labels: z.boolean(),
+  chambers: z.array(z.enum(["right_atrium", "right_ventricle", "left_atrium", "left_ventricle"])).length(4),
+  valves: z.array(z.enum(["tricuspid", "pulmonary", "mitral", "aortic"])).length(4),
+  vessels: z.array(z.enum(["superior_vena_cava", "inferior_vena_cava", "pulmonary_arteries", "pulmonary_veins", "aorta"])).min(5),
+  flowSequence: z.array(z.string()).length(14),
+  deoxygenatedColor: z.literal("blue"),
+  oxygenatedColor: z.literal("red"),
+  pulmonaryArteriesCarry: z.literal("deoxygenated"),
+  pulmonaryVeinsCarry: z.literal("oxygenated"),
+  septumVisible: z.literal(true),
+  coronarySurfaceDetail: z.boolean(),
+  showValveMotion: z.literal(true),
+  showBloodParticles: z.literal(true),
+  showDepthLighting: z.literal(true),
+  scientificClaims: z.array(z.string()).max(8)
+});
+
 const FLOW = {
   venous: "M150 86 C190 112 217 150 238 206 C252 244 266 284 310 318 C344 345 378 352 414 336",
   pulmOut: "M352 178 C392 148 432 132 474 132 C516 132 551 150 578 180",
@@ -44,6 +68,8 @@ function CinematicHeartExperience() {
   const [labels, setLabels] = useState(true);
   const [cutaway, setCutaway] = useState(false);
   const [lastAIAction, setLastAIAction] = useState("none");
+  const [scienceStatus, setScienceStatus] = useState("NOT VALIDATED");
+  const [generatedSpec, setGeneratedSpec] = useState(null);
   const beatSeconds = useMemo(() => Math.max(0.45, 60 / bpm), [bpm]);
 
   useAgentContext({
@@ -123,10 +149,40 @@ function CinematicHeartExperience() {
     }
   }, []);
 
+  useFrontendTool({
+    name: "apply_validated_heart_scene",
+    description: "Apply a NAHLATY premium scientific heart scene only after the server-side scientific validator returns PASS.",
+    parameters: z.object({
+      validationToken: z.literal(VALIDATION_TOKEN),
+      spec: HeartSceneSpecSchema
+    }),
+    handler: async ({ validationToken, spec }) => {
+      if (validationToken !== VALIDATION_TOKEN) {
+        setScienceStatus("REJECTED");
+        return { status: "rejected", reason: "Missing scientific validation PASS token." };
+      }
+
+      setGeneratedSpec(spec);
+      setScienceStatus("SCIENCE PASS");
+      setBpm(spec.bpm);
+      setLabels(spec.labels);
+      setCutaway(true);
+      setRunning(true);
+      setLastAIAction("apply_validated_heart_scene(SCIENCE_PASS)");
+      return {
+        status: "success",
+        scienceStatus: "PASS",
+        bpm: spec.bpm,
+        view: spec.view,
+        conceptId: spec.conceptId
+      };
+    }
+  }, []);
+
   return (
     <main
       dir="rtl"
-      className={`cinematicHeart ${running ? "isRunning" : "isPaused"} ${cutaway ? "isCutaway" : ""}`}
+      className={`cinematicHeart ${running ? "isRunning" : "isPaused"} ${cutaway ? "isCutaway" : ""} ${generatedSpec?.coronarySurfaceDetail ? "hasCoronaryDetail" : ""}`}
       style={{ "--beat": `${beatSeconds}s` }}
     >
       <section className="stage">
@@ -135,9 +191,9 @@ function CinematicHeartExperience() {
 
         <header className="topbar">
           <div>
-            <span className="eyebrow">NAHLATY · COPILOTKIT × LIVE HTML HEART</span>
+            <span className="eyebrow">NAHLATY · COPILOTKIT × QWEN · SCIENCE-GATED HEART</span>
             <h1>قلب حيّ — HTML / SVG</h1>
-            <p>CopilotKit يتحكم فعليًا بقلب HTML/SVG: النبض، BPM، تدفق الدم، Cutaway والـLabels.</p>
+            <p>المشهد لا يُطبّق من الوكيل إلا بعد PASS من بوابة الفحص العلمي. Qwen يصنع SceneSpec، وCopilotKit ينسّق التحقق والتطبيق.</p>
           </div>
           <div className="statusPill">
             <span className="liveDot" />
@@ -277,6 +333,14 @@ function CinematicHeartExperience() {
               <path d="M403 159 C419 134 443 116 470 108" fill="none" stroke="#b71931" strokeWidth="14" strokeLinecap="round" opacity=".92" />
             </g>
 
+            {generatedSpec?.coronarySurfaceDetail && (
+              <g className="coronaryOverlay" aria-label="coronary surface detail">
+                <path d="M388 191 C418 210 438 244 430 283 C421 327 405 364 414 405" fill="none" stroke="#ff8996" strokeWidth="5" strokeLinecap="round" opacity=".82" />
+                <path d="M430 260 C462 268 486 290 500 321" fill="none" stroke="#ff7b8a" strokeWidth="3.5" strokeLinecap="round" opacity=".68" />
+                <path d="M365 214 C338 236 319 268 316 304 C312 342 329 378 345 401" fill="none" stroke="#b62b43" strokeWidth="4" strokeLinecap="round" opacity=".72" />
+              </g>
+            )}
+
             <g className={labels ? "labels visible" : "labels"}>
               <line x1="276" y1="223" x2="152" y2="194" stroke="#8ebcf2" strokeOpacity=".7" />
               <text x="144" y="190" textAnchor="end">الأذين الأيمن</text>
@@ -349,14 +413,14 @@ function CinematicHeartExperience() {
         <div className="legend">
           <div><i className="blue" />دم غير مؤكسج</div>
           <div><i className="red" />دم مؤكسج</div>
-          <div className="note">المشهد HTML/SVG مباشر، وCopilotKit ينفّذ تغييرات حقيقية على الحالة.</div>
+          <div className="note">المشهد HTML/SVG مباشر · Science Gate: <b>{scienceStatus}</b> · CopilotKit/Qwen يطبّقان فقط SceneSpec مُجاز علميًا.</div>
         </div>
 
         <section className="copilotPanel">
           <div className="copilotSummary">
             <span className="eyebrow">COPILOTKIT E2E TEST</span>
-            <h2>اطلب من الوكيل تغيير القلب</h2>
-            <p>جرّب: “Show blood flow, set the heart to 96 BPM, turn labels on, then pause it.”</p>
+            <h2>مهمة الجودة العلمية — CopilotKit + Qwen</h2>
+            <p>الوكيل مُلزم بتصميم SceneSpec، تمريره على Scientific Gate، إصلاح أي FAIL، ثم تطبيقه فقط بعد PASS.</p>
             <div className="aiAction">Last AI action: <b>{lastAIAction}</b></div>
           </div>
           <div className="copilotChatBox">
@@ -398,6 +462,8 @@ function CinematicHeartExperience() {
         .internal{transition:opacity .25s ease}
         .isCutaway .internal{opacity:1}
         .vascularBack{filter:drop-shadow(0 12px 18px rgba(0,0,0,.28))}
+        .coronaryOverlay{filter:drop-shadow(0 0 8px rgba(255,70,92,.24))}
+        .coronaryOverlay path{animation:coronaryPulse var(--beat) infinite ease-in-out}
         .labels{opacity:0;transition:opacity .24s ease;pointer-events:none}
         .labels.visible{opacity:1}
         .labels text{fill:#e9edf4;font-size:15px;font-weight:650;paint-order:stroke;stroke:#03060b;stroke-width:4px;stroke-linejoin:round}
@@ -443,6 +509,7 @@ function CinematicHeartExperience() {
           100%{transform:scale(1.08);opacity:0}
         }
         @keyframes liveDot{50%{opacity:.35;transform:scale(.75)}}
+        @keyframes coronaryPulse{50%{opacity:.48}}
         @media(max-width:800px){
           .cinematicHeart{padding:10px}
           .stage{padding:14px;border-radius:20px}
