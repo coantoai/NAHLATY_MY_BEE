@@ -8,6 +8,7 @@ import {
   useFrontendTool
 } from "@copilotkit/react-core/v2";
 import { z } from "zod";
+import { CANONICAL_CIRCULATION, validateHeartSceneSpec } from "../../lib/heart-science";
 
 const FLOW = {
   venous: "M150 86 C190 112 217 150 238 206 C252 244 266 284 310 318 C344 345 378 352 414 336",
@@ -44,6 +45,7 @@ function CinematicHeartExperience() {
   const [labels, setLabels] = useState(true);
   const [cutaway, setCutaway] = useState(false);
   const [lastAIAction, setLastAIAction] = useState("none");
+  const [scienceStatus, setScienceStatus] = useState({ status: "not-run", errors: [], warnings: [] });
   const beatSeconds = useMemo(() => Math.max(0.45, 60 / bpm), [bpm]);
 
   useAgentContext({
@@ -55,9 +57,60 @@ function CinematicHeartExperience() {
       cutaway,
       mode: cutaway ? "cutaway" : "anatomy",
       bloodFlowAnimated: running,
-      lastAIAction
+      lastAIAction,
+      scientificValidation: scienceStatus,
+      canonicalCirculation: CANONICAL_CIRCULATION,
+      pulmonaryArteryConvention: "blue/deoxygenated",
+      pulmonaryVeinConvention: "red/oxygenated"
     }
   });
+
+  useFrontendTool({
+    name: "apply_scientific_heart_scene",
+    description: "PRIMARY heart scene tool. Validate a requested educational human-heart scene against canonical anatomy/circulation rules, then apply it only if it passes. Use this before claiming any heart visual change is scientifically valid.",
+    parameters: z.object({
+      view: z.enum(["anatomy", "cutaway", "blood_flow"]),
+      bpm: z.number().min(45).max(140),
+      labels: z.boolean(),
+      running: z.boolean(),
+      circulationPath: z.array(z.string()),
+      pulmonaryArteryColor: z.enum(["blue"]),
+      pulmonaryVeinColor: z.enum(["red"])
+    }),
+    handler: async (sceneSpec) => {
+      const result = validateHeartSceneSpec(sceneSpec);
+      setScienceStatus({
+        status: result.ok ? "passed" : "rejected",
+        errors: result.errors,
+        warnings: result.warnings,
+        version: result.version
+      });
+
+      if (!result.ok) {
+        setLastAIAction("SCIENTIFIC_REJECT");
+        return {
+          status: "rejected",
+          validator: result.version,
+          errors: result.errors,
+          warnings: result.warnings
+        };
+      }
+
+      setBpm(result.normalized.bpm);
+      setLabels(result.normalized.labels);
+      setRunning(result.normalized.running);
+      setCutaway(result.normalized.view !== "anatomy");
+      setLastAIAction(`apply_scientific_heart_scene(${result.normalized.view}, ${result.normalized.bpm} BPM)`);
+
+      return {
+        status: "success",
+        validator: result.version,
+        scientificPass: true,
+        applied: result.normalized,
+        warnings: result.warnings
+      };
+    }
+  }, []);
 
   useFrontendTool({
     name: "set_heart_rate",
@@ -358,6 +411,7 @@ function CinematicHeartExperience() {
             <h2>اطلب من الوكيل تغيير القلب</h2>
             <p>جرّب: “Show blood flow, set the heart to 96 BPM, turn labels on, then pause it.”</p>
             <div className="aiAction">Last AI action: <b>{lastAIAction}</b></div>
+            <div className={`scienceGate ${scienceStatus.status}`}>Scientific gate: <b>{scienceStatus.status.toUpperCase()}</b>{scienceStatus.errors?.length ? ` · ${scienceStatus.errors.join(" | ")}` : ""}</div>
           </div>
           <div className="copilotChatBox">
             <CopilotChat
@@ -428,7 +482,7 @@ function CinematicHeartExperience() {
         .copilotSummary{padding:18px}
         .copilotSummary h2{margin:8px 0 10px;font-size:24px}
         .copilotSummary p{margin:0;color:#aab2be;line-height:1.7}
-        .aiAction{margin-top:16px;padding:12px;border-radius:12px;background:#0c121b;color:#9aa4b3;font-size:13px;overflow-wrap:anywhere}
+        .aiAction{margin-top:16px;padding:12px;border-radius:12px;background:#0c121b;color:#9aa4b3;font-size:13px;overflow-wrap:anywhere}\n        .scienceGate{margin-top:10px;padding:12px;border-radius:12px;background:#0c121b;color:#8f9aaa;font-size:12px;overflow-wrap:anywhere}\n        .scienceGate.passed{color:#b8f7d1;border:1px solid rgba(100,220,150,.25)}\n        .scienceGate.rejected{color:#ffb6c0;border:1px solid rgba(255,90,110,.28)}
         .copilotChatBox{height:390px;overflow:hidden}
         @keyframes beat{
           0%,100%{transform:scale(1)}
