@@ -6,6 +6,7 @@ on:
 
 jobs:
   generate-first-video:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Generate first video on Lium B200

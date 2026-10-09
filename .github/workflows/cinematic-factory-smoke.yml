@@ -1,0 +1,76 @@
+name: NAHLATY 3D Factory — isolated OSS smoke
+
+on:
+  push:
+    branches:
+      - research/cinematic-factory-test
+    paths:
+      - 'research/factory-tests/**'
+      - '.github/workflows/cinematic-factory-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: github.ref == 'refs/heads/research/cinematic-factory-test'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout isolated research code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Clone ORIGINAL OSS samples (no modifications or secrets)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p research/factory-tests/out upstream
+          git clone --depth 1 https://github.com/heliosv24/v8-engine.git upstream/v8-engine
+          git clone --depth 1 https://github.com/SpatiaOS/Procedura.git upstream/procedura
+          git clone --depth 1 https://github.com/Pan-Chera/Multi-Agent-CAD.git upstream/mac
+          git clone --depth 1 https://github.com/wangpuyi/SceneCode.git upstream/scenecode
+          for p in upstream/*; do
+            printf '%s %s\n' "$p" "$(git -C "$p" rev-parse HEAD)"
+          done > research/factory-tests/out/source-revisions.txt
+      - name: Real V8 upstream kinematics test
+        shell: bash
+        run: |
+          set +e
+          (cd upstream/v8-engine && npm test) > research/factory-tests/out/v8-kinematics-test.log 2>&1
+          status=$?
+          printf 'v8 npm test exit=%s\n' "$status" | tee research/factory-tests/out/v8-kinematics-status.txt
+          exit 0
+      - name: Check Procedura prerequisites without install or API costs
+        shell: bash
+        run: |
+          set +e
+          (cd upstream/procedura && bash scripts/install-deps.sh --check) > research/factory-tests/out/procedura-preflight.log 2>&1
+          status=$?
+          printf 'Procedura check exit=%s\n' "$status" >> research/factory-tests/out/procedura-preflight.log
+          test -f upstream/procedura/LICENSE && echo 'LICENSE present' >> research/factory-tests/out/procedura-preflight.log
+          test -f upstream/mac/LICENSE && echo 'MAC LICENSE present' >> research/factory-tests/out/procedura-preflight.log
+          exit 0
+      - name: Install headless browser for actual controls test
+        shell: bash
+        run: |
+          npm install --no-audit --no-fund --prefix research/factory-tests playwright@1.56.1
+          npx --prefix research/factory-tests playwright install --with-deps chromium
+          python3 -m http.server 8765 --directory upstream/v8-engine > research/factory-tests/out/local-http.log 2>&1 &
+          sleep 3
+      - name: Test existing interactive V8 & SceneCode demos
+        shell: bash
+        run: node research/factory-tests/smoke.mjs
+      - name: Upload real evidence, pass or fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: NAHLATY-3D-factory-reuse-evidence
+          path: research/factory-tests/out/
+          if-no-files-found: warn
+          retention-days: 30
