@@ -1,0 +1,24 @@
+{
+  "id": "ijiri-heart-v4",
+  "purpose": "interaction/navigation pilot only; not final anatomical master asset",
+  "source": "Takashi Ijiri Full Heart Model v4",
+  "sourceProject": "https://takashiijiri.com/projects/ProjHeartSim/index.html",
+  "sourceRepository": "TakashiIjiri/TakashiIjiri.github.io",
+  "sourceArchiveGitBlobSha": "21471b533398d1804dc7c58d46537de986773149",
+  "sourceFile": "version4Mesh.obj",
+  "license": "Public Domain for heart models per source project page",
+  "attributionRequired": false,
+  "simulatorIncluded": false,
+  "geometry": {
+    "vertices": 7498,
+    "faces": 15016,
+    "connectedComponents": 1,
+    "watertight": true
+  },
+  "limitations": [
+    "single undivided surface mesh",
+    "no semantic chamber/valve parts",
+    "no UV texture coordinates in source OBJ",
+    "pilot validates interaction grammar, camera depth, clipping and mobile UX"
+  ]
+}
