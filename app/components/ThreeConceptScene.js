@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 function geometryFor(visual){
- if(visual==="heart") return new THREE.SphereGeometry(5,32,24);
+ if(visual==="heart") return new THREE.SphereGeometry(5,48,36);
  if(visual==="brain") return new THREE.IcosahedronGeometry(5,2);
  if(["cell","planet","blood"].includes(visual)) return new THREE.SphereGeometry(5,28,20);
  if(visual==="lung") return new THREE.SphereGeometry(4.7,24,18);
@@ -70,16 +70,23 @@ function isCausalEdge3D(edge){
 
 function decorateSemanticMesh(mesh,visual,color){
  const v=String(visual||"").toLowerCase();
- const soft=(opacity=.72,emissive=.16)=>new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.08,emissive:color,emissiveIntensity:emissive,transparent:true,opacity});
+ const soft=(opacity=.72,emissive=.16)=>new THREE.MeshPhysicalMaterial({color,roughness:.46,metalness:.02,emissive:color,emissiveIntensity:emissive,transparent:true,opacity,clearcoat:.32,clearcoatRoughness:.48,sheen:.34,sheenColor:new THREE.Color(color)});
  const glow=(opacity=.34)=>new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false});
  if(v==="heart"){
-  mesh.material.opacity=.24;
-  const lobeGeometry=new THREE.SphereGeometry(2.75,22,16);
+  mesh.material.opacity=.16;
+  mesh.material.roughness=.5;
+  mesh.material.metalness=.01;
+  const lobeGeometry=new THREE.SphereGeometry(2.75,36,26);
   const left=new THREE.Mesh(lobeGeometry,soft(.84,.22)); left.position.set(-1.65,1.15,.2); left.scale.set(1,.9,.85);
   const right=new THREE.Mesh(lobeGeometry.clone(),soft(.84,.22)); right.position.set(1.65,1.15,.2); right.scale.set(1,.9,.85);
   const lower=new THREE.Mesh(new THREE.ConeGeometry(3.5,6.2,28),soft(.8,.18)); lower.position.set(0,-2.25,.15); lower.rotation.z=Math.PI;
-  const aura=new THREE.Mesh(new THREE.TorusGeometry(6.6,.13,8,52),glow(.2)); aura.rotation.x=Math.PI/2; aura.userData.semanticAura=true;
-  mesh.add(left,right,lower,aura);
+  const aura=new THREE.Mesh(new THREE.TorusGeometry(6.6,.1,10,72),glow(.12)); aura.rotation.x=Math.PI/2; aura.userData.semanticAura=true;
+  const apexGlow=new THREE.PointLight(0xff8b72,5.5,28,2); apexGlow.position.set(0,-2.8,4.2);
+  const coronaryMat=new THREE.MeshPhysicalMaterial({color:0xd95449,roughness:.32,clearcoat:.55,emissive:0x5b0907,emissiveIntensity:.18});
+  const coronaryCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-.2,2.6,2.55),new THREE.Vector3(1.9,1.25,2.85),new THREE.Vector3(2.35,-1.1,2.45),new THREE.Vector3(.8,-3.5,1.65)]);
+  const coronary=new THREE.Mesh(new THREE.TubeGeometry(coronaryCurve,48,.12,10,false),coronaryMat);
+  coronary.userData.semanticAura=true;
+  mesh.add(left,right,lower,aura,coronary,apexGlow);
  }else if(v==="lung"){
   mesh.material.opacity=.14;
   const lobeGeometry=new THREE.SphereGeometry(3.4,24,18);
@@ -169,14 +176,19 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
   try{renderer=new THREE.WebGLRenderer({antialias:!lowPower,alpha:true,powerPreference:lowPower?"low-power":"high-performance"});}catch(err){setFailed(true);return;}
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,lowPower?1.25:2));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.08;
   host.appendChild(renderer.domElement);
 
   const ambient=new THREE.AmbientLight(0xfff6df,1.18);
   const key=new THREE.DirectionalLight(0xffe6ad,2.3);
   key.position.set(30,35,60);
-  const fill=new THREE.PointLight(0x78a9ff,28,180);
+  const fill=new THREE.PointLight(0x78a9ff,22,180);
   fill.position.set(-30,-12,45);
-  scene.add(ambient,key,fill);
+  const rim=new THREE.DirectionalLight(0xff765f,2.4); rim.position.set(-24,18,-30);
+  const warm=new THREE.PointLight(0xffb07c,16,120,2); warm.position.set(18,-18,34);
+  scene.fog=new THREE.FogExp2(0x090b10,.0065);
+  scene.add(ambient,key,fill,rim,warm);
 
   const controls=new OrbitControls(camera,renderer.domElement);
   controls.enableDamping=true;
@@ -186,12 +198,22 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
 
   const group=new THREE.Group();
   scene.add(group);
+  // Cinematic depth field: restrained dust motes give scale without distracting from meaning.
+  const dustCount=lowPower?90:180;
+  const dustGeo=new THREE.BufferGeometry();
+  const dustPos=new Float32Array(dustCount*3);
+  for(let d=0;d<dustCount;d++){dustPos[d*3]=(Math.random()-.5)*150;dustPos[d*3+1]=(Math.random()-.5)*95;dustPos[d*3+2]=(Math.random()-.5)*110;}
+  dustGeo.setAttribute("position",new THREE.BufferAttribute(dustPos,3));
+  const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xffd9b5,size:.18,transparent:true,opacity:.16,depthWrite:false}));
+  scene.add(dust);
   const positions=new Map();
   const meshes=[];
   const labels=[];
   const edgeCurves=new Map();
   const travelers=[];
   const actionParticles=[];
+  const heartFlowParticles=[];
+  const heartValves=[];
   const edgeGlowTubes=[];
   const edgeArrows=[];
   const focusHalos=[];
@@ -221,10 +243,36 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    const mesh=new THREE.Mesh(geometry,material);
    mesh.position.copy(pos);
    mesh.userData={nodeId:n.id,baseScale:1,baseVisualScale:new THREE.Vector3(1,1,1),action:actionMap.get(n.id)||"dim",phase:i*.7,visible:visible&&!background,basePosition:pos.clone(),baseColor:new THREE.Color(color)};
-   if(n.visual==="heart") mesh.scale.set(.88,1.08,.92);
+   if(n.visual==="heart"){
+    mesh.scale.set(.9,1.12,.94);
+    mesh.rotation.set(-.08,0,-.12);
+    mesh.userData.cinematicHeart=true;
+   }
    if(n.visual==="building"||n.visual==="server") mesh.scale.set(.9,1.12,.9);
    mesh.userData.baseVisualScale.copy(mesh.scale);
    decorateSemanticMesh(mesh,n.visual,color);
+   if(n.visual==="heart"){
+    // Four controllable valve cues. They remain visually subordinate until the heart is active.
+    const valveGeo=new THREE.TorusGeometry(.62,.1,8,24);
+    const valveMat=new THREE.MeshPhysicalMaterial({color:0xffd7b0,roughness:.34,clearcoat:.5,emissive:0x6a261f,emissiveIntensity:.12,transparent:true,opacity:.7});
+    const valveSpecs=[
+     {p:[-1.05,.65,2.85],kind:"av"},{p:[1.05,.72,2.85],kind:"av"},
+     {p:[-.82,-.78,2.92],kind:"semilunar"},{p:[.9,-.72,2.92],kind:"semilunar"}
+    ];
+    valveSpecs.forEach((v,vi)=>{const valve=new THREE.Mesh(valveGeo,valveMat.clone());valve.position.set(...v.p);valve.rotation.x=Math.PI/2;valve.userData={heartOwner:mesh,phase:vi*.08,kind:v.kind};mesh.add(valve);heartValves.push(valve);});
+   }
+   if(n.visual==="heart"&&!reduced){
+    // Local cardiac circulation cue: restrained dual-stream particles remain bound to the heart,
+    // so the cinematic layer reinforces flow without inventing a separate mechanism.
+    const flowMatA=new THREE.MeshBasicMaterial({color:0x66b8ff,transparent:true,opacity:.72,depthWrite:false});
+    const flowMatB=new THREE.MeshBasicMaterial({color:0xff6b62,transparent:true,opacity:.76,depthWrite:false});
+    const flowGeo=new THREE.SphereGeometry(.22,8,6);
+    for(let hp=0;hp<18;hp++){
+     const p=new THREE.Mesh(flowGeo,(hp<9?flowMatA:flowMatB).clone());
+     p.userData={heartOwner:mesh,phase:(hp%9)/9,oxygenated:hp>=9};
+     group.add(p); heartFlowParticles.push(p);
+    }
+   }
    if(focusIds.includes(n.id)){
     const focusHalo=new THREE.Mesh(new THREE.TorusGeometry(7.8,.14,8,56),new THREE.MeshBasicMaterial({color:knowledgeTone(n.knowledge),transparent:true,opacity:.34,depthWrite:false}));
     focusHalo.rotation.x=Math.PI/2; focusHalo.userData={focusHalo:true,phase:i*.6}; mesh.add(focusHalo); focusHalos.push(focusHalo);
@@ -403,6 +451,7 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
    frame=requestAnimationFrame(animate);
    if(document.hidden||!inViewport)return;
    const t=clock.getElapsedTime();
+   if(!reduced){dust.rotation.y=t*.006;dust.rotation.x=Math.sin(t*.08)*.025;}
    if(playingRef.current&&cameraMode==="inside"&&explicitTarget&&!reduced){
     const insideCamera=explicitTarget.clone().add(new THREE.Vector3(0,1,18));
     controls.target.lerp(explicitTarget,.1);
@@ -438,6 +487,33 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
      particle.scale.setScalar(1-rise*.65);
      particle.material.opacity=.82*(1-rise);
     }
+   }
+   for(const valve of heartValves){
+    const owner=valve.userData.heartOwner;
+    const active=owner?.userData?.action==="contract"&&playingRef.current;
+    const cyc=(t*.82+valve.userData.phase)%1;
+    const avOpen=cyc>.48||cyc<.08;
+    const semilunarOpen=cyc>.14&&cyc<.36;
+    const opening=active?((valve.userData.kind==="av"?avOpen:semilunarOpen)?1:.08):.18;
+    valve.scale.set(1,.34+.66*opening,1);
+    valve.material.emissiveIntensity=.1+.22*opening;
+    valve.material.opacity=.5+.35*opening;
+   }
+   for(const particle of heartFlowParticles){
+    const owner=particle.userData.heartOwner;
+    if(!owner)continue;
+    const u=(t*.34+particle.userData.phase)%1;
+    const oxy=particle.userData.oxygenated;
+    const angle=(oxy?1:-1)*(u*Math.PI*1.55-.75);
+    const radius=2.2+u*1.5;
+    particle.position.copy(owner.position).add(new THREE.Vector3(
+     (oxy?1:-1)*(1.25+Math.sin(angle)*radius*.48),
+     3.5-u*7.2,
+     3.2+Math.cos(angle)*radius*.32
+    ));
+    const pulse=.72+.28*Math.sin(Math.PI*u);
+    particle.scale.setScalar(pulse);
+    particle.material.opacity=.38+.4*Math.sin(Math.PI*u);
    }
    for(const tube of edgeGlowTubes){
     tube.material.opacity=.14+(.5+.5*Math.sin(t*3.2+tube.userData.phase))*.16;
@@ -483,8 +559,18 @@ export default function ThreeConceptScene({nodes=[],edges=[],focusIds=[],visible
     if(!reduced&&action==="flow"&&base) mesh.position.x=base.x+Math.sin(t*2+phase)*.8;
     if(action==="compress"){mesh.scale.y*=.58;mesh.scale.x*=1.08;}
     if(action==="contract"){
-     const beat=.5+.5*Math.sin(t*5.2+phase);
-     mesh.scale.x*=.9+.08*beat; mesh.scale.y*=.8+.12*beat; mesh.scale.z*=.9+.06*beat;
+     // Two-part heartbeat profile: quick systolic squeeze followed by a longer relaxed phase.
+     const cycle=(t*.82+phase*.08)%1;
+     const systole=Math.exp(-Math.pow((cycle-.18)/.085,2));
+     const rebound=.32*Math.exp(-Math.pow((cycle-.34)/.11,2));
+     const squeeze=Math.min(1,systole+rebound);
+     mesh.scale.x*=1-.075*squeeze; mesh.scale.y*=1-.115*squeeze; mesh.scale.z*=1-.065*squeeze;
+     if(mesh.userData.cinematicHeart){
+      mesh.rotation.z=-.12-.025*squeeze;
+      mesh.rotation.y=.025*Math.sin(t*.55);
+      const coronary=mesh.children.find(x=>x.geometry?.type==="TubeGeometry");
+      if(coronary?.material) coronary.material.emissiveIntensity=.12+.28*squeeze;
+     }
     }
     if(action==="expand"){
      const breath=.5+.5*Math.sin(t*2.15+phase);
