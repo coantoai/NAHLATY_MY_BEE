@@ -184,6 +184,7 @@ def export_glb(path):
         export_cameras=True,
         export_lights=False,
         export_materials="EXPORT",
+        export_extras=True,
         export_yup=True,
         export_apply=True
     )
