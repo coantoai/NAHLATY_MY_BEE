@@ -14,7 +14,7 @@ on:
       prompt:
         description: "Mechanical object to generate"
         required: false
-        default: "a simple educational crank-slider mechanism with exactly four main parts: fixed base, crank wheel, connecting rod and sliding piston; mechanically connected and clearly separated"
+        default: "a compact two-finger parallel robot gripper with exactly five main parts: fixed base, left finger, right finger, left linkage and right linkage; symmetric, mechanically connected through visible pivot joints, with clearly separated parts and realistic engineering proportions"
 
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 90
     env:
       PROCEDURA_COMMIT: fac191ed49f55fcc2e0f23897e986042249f59fe
-      DEFAULT_PROMPT: "a simple educational crank-slider mechanism with exactly four main parts: fixed base, crank wheel, connecting rod and sliding piston; mechanically connected and clearly separated"
+      DEFAULT_PROMPT: "a compact two-finger parallel robot gripper with exactly five main parts: fixed base, left finger, right finger, left linkage and right linkage; symmetric, mechanically connected through visible pivot joints, with clearly separated parts and realistic engineering proportions"
       PATH: /home/runner/.bun/bin:/home/runner/.local/bin:/usr/local/bin:/usr/bin:/bin
 
     steps:
