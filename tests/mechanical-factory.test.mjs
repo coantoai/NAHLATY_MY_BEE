@@ -9,6 +9,7 @@ import { reviewMechanicalReadiness, MECHANICAL_STACK } from "../factory/mechanic
 import { proceduraToMechanicalDraft, applyMechanicalGateResults } from "../factory/mechanical/proceduraAdapter.mjs";
 import { buildMechanicalSceneSpec } from "../factory/core/mechanicalSceneSpec.mjs";
 import { planMechanicalView } from "../factory/runtime/mechanicalViewPlan.mjs";
+import { buildBlenderCommand, mechanicalDeliveryPaths } from "../factory/mechanical/buildBlenderDelivery.mjs";
 
 function validFixture() {
   const draft = proceduraToMechanicalDraft({
@@ -121,4 +122,16 @@ test("five display modes operate on the same semantic assembly", () => {
     assert.equal(plan.mode, mode);
     assert.deepEqual(plan.directives.map((item) => item.id), spec.asset.parts.map((item) => item.id));
   }
+});
+
+
+test("Blender delivery consumes Procedura painted output and emits GLB delivery paths", () => {
+  const paths = mechanicalDeliveryPaths("/tmp/procedura-run");
+  const command = buildBlenderCommand("/tmp/procedura-run", { blender: "blender-test", tone: "AgX", samples: 128 });
+  assert.equal(command.command, "blender-test");
+  assert.equal(paths.obj.endsWith("final_painted.obj"), true);
+  assert.equal(paths.materials.endsWith("final_materials.json"), true);
+  assert.equal(paths.glb.endsWith("nahlaty_delivery/scene.glb"), true);
+  assert.ok(command.args.includes("AgX"));
+  assert.ok(command.args.includes("128"));
 });
