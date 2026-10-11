@@ -1,0 +1,247 @@
+name: NAHLATY Procedura Linux E2E
+
+on:
+  push:
+    branches:
+      - factory/mechanical-v1
+    paths:
+      - ".github/workflows/procedura-linux-e2e.yml"
+      - "factory/procedura/**"
+      - "factory/blender/**"
+      - "factory/mechanical/**"
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Mechanical object to generate"
+        required: false
+        default: "a compact two-finger parallel robot gripper with exactly five main parts: fixed base, left finger, right finger, left linkage and right linkage; symmetric, mechanically connected through visible pivot joints, with clearly separated parts and realistic engineering proportions"
+
+permissions:
+  contents: read
+
+jobs:
+  procedura-linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PROCEDURA_COMMIT: fac191ed49f55fcc2e0f23897e986042249f59fe
+      DEFAULT_PROMPT: "a compact two-finger parallel robot gripper with exactly five main parts: fixed base, left finger, right finger, left linkage and right linkage; symmetric, mechanically connected through visible pivot joints, with clearly separated parts and realistic engineering proportions"
+      PATH: /home/runner/.bun/bin:/home/runner/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+    steps:
+      - name: Checkout NAHLATY branch
+        uses: actions/checkout@v4
+
+      - name: Clone pinned Procedura
+        run: |
+          set -euxo pipefail
+          git clone https://github.com/SpatiaOS/Procedura.git /tmp/procedura
+          cd /tmp/procedura
+          git checkout "$PROCEDURA_COMMIT"
+          test "$(git rev-parse HEAD)" = "$PROCEDURA_COMMIT"
+
+      - name: Install Linux graphics runtime libraries
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libopengl0 libxrender1 libxext6 libxi6 libxfixes3 libxkbcommon0 libdbus-1-3
+
+      - name: Install Procedura Linux dependencies
+        working-directory: /tmp/procedura
+        run: |
+          set -euxo pipefail
+          bash scripts/install-deps.sh
+          export PATH="$HOME/.bun/bin:$PATH"
+          bun --version
+          test -x "$HOME/opt/blender/blender"
+          test -e "$HOME/opt/openscad"
+
+      - name: Record exact toolchain
+        working-directory: /tmp/procedura
+        run: |
+          set -euxo pipefail
+          export PATH="$HOME/.bun/bin:$PATH"
+          {
+            echo "procedura_commit=$(git rev-parse HEAD)"
+            echo "bun=$(bun --version)"
+            echo "blender=$($HOME/opt/blender/blender --version 2>&1 | head -1)"
+            echo "openscad_file=$(file $HOME/opt/openscad)"
+            echo "openscad_version=$($HOME/opt/openscad --version 2>&1 | head -1 || true)"
+          } | tee /tmp/procedura-linux-report.txt
+
+      - name: Procedura CLI preflight with explicit OpenSCAD fallback
+        working-directory: /tmp/procedura
+        env:
+          OPENSCAD_PATH: /home/runner/opt/openscad
+          PROCEDURA_ALLOW_CGAL_OPENSCAD: "1"
+        run: |
+          set -euxo pipefail
+          export PATH="$HOME/.bun/bin:$PATH"
+          bun run scripts/procedura.ts --help > /tmp/procedura-help.txt 2> /tmp/procedura-help.err
+          test -s /tmp/procedura-help.txt
+          echo "procedura_cli_pass=true" | tee -a /tmp/procedura-linux-report.txt
+
+      - name: Select model endpoint
+        id: model
+        env:
+          PROCEDURA_API_KEY: ${{ secrets.PROCEDURA_OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${PROCEDURA_API_KEY:-}" ]; then
+            echo "mode=external" >> "$GITHUB_OUTPUT"
+            echo "model_mode=external_api" | tee -a /tmp/procedura-linux-report.txt
+          else
+            echo "mode=local" >> "$GITHUB_OUTPUT"
+            echo "model_mode=local_ollama" | tee -a /tmp/procedura-linux-report.txt
+          fi
+
+      - name: Install free local Ollama fallback
+        if: steps.model.outputs.mode == 'local'
+        run: |
+          set -euxo pipefail
+          curl -fsSL https://ollama.com/install.sh | sh
+          nohup ollama serve >/tmp/ollama.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:11434/api/version >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:11434/api/version
+          ollama pull qwen2.5-coder:7b
+          curl -fsS http://127.0.0.1:11434/v1/models >/tmp/ollama-models.json
+          echo "ollama_ready=true" | tee -a /tmp/procedura-linux-report.txt
+
+      - name: Run real Procedura generation
+        working-directory: /tmp/procedura
+        env:
+          PROCEDURA_API_KEY: ${{ secrets.PROCEDURA_OPENAI_API_KEY }}
+          PROCEDURA_BASE_URL_SECRET: ${{ secrets.PROCEDURA_OPENAI_BASE_URL }}
+          PROCEDURA_MODEL_SECRET: ${{ secrets.PROCEDURA_MODEL }}
+          DISPATCH_PROMPT: ${{ inputs.prompt }}
+          MODEL_MODE: ${{ steps.model.outputs.mode }}
+          OPENSCAD_PATH: /home/runner/opt/openscad
+          PROCEDURA_ALLOW_CGAL_OPENSCAD: "1"
+          PROCEDURA_LLM_TIMEOUT_MS: "1800000"
+          PROCEDURA_LLM_DEADLINE_MS: "3600000"
+          PROCEDURA_LLM_MAX_ATTEMPTS: "2"
+          PROCEDURA_MAX_PARTS: "5"
+        run: |
+          set -euxo pipefail
+          export PATH="$HOME/.bun/bin:$PATH"
+
+          if [ "$MODEL_MODE" = "external" ]; then
+            export OPENAI_API_KEY="$PROCEDURA_API_KEY"
+            export OPENAI_BASE_URL="${PROCEDURA_BASE_URL_SECRET:-https://api.openai.com/v1}"
+            export PROCEDURA_MODEL="${PROCEDURA_MODEL_SECRET:-gpt-5.2-mini}"
+          else
+            export OPENAI_API_KEY="ollama-local"
+            export OPENAI_BASE_URL="http://127.0.0.1:11434/v1"
+            export PROCEDURA_MODEL="qwen2.5-coder:7b"
+          fi
+          export PROCEDURA_PROVIDER=openai
+
+          PROMPT="${DISPATCH_PROMPT:-}"
+          if [ -z "$PROMPT" ]; then PROMPT="$DEFAULT_PROMPT"; fi
+
+          echo "generation_started=true" | tee -a /tmp/procedura-linux-report.txt
+          echo "model=$PROCEDURA_MODEL" | tee -a /tmp/procedura-linux-report.txt
+
+          bun run scripts/procedura.ts             -o /tmp/procedura/outputs/nahlaty-mechanical-proof             --no-image             --assembly             --no-refine             --prompt "$PROMPT" | tee /tmp/procedura-generation.log
+
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/final.scad
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/final.obj
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/plan.json
+          echo "generation_pass=true" | tee -a /tmp/procedura-linux-report.txt
+
+      - name: Split final Procedura SCAD into semantic part meshes
+        working-directory: /tmp/procedura
+        env:
+          OPENSCAD_PATH: /home/runner/opt/openscad
+          PROCEDURA_ALLOW_CGAL_OPENSCAD: "1"
+          GALLERY_ROOT: /tmp/procedura/outputs
+        run: |
+          set -euxo pipefail
+          export PATH="$HOME/.bun/bin:$PATH"
+          bun run scripts/gen_parts_color_full.ts nahlaty-mechanical-proof
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/_parts_color_full/parts_color_meta.txt
+
+      - name: Compile NAHLATY proof manifest and SceneSpec
+        run: |
+          set -euxo pipefail
+          node factory/mechanical/compileProceduraProof.mjs /tmp/procedura/outputs/nahlaty-mechanical-proof
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/proof-manifest.json
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/scene-spec.json
+
+      - name: Export semantic PBR GLB and cinematic proof
+        run: |
+          set -euxo pipefail
+          "$HOME/opt/blender/blender" --background             --python "$GITHUB_WORKSPACE/factory/blender/export_semantic_parts_glb.py" --             --manifest /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/proof-manifest.json             --out /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/scene.glb             --preview /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/hero.png
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/scene.glb
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/hero.png
+          echo "semantic_glb_pass=true" | tee -a /tmp/procedura-linux-report.txt
+
+      - name: Render generated geometry proof in Blender
+        working-directory: /tmp/procedura
+        run: |
+          set -euxo pipefail
+          RUN=/tmp/procedura/outputs/nahlaty-mechanical-proof
+          mkdir -p "$RUN/nahlaty_proof"
+
+          "$HOME/opt/blender/blender" --background --python-expr '
+          import bpy, math, os
+          from mathutils import Vector
+          p=os.environ["OBJ"]
+          if hasattr(bpy.ops.wm,"obj_import"): bpy.ops.wm.obj_import(filepath=p)
+          else: bpy.ops.import_scene.obj(filepath=p)
+          meshes=[o for o in bpy.context.scene.objects if o.type=="MESH"]
+          if not meshes: raise RuntimeError("no meshes")
+          for o in meshes:
+              m=bpy.data.materials.new("ProofMetal_"+o.name); m.diffuse_color=(0.18,0.22,0.28,1); m.use_nodes=True
+              bs=m.node_tree.nodes.get("Principled BSDF")
+              if bs:
+                  bs.inputs["Metallic"].default_value=.65; bs.inputs["Roughness"].default_value=.3
+              o.data.materials.clear(); o.data.materials.append(m)
+          scene=bpy.context.scene
+          scene.render.engine="BLENDER_EEVEE_NEXT"
+          scene.view_settings.view_transform="AgX"
+          world=bpy.data.worlds.new("ProofWorld"); scene.world=world; world.use_nodes=True
+          bg=world.node_tree.nodes.get("Background"); bg.inputs["Color"].default_value=(.01,.015,.025,1); bg.inputs["Strength"].default_value=.25
+          for name,energy,loc,color,size in [
+              ("Key",1800,(6,-7,8),(1,.78,.55),5),
+              ("Fill",900,(-6,-3,4),(.5,.7,1),6),
+              ("Rim",1400,(0,6,7),(1,.65,.35),4)]:
+              ld=bpy.data.lights.new(name,"AREA"); ld.energy=energy; ld.color=color; ld.shape="DISK"; ld.size=size
+              lo=bpy.data.objects.new(name,ld); lo.location=loc; scene.collection.objects.link(lo)
+          box=None
+          for o in meshes:
+              b=o.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()
+              bb=[o.matrix_world@Vector(c) for c in o.bound_box]
+              if box is None: mn=Vector(bb[0]); mx=Vector(bb[0]); box=True
+              for v in bb:
+                  mn.x=min(mn.x,v.x); mn.y=min(mn.y,v.y); mn.z=min(mn.z,v.z)
+                  mx.x=max(mx.x,v.x); mx.y=max(mx.y,v.y); mx.z=max(mx.z,v.z)
+          c=(mn+mx)/2; e=max((mx-mn).x,(mx-mn).y,(mx-mn).z,1)
+          cd=bpy.data.cameras.new("Camera"); cam=bpy.data.objects.new("Camera",cd); scene.collection.objects.link(cam); scene.camera=cam
+          cam.location=c+Vector((1.5*e,-2.2*e,1.1*e)); cam.rotation_euler=(c-cam.location).to_track_quat("-Z","Y").to_euler(); cd.lens=55
+          scene.render.resolution_x=1280; scene.render.resolution_y=720; scene.render.resolution_percentage=100
+          scene.render.filepath=os.environ["PNG"]; scene.render.image_settings.file_format="PNG"
+          bpy.ops.render.render(write_still=True)
+          '
+        env:
+          OBJ: /tmp/procedura/outputs/nahlaty-mechanical-proof/final.obj
+          PNG: /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_proof/hero.png
+
+      - name: Upload proof artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: procedura-linux-proof
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            /tmp/procedura-linux-report.txt
+            /tmp/procedura-help.txt
+            /tmp/procedura-help.err
+            /tmp/procedura-generation.log
+            /tmp/ollama.log
+            /tmp/ollama-models.json
+            /tmp/procedura/outputs/nahlaty-mechanical-proof/
