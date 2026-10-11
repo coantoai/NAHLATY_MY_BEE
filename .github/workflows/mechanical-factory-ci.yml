@@ -18,6 +18,10 @@ jobs:
       - name: Mechanical contract tests
         run: node --test tests/mechanical-factory.test.mjs
       - name: Check delivery orchestrator syntax
-        run: node --check factory/mechanical/buildBlenderDelivery.mjs
+        run: |
+          node --check factory/mechanical/buildBlenderDelivery.mjs
+          node --check factory/mechanical/compileProceduraProof.mjs
       - name: Check Blender bridge syntax
-        run: python3 -m py_compile factory/blender/export_pbr_glb.py
+        run: |
+          python3 -m py_compile factory/blender/export_pbr_glb.py
+          python3 -m py_compile factory/blender/export_semantic_parts_glb.py
