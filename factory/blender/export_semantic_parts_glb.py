@@ -65,7 +65,10 @@ for part in manifest["parts"]:
     meshes.append(obj)
 
 scene=bpy.context.scene
-scene.render.engine="BLENDER_EEVEE_NEXT"
+scene.render.engine="CYCLES" if "CYCLES" in [i.identifier for i in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items] else "BLENDER_EEVEE"
+if scene.render.engine == "CYCLES":
+    scene.cycles.samples = 64
+    scene.cycles.use_denoising = True
 try: scene.view_settings.view_transform="AgX"
 except: pass
 try: scene.view_settings.look="Medium High Contrast"
