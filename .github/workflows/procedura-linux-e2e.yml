@@ -1,0 +1,112 @@
+name: NAHLATY Procedura Linux E2E
+
+on:
+  push:
+    branches:
+      - factory/mechanical-v1
+    paths:
+      - ".github/workflows/procedura-linux-e2e.yml"
+      - "factory/procedura/**"
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Mechanical object to generate"
+        required: false
+        default: "a compact cutaway single-cylinder four-stroke engine demonstrator with engine block, crankshaft, connecting rod, piston, intake valve, exhaust valve, spark plug and flywheel"
+
+permissions:
+  contents: read
+
+jobs:
+  procedura-linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      PROCEDURA_COMMIT: fac191ed49f55fcc2e0f23897e986042249f59fe
+      DEFAULT_PROMPT: "a compact cutaway single-cylinder four-stroke engine demonstrator with engine block, crankshaft, connecting rod, piston, intake valve, exhaust valve, spark plug and flywheel"
+
+    steps:
+      - name: Checkout NAHLATY branch
+        uses: actions/checkout@v4
+
+      - name: Clone pinned Procedura
+        run: |
+          set -euxo pipefail
+          git clone https://github.com/SpatiaOS/Procedura.git /tmp/procedura
+          cd /tmp/procedura
+          git checkout "$PROCEDURA_COMMIT"
+          git rev-parse HEAD
+
+      - name: Install Procedura Linux dependencies
+        working-directory: /tmp/procedura
+        run: |
+          set -euxo pipefail
+          bash scripts/install-deps.sh
+          bash scripts/install-deps.sh --check
+
+      - name: Record environment
+        working-directory: /tmp/procedura
+        run: |
+          set -euxo pipefail
+          {
+            echo "procedura_commit=$(git rev-parse HEAD)"
+            echo "os=$(uname -a)"
+            echo "bun=$($HOME/.bun/bin/bun --version)"
+            echo "openscad=$($HOME/opt/openscad/openscad --version 2>&1 | head -1 || true)"
+            echo "blender=$($HOME/opt/blender/blender --version 2>&1 | head -1 || true)"
+          } | tee /tmp/procedura-linux-report.txt
+
+      - name: Procedura CLI preflight
+        working-directory: /tmp/procedura
+        run: |
+          set -euxo pipefail
+          $HOME/.bun/bin/bun run scripts/procedura.ts --help > /tmp/procedura-help.txt
+          test -s /tmp/procedura-help.txt
+
+      - name: Run real Procedura generation when an API endpoint is configured
+        working-directory: /tmp/procedura
+        env:
+          PROCEDURA_API_KEY: ${{ secrets.PROCEDURA_OPENAI_API_KEY }}
+          PROCEDURA_BASE_URL_SECRET: ${{ secrets.PROCEDURA_OPENAI_BASE_URL }}
+          PROCEDURA_MODEL_SECRET: ${{ secrets.PROCEDURA_MODEL }}
+          DISPATCH_PROMPT: ${{ inputs.prompt }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${PROCEDURA_API_KEY:-}" ]; then
+            echo "generation_skipped=no_api_key" | tee -a /tmp/procedura-linux-report.txt
+            echo "Linux + Bun + Manifold OpenSCAD + Blender + Procedura CLI are ready; no model call was attempted."
+            exit 0
+          fi
+
+          export OPENAI_API_KEY="$PROCEDURA_API_KEY"
+          export OPENAI_BASE_URL="${PROCEDURA_BASE_URL_SECRET:-https://api.openai.com/v1}"
+          export PROCEDURA_MODEL="${PROCEDURA_MODEL_SECRET:-gpt-5.2-mini}"
+          export PROCEDURA_PROVIDER=openai
+          export PROCEDURA_LLM_TIMEOUT_MS=1800000
+          export PROCEDURA_LLM_DEADLINE_MS=1800000
+
+          PROMPT="${DISPATCH_PROMPT:-}"
+          if [ -z "$PROMPT" ]; then PROMPT="$DEFAULT_PROMPT"; fi
+
+          echo "generation_started=true" | tee -a /tmp/procedura-linux-report.txt
+          echo "model=$PROCEDURA_MODEL" | tee -a /tmp/procedura-linux-report.txt
+          echo "base_url=$OPENAI_BASE_URL" | tee -a /tmp/procedura-linux-report.txt
+
+          $HOME/.bun/bin/bun run scripts/procedura.ts             -o /tmp/procedura/outputs/nahlaty-mechanical-proof             --no-image             --assembly             --no-refine             --prompt "$PROMPT"
+
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/final.scad
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/final.obj
+          echo "generation_pass=true" | tee -a /tmp/procedura-linux-report.txt
+
+      - name: Upload proof artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: procedura-linux-proof
+          if-no-files-found: ignore
+          retention-days: 7
+          path: |
+            /tmp/procedura-linux-report.txt
+            /tmp/procedura-help.txt
+            /tmp/procedura/outputs/nahlaty-mechanical-proof/
