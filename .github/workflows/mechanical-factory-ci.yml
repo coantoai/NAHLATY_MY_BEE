@@ -15,4 +15,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: node --test tests/mechanical-factory.test.mjs
+      - name: Mechanical contract tests
+        run: node --test tests/mechanical-factory.test.mjs
+      - name: Check delivery orchestrator syntax
+        run: node --check factory/mechanical/buildBlenderDelivery.mjs
+      - name: Check Blender bridge syntax
+        run: python3 -m py_compile factory/blender/export_pbr_glb.py
