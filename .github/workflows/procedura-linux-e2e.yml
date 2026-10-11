@@ -12,7 +12,7 @@ on:
       prompt:
         description: "Mechanical object to generate"
         required: false
-        default: "a simple educational piston-crank mechanism with a fixed frame, crankshaft, connecting rod, sliding piston and cylinder; all parts visibly separate and mechanically connected"
+        default: "a simple educational crank-slider mechanism with exactly four main parts: fixed base, crank wheel, connecting rod and sliding piston; mechanically connected and clearly separated"
 
 permissions:
   contents: read
@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 90
     env:
       PROCEDURA_COMMIT: fac191ed49f55fcc2e0f23897e986042249f59fe
-      DEFAULT_PROMPT: "a simple educational piston-crank mechanism with a fixed frame, crankshaft, connecting rod, sliding piston and cylinder; all parts visibly separate and mechanically connected"
+      DEFAULT_PROMPT: "a simple educational crank-slider mechanism with exactly four main parts: fixed base, crank wheel, connecting rod and sliding piston; mechanically connected and clearly separated"
       PATH: /home/runner/.bun/bin:/home/runner/.local/bin:/usr/local/bin:/usr/bin:/bin
 
     steps:
@@ -98,7 +98,7 @@ jobs:
             sleep 2
           done
           curl -fsS http://127.0.0.1:11434/api/version
-          ollama pull qwen3:4b
+          ollama pull qwen2.5-coder:3b
           curl -fsS http://127.0.0.1:11434/v1/models >/tmp/ollama-models.json
           echo "ollama_ready=true" | tee -a /tmp/procedura-linux-report.txt
 
@@ -115,6 +115,7 @@ jobs:
           PROCEDURA_LLM_TIMEOUT_MS: "1800000"
           PROCEDURA_LLM_DEADLINE_MS: "3600000"
           PROCEDURA_LLM_MAX_ATTEMPTS: "2"
+          PROCEDURA_MAX_PARTS: "5"
         run: |
           set -euxo pipefail
           export PATH="$HOME/.bun/bin:$PATH"
@@ -126,7 +127,7 @@ jobs:
           else
             export OPENAI_API_KEY="ollama-local"
             export OPENAI_BASE_URL="http://127.0.0.1:11434/v1"
-            export PROCEDURA_MODEL="qwen3:4b"
+            export PROCEDURA_MODEL="qwen2.5-coder:3b"
           fi
           export PROCEDURA_PROVIDER=openai
 
@@ -142,6 +143,33 @@ jobs:
           test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/final.obj
           test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/plan.json
           echo "generation_pass=true" | tee -a /tmp/procedura-linux-report.txt
+
+      - name: Split final Procedura SCAD into semantic part meshes
+        working-directory: /tmp/procedura
+        env:
+          OPENSCAD_PATH: /home/runner/opt/openscad
+          PROCEDURA_ALLOW_CGAL_OPENSCAD: "1"
+          GALLERY_ROOT: /tmp/procedura/outputs
+        run: |
+          set -euxo pipefail
+          export PATH="$HOME/.bun/bin:$PATH"
+          bun run scripts/gen_parts_color_full.ts nahlaty-mechanical-proof
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/_parts_color_full/parts_color_meta.txt
+
+      - name: Compile NAHLATY proof manifest and SceneSpec
+        run: |
+          set -euxo pipefail
+          node factory/mechanical/compileProceduraProof.mjs /tmp/procedura/outputs/nahlaty-mechanical-proof
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/proof-manifest.json
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/scene-spec.json
+
+      - name: Export semantic PBR GLB and cinematic proof
+        run: |
+          set -euxo pipefail
+          "$HOME/opt/blender/blender" --background             --python "$GITHUB_WORKSPACE/factory/blender/export_semantic_parts_glb.py" --             --manifest /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/proof-manifest.json             --out /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/scene.glb             --preview /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/hero.png
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/scene.glb
+          test -s /tmp/procedura/outputs/nahlaty-mechanical-proof/nahlaty_delivery/hero.png
+          echo "semantic_glb_pass=true" | tee -a /tmp/procedura-linux-report.txt
 
       - name: Render generated geometry proof in Blender
         working-directory: /tmp/procedura
