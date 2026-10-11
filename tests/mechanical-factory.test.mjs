@@ -7,6 +7,8 @@ import {
 } from "../factory/core/mechanicalContract.mjs";
 import { reviewMechanicalReadiness, MECHANICAL_STACK } from "../factory/mechanical/mechanicalPipeline.mjs";
 import { proceduraToMechanicalDraft, applyMechanicalGateResults } from "../factory/mechanical/proceduraAdapter.mjs";
+import { buildMechanicalSceneSpec } from "../factory/core/mechanicalSceneSpec.mjs";
+import { planMechanicalView } from "../factory/runtime/mechanicalViewPlan.mjs";
 
 function validFixture() {
   const draft = proceduraToMechanicalDraft({
@@ -102,4 +104,21 @@ test("invalid articulation cycles are blocked before runtime", () => {
   const result = validateMechanicalManifest(fixture);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((error) => error.includes("directed cycle")));
+});
+
+
+test("validated artifact becomes one GLB-backed SceneSpec", () => {
+  const spec = buildMechanicalSceneSpec(validFixture());
+  assert.equal(spec.asset.format, "glb");
+  assert.equal(spec.asset.parts.length, 3);
+  assert.deepEqual(spec.interaction.modes, REQUIRED_VIEW_MODES);
+});
+
+test("five display modes operate on the same semantic assembly", () => {
+  const spec = buildMechanicalSceneSpec(validFixture());
+  for (const mode of REQUIRED_VIEW_MODES) {
+    const plan = planMechanicalView(spec, mode, { selectedPartId: "crankshaft" });
+    assert.equal(plan.mode, mode);
+    assert.deepEqual(plan.directives.map((item) => item.id), spec.asset.parts.map((item) => item.id));
+  }
 });
