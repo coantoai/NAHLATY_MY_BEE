@@ -7,6 +7,8 @@ on:
     paths:
       - ".github/workflows/procedura-linux-e2e.yml"
       - "factory/procedura/**"
+      - "factory/blender/**"
+      - "factory/mechanical/**"
   workflow_dispatch:
     inputs:
       prompt:
